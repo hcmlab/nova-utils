@@ -19,4 +19,5 @@ def string_to_enum(enum, string):
   for e in enum:
     if e.name == string.upper():
       return e
-  raise ValueError('{} not part of enumeration  {}'.format(string, enum))
+  print('Warning! Unknown type {}. Assuming FEATURE data type.'.format(string))
+  return DataTypes.FEATURE
