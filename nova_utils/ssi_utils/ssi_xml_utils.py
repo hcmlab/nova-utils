@@ -133,12 +133,14 @@ class Chain:
         meta_frame_step: str = "",
         meta_left_context: str = "",
         meta_right_context: str = "",
+        meta_backend: str = "nova-server",
         register: list = None,
         links: list = None,
     ):
         self.meta_frame_step = meta_frame_step
         self.meta_left_ctx = meta_left_context
         self.meta_right_ctx = meta_right_context
+        self.meta_backend = meta_backend
         self.register = register if register else []
         self.links = links if links else []
 
@@ -156,6 +158,7 @@ class Chain:
             self.meta_frame_step = meta.get("frame_step", default="0")
             self.meta_left_ctx = meta.get("left_ctx", default="0")
             self.meta_right_ctx = meta.get("right_ctx", default="0")
+
 
         if register is not None:
             for r in register:
