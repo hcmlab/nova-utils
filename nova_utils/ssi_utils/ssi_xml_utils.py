@@ -19,7 +19,7 @@ class Trainer:
         meta_right_ctx: int = 0,
         meta_left_ctx: int = 0,
         meta_balance: str = "none",
-        meta_backend: str = "Python",
+        meta_backend: str = "nova-server",
         ssi_v="5",
         xml_version="1.0",
     ):
