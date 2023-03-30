@@ -122,9 +122,14 @@ class Trainer:
 
 
 class ChainLink:
-    def __init__(self, link_type: str = "feature", item: dict = None):
-        self.link_type = link_type
-        self.item = item
+
+    def __init__(self, create: str, script: str, optsstr: str, syspath: str, tag: str = "feature", multi_role_input: str = 'False', **kwargs):
+        self.create = create
+        self.script = script
+        self.optsstr = optsstr
+        self.syspath = syspath
+        self.tag = tag
+        self.multi_role_input = True if multi_role_input == 'True' else False
 
 
 class Chain:
@@ -134,6 +139,8 @@ class Chain:
         meta_left_context: str = "",
         meta_right_context: str = "",
         meta_backend: str = "nova-server",
+        meta_description: str = "",
+        meta_category: str = "",
         register: list = None,
         links: list = None,
     ):
@@ -141,6 +148,8 @@ class Chain:
         self.meta_left_ctx = meta_left_context
         self.meta_right_ctx = meta_right_context
         self.meta_backend = meta_backend
+        self.meta_description = meta_description
+        self.meta_category = meta_category
         self.register = register if register else []
         self.links = links if links else []
 
@@ -155,20 +164,20 @@ class Chain:
                 links.append(child)
 
         if meta is not None:
-            self.meta_frame_step = meta.get("frame_step", default="0")
-            self.meta_left_ctx = meta.get("left_ctx", default="0")
-            self.meta_right_ctx = meta.get("right_ctx", default="0")
-
+            self.meta_frame_step = meta.attrib.get("frameStep", "0")
+            self.meta_left_ctx = meta.attrib.get("leftContext", "0")
+            self.meta_right_ctx = meta.attrib.get("rightContext", "0")
+            self.meta_backend = meta.attrib.get("backend", "nova-server")
+            self.meta_description = meta.attrib.get("description", "")
+            self.meta_category = meta.attrib.get("category", "")
 
         if register is not None:
             for r in register:
                 self.register.append(r.attrib)
 
         for link in links:
-            link_type = link.tag
             item = link.find("item")
-
-            new_link = ChainLink(link_type=link_type, item=item.attrib)
+            new_link = ChainLink(**item.attrib, tag=link.tag)
             self.links.append(new_link)
 
     def write_to_file(self, fp):
@@ -179,6 +188,10 @@ class Chain:
             frameStep=str(self.meta_frame_step),
             leftContext=str(self.meta_left_ctx),
             rightContex=str(self.meta_right_ctx),
+            backend=str(self.meta_backend),
+            description=str(self.meta_description),
+            category=str(self.meta_category),
+
         )
         register = ET.SubElement(root, "register")
         for r in self.register:
@@ -186,8 +199,8 @@ class Chain:
 
         cl: ChainLink
         for cl in self.links:
-            link = ET.SubElement(root, cl.link_type)
-            ET.SubElement(link, "item", **cl.item)
+            link = ET.SubElement(root, cl.tag)
+            ET.SubElement(link, "item", create=cl.create, script=cl.script, syspath=cl.syspath, optsstr=cl.optsstr, multi_role_input=str(cl.multi_role_input))
 
         tree = ET.ElementTree(root)
         ET.indent(tree, space="    ", level=0)
@@ -198,7 +211,7 @@ class Chain:
 
 
 if __name__ == "__main__":
-    chain_in_fp = Path("/Volumes/datasets/nova/cml/chains/audio/mfcc/mfcc.chain")
+    chain_in_fp = Path("/Users/dominikschiller/Work/github/nova-server/local/cml/chains/test/uc1/uc1.chain")
     chain_out_fp = Path("test_chain.chain")
 
     chain = Chain()
