@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import numpy as np
 from nova_utils.ssi_utils.ssi_data_types import NPDataTypes, FileTypes, string_to_enum
-
+from pathlib import Path
 
 class Chunk:
     def __init__(self, f=0, t=0, b=0, n=0):
@@ -12,15 +12,26 @@ class Chunk:
 
 
 class Stream:
-    def __init__(self, path=None):
-        self.ftype = string_to_enum(FileTypes, "UNDEF")
-        self.sr = 0
-        self.dim = 0
-        self.byte = 4
-        self.type = "UNDEF"
-        self.delim = ""
-        self.chunks = []
-        self.data = None
+    def __init__(
+        self,
+        ftype: FileTypes = FileTypes.UNDEF,
+        sr: int = 0,
+        dim: int = 0,
+        byte: int = 4,
+        dtype: NPDataTypes = NPDataTypes.UNDEF,
+        delim: str = "",
+        chunks: list = None,
+        data: np.ndarray = None,
+        path: Path =None,
+    ):
+        self.ftype = ftype
+        self.sr = sr
+        self.dim = dim
+        self.byte = byte
+        self.dtype = dtype
+        self.delim = delim
+        self.chunks = chunks if chunks else []
+        self.data = data
 
         if path:
             self.load(path)
@@ -42,7 +53,7 @@ class Stream:
                     elif key == "byte":
                         self.byte = int(val)
                     elif key == "type":
-                        self.type = string_to_enum(NPDataTypes, val).value
+                        self.dtype = string_to_enum(NPDataTypes, val).value
                     elif key == "delim":
                         self.delim = val
             elif child.tag == "chunk":
@@ -61,17 +72,19 @@ class Stream:
 
     def load_data(self, path):
         if self.ftype == FileTypes.ASCII:
-            self.data = np.loadtxt(path, dtype=self.type, delimiter=self.delim)
+            self.data = np.loadtxt(path, dtype=self.dtype, delimiter=self.delim)
         elif self.ftype == FileTypes.BINARY:
             # number of all data chunks
             num = sum([c.n for c in self.chunks])
-            self.data = np.fromfile(path, dtype=self.type).reshape(num, self.dim)
+            self.data = np.fromfile(path, dtype=self.dtype).reshape(num, self.dim)
         else:
             raise ValueError("FileType {} not supported".format(self))
 
-    def load(self, path):
+    def load(self, path: Path):
+        if not path == type(Path):
+            path = Path(path)
         self.load_header(path)
-        self.load_data(path + "~")
+        self.load_data(path.parent / (path.name + '~'))
 
     def save_header(self, path):
 
@@ -83,8 +96,8 @@ class Stream:
             sr=str(self.sr),
             dim=str(self.dim),
             byte=str(self.byte),
-            type=NPDataTypes(self.type).name,
-            #delim=str(self.delim),
+            type=NPDataTypes(self.dtype).name,
+            # delim=str(self.delim),
         )
         ET.SubElement(
             root,
@@ -111,17 +124,23 @@ class Stream:
         if self.ftype == FileTypes.BINARY:
             self.data.tofile(path)
 
-    def save(self, path):
+    def save(self, path: Path):
+        if not path == type(Path):
+            path = Path(path)
+        if not path.suffix == '.stream':
+            path = path.parent / (path.name + '.stream')
         self.save_header(path)
-        self.save_data(path + "~")
+        self.save_data(path.parent / (path.name + '~'))
 
 
 if __name__ == "__main__":
     stream = Stream()
-    stream.load("../../local/expert.audio.gemaps[480ms,40ms,480ms].stream")
+    stream.load(Path("../../local/novice.audio.gemaps[480ms,40ms,480ms].stream"))
 
     # modify data
-    stream.data = np.random.rand(sum([c.n for c in stream.chunks]), stream.dim).astype(np.float32)
+    stream.data = np.random.rand(sum([c.n for c in stream.chunks]), stream.dim).astype(
+        np.float32
+    )
     stream.ftype = FileTypes.ASCII
 
-    stream.save("../../local/expert.audio.gemaps[480ms,40ms,480ms]_modified.stream")
+    stream.save(Path("../../local/novice.audio.gemaps[480ms,40ms,480ms]_modified.stream"))
