@@ -4,24 +4,25 @@ from pathlib import Path
 
 class Trainer:
     def __init__(
-        self,
-        model_script_path: str = "",
-        model_option_path: str = "",
-        model_option_string: str = "",
-        model_weights_path: str = "",
-        model_stream: int = 0,
-        model_create: str = "PythonModel",
-        users: list = None,
-        classes: list = None,
-        streams: list = None,
-        register: list = None,
-        info_trained: bool = False,
-        meta_right_ctx: int = 0,
-        meta_left_ctx: int = 0,
-        meta_balance: str = "none",
-        meta_backend: str = "nova-server",
-        ssi_v="5",
-        xml_version="1.0",
+            self,
+            model_script_path: str = "",
+            model_option_path: str = "",
+            model_option_string: str = "",
+            model_weights_path: str = "",
+            model_stream: int = 0,
+            model_create: str = "PythonModel",
+            model_multirole_input = False,
+            users: list = None,
+            classes: list = None,
+            streams: list = None,
+            register: list = None,
+            info_trained: bool = False,
+            meta_right_ctx: int = 0,
+            meta_left_ctx: int = 0,
+            meta_balance: str = "none",
+            meta_backend: str = "nova-server",
+            ssi_v="5",
+            xml_version="1.0",
     ):
 
         self.model_script_path = model_script_path
@@ -41,6 +42,7 @@ class Trainer:
         self.meta_backend = meta_backend
         self.ssi_v = ssi_v
         self.xml_version = xml_version
+        self.model_multi_role_input = model_multirole_input
 
     def load_from_file(self, fp):
         root = ET.parse(Path(fp))
@@ -78,6 +80,7 @@ class Trainer:
             self.model_script_path = model.get("script", default="")
             self.model_weights_path = model.get("path", default="")
             self.model_optstr = model.get("optstr", default="")
+            self.model_multi_role_input = bool(model.get("multi_role_input", default=False))
 
     def write_to_file(self, fp):
         root = ET.Element("trainer")
