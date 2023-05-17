@@ -126,7 +126,17 @@ class Predictor(Processor):
         Example:
 
             Discrete annotation:
-                ...
+                ::
+
+                    {
+                        '0.0_1.0' : {
+                            'speaker_1.audio' : {'id': '1', 'conf': 0.73}
+                            'speaker_2.audio' : {'id': '0', conf: 1.0}
+                        }
+                        ...
+                        'values': [],
+                        'confidences': []
+                    }
 
             Continuous annotation:
                 ...
