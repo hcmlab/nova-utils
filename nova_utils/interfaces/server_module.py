@@ -5,7 +5,7 @@ import numpy as np
 
 REQUIREMENTS = []
 
-
+'''
 class Dataset(DatasetIterable):
     def __int__(self, *args, data: dict, **kwargs):
         super().__init__(*args, **kwargs)
@@ -22,7 +22,7 @@ class Dataset(DatasetIterable):
 
     def get_output_info(self):
         return ""
-
+'''
 
 class Processor(ABC):
     """
@@ -60,8 +60,12 @@ class Processor(ABC):
             logger.info("...done.")
 
     @abstractmethod
-    def preprocess_sample(self, sample):
-        """Preprocess data to convert between nova-server dataset iterator item to the raw model input as required in forward_sample."""
+    def preprocess_sample(self, sample: dict ):
+        """Preprocess data to convert between nova-server dataset iterator item to the raw model input as required in process_sample.
+
+        Args:
+            sample (dict):
+        """
         return sample
 
     @abstractmethod
@@ -125,7 +129,51 @@ class Predictor(Processor):
 
     @abstractmethod
     def to_anno(self, data):
-        """Converts the output of process_data to the correct annotation format to upload them to the database"""
+        """Converts the output of process_data to the correct annotation format to upload them to the database.
+        !THE OUTPUT FORMAT OF THIS FUNCTION IS NOT YET FULLY DEFINED AND WILL CHANGE IN FUTURE RELEASES!
+
+        Args:
+            data (object): Data output of process_data function
+
+        Returns:
+            dict: A dictionary containing the predictions of the model in the correct annotation format.
+
+
+        Example:
+
+            Discrete annotation:
+                ::
+
+                    {
+                        '0.0_1.0' : {
+                            'speaker_1.audio' : {'id': '1', 'conf': 0.73}
+                            'speaker_2.audio' : {'id': '0', conf: 1.0}
+                        }
+                        ...
+                        'values': [],
+                        'confidences': []
+                    }
+
+            Continuous annotation:
+                ...
+            Free annotation:
+                ::
+
+                    {
+                        '0.0_1.0' : {
+                            'speaker_1.audio' : {'name': 'Hello', 'conf': 0.73}
+                            'speaker_2.audio' : {'name': '', conf: 1.0}
+                        }
+                        '1.0_2.0' : {
+                            'speaker_1.audio' : {'name': 'My Name', 'conf': 0.85}}
+                            'speaker_2.audio' : {'name': '', conf: 1.0}
+                        }
+                        ...
+                        'values': [],
+                        'confidences': []
+                    }
+
+        """
         raise NotImplemented
 
 
@@ -146,18 +194,22 @@ class Extractor(Processor):
     @abstractmethod
     def to_stream(self, data: object) -> dict:
         """Converts the return value from process_data() to data stream chunk that can be processed by nova-server.
-        The output should have the following format:
 
         Args:
-            data (object):
+            data (object): The data as returned by the process_data function of the Processor class
 
-        Returns: A dictionary mapping a stream identifier (usually composed using the role, signal, extracted feature name and sliding window parameters) to a tuple containing a chunk of the data as well as additional information.
-        Each tuple has the form ( type (nova_types.DataTypes), sample_rate (int), data_chunk (numpy.ndarray) ). The shape of the data chunk should in the form of (n_frames, n_features)
+
+        Returns:
+            dict: A dictionary mapping a stream identifier (usually composed using the role, signal, extracted feature name and sliding window parameters) to a tuple containing a chunk of the data as well as additional information.
+        Each tuple has the form ( type (nova_types.DataTypes), sample_rate (double), data_chunk (numpy.ndarray) ). The shape of the data chunk should in the form of (n_frames, n_features)
         An arbitrary number of streams maybe returned.
-        An example for a returned dictionary may look like this:
-        {
-        speaker_1.audio.mfcc[10ms,10ms,10ms] : ( DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] )
-        speaker_2.audio.mfcc[10ms,10ms,10ms] : ( DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] )
-        }
+
+        Example:
+            ::
+
+                {
+                    'speaker_1.audio.mfcc[10ms,10ms,10ms]' : ( DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] ),
+                    'speaker_2.audio.mfcc[10ms,10ms,10ms]' : ( DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] )
+                }
         """
         raise NotImplemented
