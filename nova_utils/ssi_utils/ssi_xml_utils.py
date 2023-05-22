@@ -24,6 +24,7 @@ class Trainer:
         xml_version="1.0",
     ):
 
+        self.model_multi_role_input = None
         self.model_script_path = model_script_path
         self.model_option_path = model_option_path
         self.model_optstr = model_option_string

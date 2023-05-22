@@ -35,15 +35,29 @@ class Processor(ABC):
     # Flag to indicate whether the processed input belongs to one role or to multiple roles
     SINGLE_ROLE_INPUT = True
 
-
-
     def __init__(self, logger, request_form=None):
         self.logger = logger
         self.request_form = request_form
-        self.options = {"input_1": None}
         self.model = None
         self.data = None
         self.output = None
+        self.options = {}
+
+        if self.request_form is not None:
+            # Set Options
+            logger.info("Setting options...")
+            if not request_form["optStr"] == "":
+                for k, v in dict(
+                        option.split("=") for option in request_form["optStr"].split(";")
+                ).items():
+                    if v in ("True", "False"):
+                        self.options[k] = True if v == "True" else False
+                    elif v == "None":
+                        self.options[k] = True if v == "True" else False
+                    else:
+                        self.options[k] = v
+                    logger.info(k + "=" + v)
+            logger.info("...done.")
 
     @abstractmethod
     def preprocess_sample(self, sample):
