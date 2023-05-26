@@ -5,6 +5,15 @@ import numpy as np
 import csv
 from struct import *
 
+class LabelDataType(Enum):
+    DISCRETE =  {'names':('from', 'to', 'class', 'conf'),
+                 'formats':(np.float32, np.float32, np.int32, np.float32)}
+
+    FREE = dt = {'names':('from', 'to', 'name', 'conf'),
+                 'formats':(np.float64, np.float64, np.object_, np.float32)}
+
+    CONTINUOUS = {'names':('score', 'conf'),
+                       'formats':(np.float32, np.float32)}
 
 class SchemeType(Enum):
     DISCRETE = 0
@@ -12,14 +21,17 @@ class SchemeType(Enum):
     FREE = 2
 
 class Scheme:
-    def __init__(self, name : str ="", type: SchemeType = "", sr: float = 0, min: float = 0, max: float = 0, classes: dict = None ):
+    def __init__(self, name : str ="", type: SchemeType = SchemeType.DISCRETE, sr: float = 0, min: float = 0, max: float = 0, classes: dict = None ):
         self.name = name
         self.type = type
         self.sr = sr
         self.min = min
         self.max = max
         self.classes = classes if classes else {}
+        self.dtype = None
 
+    def get_dtype(self):
+        return LabelDataType[self.type.name].value
 class Anno:
     ftype: FileTypes
 
@@ -76,7 +88,7 @@ class Anno:
                     self.scheme.classes[id] = class_name
 
     def load_data_discrete(self, path):
-        dt = {'names':('from', 'to', 'class', 'confidence'),
+        dt = {'names':('from', 'to', 'class', 'conf'),
                           'formats':(np.float32, np.float32, np.int32, np.float32)}
         if self.ftype == FileTypes.ASCII:
             self.data = np.loadtxt(path, dtype=dt, delimiter=';')
@@ -86,7 +98,7 @@ class Anno:
             raise ValueError('FileType {} not supported'.format(self.ftype))
 
     def load_data_continuous(self, path):
-        dt = {'names':('score', 'confidence'),
+        dt = {'names':('score', 'conf'),
                           'formats':(np.float32, np.float32)}
         if self.ftype == FileTypes.ASCII:
             self.data = np.loadtxt(path, dtype=dt, delimiter=';')
@@ -98,7 +110,7 @@ class Anno:
     def load_data_free(self, path):
 
         data = []
-        dt = {'names':('from', 'to', 'name', 'confidence'),
+        dt = {'names':('from', 'to', 'name', 'conf'),
               'formats':(np.float64, np.float64, np.object_, np.float32)}
 
         if self.ftype == FileTypes.ASCII:

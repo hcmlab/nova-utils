@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from nova_utils.interfaces.dataset_iterable import DatasetIterable
-from nova_utils.db_utils.nova_types import DataTypes
-import numpy as np
+
+from nova_utils.ssi_utils.ssi_anno_utils import Anno
+
 
 REQUIREMENTS = []
 
@@ -128,7 +128,7 @@ class Predictor(Processor):
         super().__init__(logger, request_form)
 
     @abstractmethod
-    def to_anno(self, data):
+    def to_anno(self, data) -> list[Anno]:
         """Converts the output of process_data to the correct annotation format to upload them to the database.
         !THE OUTPUT FORMAT OF THIS FUNCTION IS NOT YET FULLY DEFINED AND WILL CHANGE IN FUTURE RELEASES!
 
@@ -136,43 +136,7 @@ class Predictor(Processor):
             data (object): Data output of process_data function
 
         Returns:
-            dict: A dictionary containing the predictions of the model in the correct annotation format.
-
-
-        Example:
-
-            Discrete annotation:
-                ::
-
-                    {
-                        '0.0_1.0' : {
-                            'speaker_1.audio' : {'id': '1', 'conf': 0.73}
-                            'speaker_2.audio' : {'id': '0', conf: 1.0}
-                        }
-                        ...
-                        'values': [],
-                        'confidences': []
-                    }
-
-            Continuous annotation:
-                ...
-            Free annotation:
-                ::
-
-                    {
-                        '0.0_1.0' : {
-                            'speaker_1.audio' : {'name': 'Hello', 'conf': 0.73}
-                            'speaker_2.audio' : {'name': '', conf: 1.0}
-                        }
-                        '1.0_2.0' : {
-                            'speaker_1.audio' : {'name': 'My Name', 'conf': 0.85}}
-                            'speaker_2.audio' : {'name': '', conf: 1.0}
-                        }
-                        ...
-                        'values': [],
-                        'confidences': []
-                    }
-
+            list: A list of annotation objects
         """
         raise NotImplemented
 
@@ -208,8 +172,8 @@ class Extractor(Processor):
             ::
 
                 {
-                    'speaker_1.audio.mfcc[10ms,10ms,10ms]' : ( DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] ),
-                    'speaker_2.audio.mfcc[10ms,10ms,10ms]' : ( DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] )
+                    'speaker_1.audio.mfcc[10ms,10ms,10ms]' : ( nova_utils.db_utils.nova_types.DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] ),
+                    'speaker_2.audio.mfcc[10ms,10ms,10ms]' : ( nova_utils.db_utils.nova_types.DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] )
                 }
         """
         raise NotImplemented
