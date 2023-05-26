@@ -77,7 +77,7 @@ class Anno:
 
     def load_data_discrete(self, path):
         dt = {'names':('from', 'to', 'class', 'confidence'),
-                          'formats':('f8', 'f8', 'i4', 'f4')}
+                          'formats':(np.float32, np.float32, np.int32, np.float32)}
         if self.ftype == FileTypes.ASCII:
             self.data = np.loadtxt(path, dtype=dt, delimiter=';')
         elif self.ftype == FileTypes.BINARY:
@@ -87,7 +87,7 @@ class Anno:
 
     def load_data_continuous(self, path):
         dt = {'names':('score', 'confidence'),
-                          'formats':('f4', 'f4')}
+                          'formats':(np.float32, np.float32)}
         if self.ftype == FileTypes.ASCII:
             self.data = np.loadtxt(path, dtype=dt, delimiter=';')
         elif self.ftype == FileTypes.BINARY:
@@ -98,6 +98,8 @@ class Anno:
     def load_data_free(self, path):
 
         data = []
+        dt = {'names':('from', 'to', 'name', 'confidence'),
+              'formats':(np.float64, np.float64, np.object_, np.float32)}
 
         if self.ftype == FileTypes.ASCII:
             with open(path, "r") as ascii_file:
@@ -131,8 +133,6 @@ class Anno:
         else:
             raise ValueError('FileType {} not supported'.format(self.ftype))
 
-        dt = {'names':('from', 'to', 'name', 'confidence'),
-                          'formats':(np.float64, np.float64, np.object_, np.float32)}
         self.data = np.array(data, dt)
 
     def load_data(self, path):
