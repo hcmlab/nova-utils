@@ -6,30 +6,38 @@ import csv
 from struct import *
 
 
-class SchemeTypes(Enum):
+class SchemeType(Enum):
     DISCRETE = 0
     CONTINUOUS = 1
     FREE = 2
 
 class Scheme:
-    #def __init__(self, name="", type="", sr=0, min=0, max=0):
-    def __init__(self):
-        self.name = ""
-        self.type = ""
-        self.sr = 0
-        self.min = 0
-        self.max = 0
-        self.classes = {}
+    def __init__(self, name : str ="", type: SchemeType = "", sr: float = 0, min: float = 0, max: float = 0, classes: dict = None ):
+        self.name = name
+        self.type = type
+        self.sr = sr
+        self.min = min
+        self.max = max
+        self.classes = classes if classes else {}
 
 class Anno:
+    ftype: FileTypes
+
     #def __init__(self, ftype="UNDEF", size=0, role="", annotator=""):
-    def __init__(self):    
-        self.ftype = string_to_enum(FileTypes, "UNDEF")
-        self.size = 0
-        self.role = ""
-        self.annotator = ""
-        self.data = None
-        self.scheme = Scheme()
+    def __init__(self,
+                 ftype: FileTypes = FileTypes.UNDEF,
+                 size: int = 0,
+                 role: str = "",
+                 annotator: str = "",
+                 data: list = None,
+                 scheme: Scheme = None
+                 ):
+        self.ftype = ftype
+        self.size = size
+        self.role = role
+        self.annotator = annotator
+        self.data = data
+        self.scheme = scheme if scheme else Scheme()
 
     def load_header(self, path):
         tree = ET.parse(path)
@@ -51,14 +59,14 @@ class Anno:
                     if key == 'name':
                         self.scheme.name = val
                     if key == 'type':
-                        self.scheme.type = string_to_enum(SchemeTypes, val)
+                        self.scheme.type = string_to_enum(SchemeType, val)
                     if key == 'sr':
                         self.scheme.sr = float(val)
                     if key == 'min':
                         self.scheme.min = int(val)
                     if key == 'max':
                         self.scheme.max = int(val)
-            if child.tag == 'scheme' and self.scheme.type == SchemeTypes.DISCRETE :
+            if child.tag == 'scheme' and self.scheme.type == SchemeType.DISCRETE :
                 for item in child:              
                     for key,val in item.attrib.items():
                         if key == "name":
@@ -97,15 +105,9 @@ class Anno:
                 for row in ascii_file_reader:
                     f = float(row[0])
                     t = float(row[1])
-                    l = row[2]
+                    n = row[2]
                     c = float(row[3])
-                    if not l in self.scheme.classes.values():
-                        if len(self.scheme.classes) == 0:
-                            v = 0
-                        else:
-                            v = max(self.scheme.classes.keys()) + 1 
-                        self.scheme.classes[v] = l
-                    data.append((f,t,v,c))
+                    data.append((f,t,n,c))
 
         elif self.ftype == FileTypes.BINARY:
             with open(path, "rb") as binary_file:
@@ -120,31 +122,25 @@ class Anno:
                     #length of label (4byte uint)
                     lol = unpack('i', binary_file.read(4))[0]
                     #the label (lol * byte)
-                    l = binary_file.read(lol).decode("ISO-8859-1") 
+                    n = binary_file.read(lol).decode("ISO-8859-1")
                     #confidence (4Byte float)
                     c = unpack('f', binary_file.read(4))[0]
-                 
-                    if not l in self.scheme.classes.values():
-                        if len(self.scheme.classes) == 0:
-                            v = 0
-                        else:
-                            v = max(self.scheme.classes.keys()) + 1 
-                        self.scheme.classes[v] = l
-                    data.append((f,t,v,c))
+
+                    data.append((f,t,n,c))
                     counter += 1
         else:
             raise ValueError('FileType {} not supported'.format(self.ftype))
 
-        dt = {'names':('from', 'to', 'label_id', 'confidence'),
-                          'formats':('f8', 'f8', 'i4', 'f4')}
+        dt = {'names':('from', 'to', 'name', 'confidence'),
+                          'formats':(np.float64, np.float64, np.object_, np.float32)}
         self.data = np.array(data, dt)
 
     def load_data(self, path):
-        if self.scheme.type == SchemeTypes.DISCRETE:
+        if self.scheme.type == SchemeType.DISCRETE:
             self.load_data_discrete(path)
-        elif self.scheme.type == SchemeTypes.CONTINUOUS:
+        elif self.scheme.type == SchemeType.CONTINUOUS:
             self.load_data_continuous(path)
-        elif self.scheme.type == SchemeTypes.FREE:
+        elif self.scheme.type == SchemeType.FREE:
             self.load_data_free(path)
         else:
             raise ValueError('SchemeType {} not supported'.format(self.scheme.type))
