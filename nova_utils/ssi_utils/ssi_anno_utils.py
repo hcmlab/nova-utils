@@ -6,14 +6,12 @@ import csv
 from struct import *
 
 class LabelDataType(Enum):
-    DISCRETE =  {'names':('from', 'to', 'class', 'conf'),
-                 'formats':(np.float32, np.float32, np.int32, np.float32)}
+    DISCRETE = np.dtype([('from', np.float64), ('to', np.float64), ('class', np.int32), ('conf', np.float32)])       #{'names':('from', 'to', 'name', 'conf'),
 
-    FREE = dt = {'names':('from', 'to', 'name', 'conf'),
-                 'formats':(np.float64, np.float64, np.object_, np.float32)}
+    FREE = np.dtype([('from', np.float64), ('to', np.float64), ('name', np.object_), ('conf', np.float32)])
 
-    CONTINUOUS = {'names':('score', 'conf'),
-                       'formats':(np.float32, np.float32)}
+    CONTINUOUS = np.dtype([('score', np.float32), ('conf', np.float32)])
+
 
 class SchemeType(Enum):
     DISCRETE = 0
@@ -32,6 +30,7 @@ class Scheme:
 
     def get_dtype(self):
         return LabelDataType[self.type.name].value
+
 class Anno:
     ftype: FileTypes
 
@@ -48,8 +47,37 @@ class Anno:
         self.size = size
         self.role = role
         self.annotator = annotator
-        self.data = data
         self.scheme = scheme if scheme else Scheme()
+        self.data = None
+        self.set_data(data)
+
+    def _verify_data_format(self, data: np.array):
+        assert len(data) > 0
+        if self.scheme.type == SchemeType.DISCRETE:
+            data.dtype = LabelDataType.DISCRETE.value
+        if self.scheme.type == SchemeType.CONTINUOUS:
+            data.dtype = LabelDataType.CONTINUOUS.value
+        if self.scheme.type == SchemeType.FREE:
+            data.dtype = LabelDataType.FREE.value
+
+        return True
+
+
+    def set_data(self, data: [np.array, list]):
+        """
+        Helper function to add data to an existing annotation. This function checks the format of the array and sets additional attributes (e.g. min and max value if necesary).
+        Needs to be called after the scheme has been set initialized. If the input is passed as a list the function will try to convert it to an np.array.
+        Args:
+            data (np.array, list): The annotation data to set
+        """
+
+        assert self.scheme is not None and self.scheme.type is not None
+        if type(data) is list:
+            data  = np.asarray(data, self.scheme.get_dtype())
+
+        if self._verify_data_format(data):
+            self.data = data
+
 
     def load_header(self, path):
         tree = ET.parse(path)
