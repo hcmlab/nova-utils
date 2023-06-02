@@ -46,7 +46,7 @@ class Processor(ABC):
         if self.request_form is not None:
             # Set Options
             logger.info("Setting options...")
-            if not request_form["optStr"] == "":
+            if request_form.get("optStr"):
                 for k, v in dict(
                         option.split("=") for option in request_form["optStr"].split(";")
                 ).items():
