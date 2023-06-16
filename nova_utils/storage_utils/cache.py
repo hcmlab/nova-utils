@@ -8,7 +8,7 @@ from pathlib import Path
 
 def retreive_from_url(url, fp):
 
-    with requests.get(url, stream=True) as r:
+    with requests.get(url, stream=True, headers={'Accept-Encoding': None}) as r:
 
         # check header to get content length, in bytes
         total_length = int(r.headers.get("Content-Length"))

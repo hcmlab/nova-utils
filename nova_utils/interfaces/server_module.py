@@ -5,25 +5,6 @@ from nova_utils.ssi_utils.ssi_anno_utils import Anno
 
 REQUIREMENTS = []
 
-'''
-class Dataset(DatasetIterable):
-    def __int__(self, *args, data: dict, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.counter = 0
-        self.data = data
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        data = self.data["counter"]
-        self.counter += 1
-        return data
-
-    def get_output_info(self):
-        return ""
-'''
-
 class Processor(ABC):
     """
     Base class of a data processor. This interface builds the foundation for all data processing classes.
