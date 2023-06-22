@@ -11,7 +11,7 @@ def retreive_from_url(url, fp):
     with requests.get(url, stream=True, headers={'Accept-Encoding': None}) as r:
 
         # check header to get content length, in bytes
-        total_length = int(r.headers.get("Content-Length"))
+        total_length = int(r.headers.get("Content-Length"),0)
 
         # implement progress bar via tqdm
         with tqdm.wrapattr(r.raw, "read", total=total_length, desc="")as raw:
@@ -35,3 +35,6 @@ def retreive_and_unzip(url, extract_to='./tmp', tmp_dir='./tmp'):
 
     with ZipFile(tmp_file) as zObject:
         zObject.extractall(path=Path(extract_to))
+
+if __name__ == '__main__':
+    retreive_from_url("https://github.com/saveli/syncpy/archive/refs/heads/master.zip",'blub.zip')
