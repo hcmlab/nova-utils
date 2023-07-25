@@ -11,7 +11,7 @@ class LabelDataType(Enum):
         [
             ("from", np.float64),
             ("to", np.float64),
-            ("class", np.int32),
+            ("id", np.int32),
             ("conf", np.float32),
         ]
     )  # {'names':('from', 'to', 'name', 'conf'),
