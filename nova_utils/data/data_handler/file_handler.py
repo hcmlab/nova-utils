@@ -1,11 +1,10 @@
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as Et
 import numpy as np
 import csv
 from struct import *
 from nova_utils.data.ssi_data_types import FileTypes
-from abc import ABC, abstractmethod
 from pathlib import Path
-from nova_utils.data.idata import IData
+from nova_utils.data.data_handler.ihandler import IHandler
 from nova_utils.data.annotation import (
     LabelType,
     SchemeType,
@@ -18,40 +17,10 @@ from nova_utils.data.annotation import (
     FreeAnnotationScheme,
 )
 
-
-class IFileHandler(ABC):
-    """Abstract base class for IO FIle handling"""
-    @abstractmethod
-    def save(self, data: IData, file_path: Path):
-        """
-       Abstract method for saving annotation data to a file.
-
-       Parameters:
-           data (IData): The annotation data to be saved.
-           file_path (Path): The file path to save the annotation data.
-
-       Returns:
-           None
-       """
-        pass
-
-    @abstractmethod
-    def load(self, file_path: Path):
-        """
-        Abstract method for loading annotation data from a file.
-
-        Parameters:
-            file_path (Path): The file path from which to load the annotation data.
-
-        Returns:
-            IAnnotation: The loaded annotation data as an IAnnotation object.
-        """
-        pass
-
-
-class AnnotationFileHandler(IFileHandler):
+class AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
-    def _load_data_discrete(self, path, ftype):
+    @staticmethod
+    def _load_data_discrete(path, ftype):
         """
        Load discrete annotation data from a file.
 
@@ -70,7 +39,8 @@ class AnnotationFileHandler(IFileHandler):
         else:
             raise ValueError("FileType {} not supported".format(ftype))
 
-    def _load_data_continuous(self, path, ftype):
+    @staticmethod
+    def _load_data_continuous(path, ftype):
         """
         Load continuous annotation data from a file.
 
@@ -89,7 +59,8 @@ class AnnotationFileHandler(IFileHandler):
         else:
             raise ValueError("FileType {} not supported".format(ftype))
 
-    def _load_data_free(self, path, ftype, size):
+    @staticmethod
+    def _load_data_free(path, ftype, size):
         """
         Load free annotation data from a file.
 
@@ -136,7 +107,8 @@ class AnnotationFileHandler(IFileHandler):
 
         return np.array(data, LabelType.FREE.value)
 
-    def _str_format_from_dtype(self, dtype: np.dtype):
+    @staticmethod
+    def _str_format_from_dtype(dtype: np.dtype):
         """
        Generate a string format for a given numpy dtype.
 
@@ -163,7 +135,7 @@ class AnnotationFileHandler(IFileHandler):
 
         return fmt
 
-    def load(self, fp):
+    def load(self, fp) -> IAnnotation:
         """
         Load annotation data from an XML file.
 
@@ -174,7 +146,7 @@ class AnnotationFileHandler(IFileHandler):
             IAnnotation: The loaded annotation data as an IAnnotation object.
         """
         data_path = fp.with_suffix(fp.suffix + "~")
-        tree = ET.parse(fp)
+        tree = Et.parse(fp)
 
         # info
         info = tree.find("info")
@@ -190,14 +162,12 @@ class AnnotationFileHandler(IFileHandler):
         scheme = tree.find("scheme")
         scheme_name = scheme.get("name")
         scheme_type = scheme.get("type")
-        scheme_classes = {}
 
         # TODO: Nova Annotations do export a 'color' column where ssi annotations do not. Account for this
         # anno object
-        annotation = None
-
         # discrete scheme
         if scheme_type == SchemeType.DISCRETE.name:
+            scheme_classes = {}
             for item in scheme:
                 scheme_classes[item.get("id")] = item.get("name")
             anno_data = self._load_data_discrete(data_path, ftype)
@@ -247,16 +217,16 @@ class AnnotationFileHandler(IFileHandler):
         data_path = fp.with_suffix(fp.suffix + "~")
 
         # header
-        root = ET.Element("annotation", attrib={"ssi-v ": "3"})
+        root = Et.Element("annotation", attrib={"ssi-v ": "3"})
 
         # info
         size = str(len(anno.data))
-        ET.SubElement(root, "info", attrib={"ftype": ftype.name, "size": size})
+        Et.SubElement(root, "info", attrib={"ftype": ftype.name, "size": size})
 
         # meta
-        role = anno.role
-        annotator = anno.annotator
-        ET.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
+        role = anno.meta_info.role
+        annotator = anno.meta_info.annotator
+        Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
 
         # scheme
         scheme_name = anno.annotation_scheme.name
@@ -264,17 +234,17 @@ class AnnotationFileHandler(IFileHandler):
 
         if scheme_type == SchemeType.DISCRETE:
             anno: DiscreteAnnotation
-            scheme = ET.SubElement(
+            scheme = Et.SubElement(
                 root, "scheme", attrib={"name": scheme_name, "type": scheme_type.name}
             )
             for class_id, class_name in anno.annotation_scheme.classes.items():
-                ET.SubElement(
+                Et.SubElement(
                     scheme, "item", attrib={"name": class_name, "id": class_id}
                 )
 
         elif scheme_type == SchemeType.CONTINUOUS:
             anno: ContinuousAnnotation
-            ET.SubElement(
+            Et.SubElement(
                 root,
                 "scheme",
                 attrib={
@@ -290,7 +260,7 @@ class AnnotationFileHandler(IFileHandler):
             if ftype == FileTypes.BINARY:
                 raise TypeError("Binary output format is not supported for free annotation schemes")
             anno: FreeAnnotation
-            ET.SubElement(
+            Et.SubElement(
                 root,
                 "scheme",
                 attrib={
@@ -301,8 +271,8 @@ class AnnotationFileHandler(IFileHandler):
         else:
             raise TypeError(f"Unknown scheme type {type}")
 
-        root = ET.ElementTree(root)
-        ET.indent(root, space="    ", level=0)
+        root = Et.ElementTree(root)
+        Et.indent(root, space="    ", level=0)
         root.write(fp)
 
         # save data
@@ -315,7 +285,7 @@ class AnnotationFileHandler(IFileHandler):
 
 if __name__ == "__main__":
 
-    """TESTCASE FOR ANNOATIONS"""
+    """TESTCASE FOR ANNOTATIONS"""
 
     base_dir = Path("../../../test_files/")
     afh = AnnotationFileHandler()

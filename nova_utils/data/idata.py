@@ -21,21 +21,26 @@ class DataType(Enum):
     ANNOTATION_POINT = 7
     ANNOTATION_DISCRETE_POLYGON = 8
 
+class MetaInfo():
+    def __init__(self, role:str = None, dataset:str = None, session:str = None):
+        self.role = role
+        self.dataset = dataset
+        self.session = session
+
 class IData(ABC):
     ''' Abstract base class for all data types '''
 
-    def __init__(self, role: str = None, data: np.ndarray = None):
-        self.role = role
-        self.data = data
-        #self.sample_shape = sample_shape  / sample_shape: tuple[int, ...] = None
+    def __init__(self, data: np.ndarray = None, meta_info : MetaInfo = None):
+        self._data = data
+        self._meta_info = meta_info
 
     @property
-    def role(self) -> str:
-        return self._role
+    def meta_info(self) -> MetaInfo:
+        return self._meta_info
 
-    @role.setter
-    def role(self, value):
-        self._role = value
+    @meta_info.setter
+    def meta_info(self, value):
+        self._meta_info = value
 
     @property
     def data(self) -> np.ndarray:
