@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 import numpy as np
-from nova_utils.ssi_utils.ssi_data_types import NPDataTypes, FileTypes, string_to_enum
+from nova_utils.deprecated_ssi_utils.ssi_data_types import NPDataTypes, FileTypes, string_to_enum
 from pathlib import Path
 
 class Chunk:

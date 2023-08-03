@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import numpy as np
-from nova_utils.ssi_utils.ssi_data_types import FileTypes, string_to_enum
-from nova_utils.ssi_utils.ssi_stream_utils import Stream
+from nova_utils.deprecated_ssi_utils.ssi_data_types import FileTypes, string_to_enum
+from nova_utils.deprecated_ssi_utils.ssi_stream_utils import Stream
 import os
 
 class Sample:

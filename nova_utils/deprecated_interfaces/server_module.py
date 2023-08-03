@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from nova_utils.ssi_utils.ssi_anno_utils import Anno
+from nova_utils.deprecated_ssi_utils.ssi_anno_utils import Anno
 
 
 REQUIREMENTS = []
