@@ -56,7 +56,7 @@ class AnnotationMongoHandler(MongoHandler):
     Class for handling download of annotation data from Mongo db.
     """
 
-    def _get_annotation(
+    def _load_annotation(
         self,
         dataset: str,
         session: str,
@@ -128,46 +128,97 @@ class AnnotationMongoHandler(MongoHandler):
         return result[0]
 
     def _update_annotation(
-        self, dataset: str, anno_id: ObjectId, anno_data_id: ObjectId, anno: IAnnotation
-    ) -> tuple[UpdateResult, UpdateResult]:
+        self,
+        dataset: str,
+        annotation_id: ObjectId,
+        annotation_data_id: ObjectId,
+        annotation_data: list,
+        is_finished: bool,
+        is_locked: bool,
+    ) -> UpdateResult:
 
-        # Todo consider mechanism to also update isLocked and isFinished attributes
-        update_query_annotation = {"$set": {"date": datetime.now()}}
-        update_query_annotation_data = {
+        update_query_annotation = {
             "$set": {
-                "labels": [
-                    dict(zip(anno.annotation_scheme.label_dtype.names, ad.item()))
-                    for ad in anno.data
-                ]
+                "date": datetime.now(),
+                "isFinished": is_finished,
+                "isLocked": is_locked,
             }
         }
-        result_anno = self.client[dataset][ANNOTATION_COLLECTION].update_one(
-            {"_id": anno_id}, update_query_annotation
-        )
-        result_anno_data = self.client[dataset][ANNOTATION_DATA_COLLECTION].update_one(
-            {"_id": anno_data_id}, update_query_annotation_data
+        update_query_annotation_data = {"$set": {"labels": annotation_data}}
+        success = self.client[dataset][ANNOTATION_COLLECTION].update_one(
+            {"_id": annotation_id}, update_query_annotation
         )
 
-        return (result_anno, result_anno_data)
+        if not success.acknowledged:
+            return success
 
-    def _insert_annotation_data(
-        self, dataset: str, annotation_data_doc: dict
-    ) -> InsertOneResult:
-        result = self.client[dataset][ANNOTATION_DATA_COLLECTION].insert_one(
-            annotation_data_doc
+        success = self.client[dataset][ANNOTATION_DATA_COLLECTION].update_one(
+            {"_id": annotation_data_id}, update_query_annotation_data
         )
-        return result
+
+        return success
+
+    def _insert_annotation_data(self, dataset: str, data: list) -> InsertOneResult:
+
+        annotation_data = {"labels": data}
+
+        success = self.client[dataset][ANNOTATION_DATA_COLLECTION].insert_one(
+            annotation_data
+        )
+        return success
+
+    def _insert_annotation(
+        self,
+        dataset: str,
+        session_id: ObjectId,
+        annotator_id: ObjectId,
+        scheme_id: ObjectId,
+        role_id: ObjectId,
+        data: list,
+        is_finished: bool,
+        is_locked: bool,
+    ):
+
+        # insert annotation data first
+        success = self._insert_annotation_data(dataset, data)
+        if not success.acknowledged:
+            return success
+        else:
+            data_id = success.inserted_id
+
+        # insert annotation object
+        annotation_document = {
+            "session_id": session_id,
+            "annotator_id": annotator_id,
+            "scheme_id": scheme_id,
+            "role_id": role_id,
+            "date": datetime.now(),
+            "isFinished": is_finished,
+            "isLocked": is_locked,
+            "data_id": data_id,
+        }
+        success = self.client[dataset][ANNOTATION_COLLECTION].insert_one(
+            annotation_document
+        )
+
+        # if the annotation could not be created we delete the annotation data as well
+        if not success.acknowledged:
+            success = self.client[dataset][ANNOTATION_DATA_COLLECTION].delete_one(
+                {"_id": data_id}
+            )
+
+        return success
 
     def load(
         self, dataset: str, scheme: str, session: str, annotator: str, role: str
     ) -> IAnnotation:
 
         # load annotation from mongo db
-        anno_doc = self._get_annotation(dataset, session, annotator, role, scheme)
+        anno_doc = self._load_annotation(dataset, session, annotator, role, scheme)
 
         if not anno_doc:
             raise FileNotFoundError(
-                f"Can't overwrite locked annotation \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}"
+                f"Annotation not found \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}"
             )
 
         (anno_data_doc,) = anno_doc["data"]
@@ -252,15 +303,7 @@ class AnnotationMongoHandler(MongoHandler):
         is_locked: bool = False,
         overwrite: bool = False,
     ):
-        """
-        Save annotation data to Mongo db.
 
-        Parameters:
-            annotation_data (List[AnnotationData]): A list of annotation data objects to save.
-
-        Returns:
-            None
-        """
         # overwrite default values
         dataset = dataset if dataset else annotation.meta_info.dataset
         session = session if session else annotation.meta_info.session
@@ -269,9 +312,13 @@ class AnnotationMongoHandler(MongoHandler):
         scheme = annotation.annotation_scheme.name
 
         # TODO check for none values
+        anno_data = [
+            dict(zip(annotation.annotation_scheme.label_dtype.names, ad.item()))
+            for ad in annotation.data
+        ]
 
-        # get documents
-        anno_doc = self._get_annotation(
+        # load annotation to check if an annotation for the provided criteria already exists in the database
+        anno_doc = self._load_annotation(
             dataset,
             session,
             annotator,
@@ -280,7 +327,7 @@ class AnnotationMongoHandler(MongoHandler):
             project={"_id": 1, "isLocked": 1, "data_id": 1},
         )
 
-        # if anno already exists
+        # update existing annotations
         if anno_doc:
             if anno_doc["isLocked"]:
                 warnings.warn(
@@ -296,52 +343,42 @@ class AnnotationMongoHandler(MongoHandler):
                 warnings.warn(
                     f"Overwriting existing annotation \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}"
                 )
+
                 success = self._update_annotation(
-                    dataset,
-                    anno_id=anno_doc["_id"],
-                    anno_data_id=anno_doc["data_id"],
-                    anno=annotation,
+                    dataset=dataset,
+                    annotation_id=anno_doc["_id"],
+                    annotation_data_id=anno_doc["data_id"],
+                    annotation_data=anno_data,
+                    is_finished=is_finished,
+                    is_locked=is_locked,
                 )
-                return success
 
-        # TODO: Do it!
-
-        # new anno
+        # add new annotation
         else:
-            success = self._insert_annotation_data(dataset, anno_data_doc)
-            if not success.acknowledged:
-                warnings.warn(
-                    f"Unexpected error uploading annotation \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}"
-                )
-                return None
-            else:
-                anno_data_doc_id = success.inserted_id
-
-            anno_doc = {
-                "data_id": anno_data_doc_id,
-                "annotator_id": annotator_doc[_id],
-                "role_id": mongo_role[0]["_id"],
-                "scheme_id": mongo_scheme[0]["_id"],
-                "session_id": mongo_session[0]["_id"],
-                "isFinished": is_finished,
-                "isLocked": is_locked,
-                "date": datetime.today().replace(microsecond=0),
-            }
-
-        success = self.update_doc_by_prop(
-            doc=mongo_label_doc,
-            database=database,
-            collection=self.ANNOTATION_DATA_COLLECTION,
-        )
-        if not success.acknowledged:
-            warnings.warn(
-                f"Unknown error update database entries for Annotation data {mongo_data_id}"
+            scheme_id = self.client[dataset][SCHEME_COLLECTION].find_one(
+                {"name": scheme}
+            )["_id"]
+            session_id = self.client[dataset][SESSION_COLLECTION].find_one(
+                {"name": session}
+            )["_id"]
+            role_id = self.client[dataset][ROLE_COLLECTION].find_one({"name": role})[
+                "_id"
+            ]
+            annotator_id = self.client[dataset][ANNOTATOR_COLLECTION].find_one(
+                {"name": annotator}
+            )["_id"]
+            success = self._insert_annotation(
+                dataset=dataset,
+                scheme_id=scheme_id,
+                session_id=session_id,
+                annotator_id=annotator_id,
+                role_id=role_id,
+                data=anno_data,
+                is_finished=is_finished,
+                is_locked=is_locked,
             )
-            return ""
-        else:
-            data_id = mongo_data_id
 
-        # anno_data_doc = self._get_annotation_data(dataset, anno_doc["data_id"])
+        # TODO success error handling
 
 
 class StreamDataHandler(MongoHandler):
@@ -402,7 +439,7 @@ if __name__ == "__main__":
         scheme="diarization",
         annotator="schildom",
         session="04_Oesterreich_test",
-        role="testrole",
+        role="testrole2",
     )
     t_stop = perf_counter()
     print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
@@ -430,4 +467,20 @@ if __name__ == "__main__":
     print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))
 
     # save
-    amh.save(discrete_anno, overwrite=True)
+    fs = "Saving {} took {}ms"
+    t_start = perf_counter()
+    amh.save(discrete_anno, annotator="testuser", overwrite=True)
+    t_stop = perf_counter()
+    print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
+
+    fs = "Saving {} took {}ms"
+    t_start = perf_counter()
+    amh.save(continuous_anno, annotator="testuser", overwrite=True)
+    t_stop = perf_counter()
+    print(fs.format("Continuous annotation", int((t_stop - t_start) * 1000)))
+
+    fs = "Saving {} took {}ms"
+    t_start = perf_counter()
+    amh.save(free_anno, annotator="testuser", overwrite=True)
+    t_stop = perf_counter()
+    print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))

@@ -364,7 +364,7 @@ if __name__ == "__main__":
         data=free_data,
         annotation_scheme=free_scheme,
     )
-    pass
+
 
 
 # TODO: Rework
