@@ -3,11 +3,9 @@ import sys
 from abc import ABC, abstractmethod
 from numpy import dtype
 from enum import Enum
-from nova_utils.data.idata import IDynamicData, MetaInfo
+from nova_utils.data.idata import IDynamicData, MetaData
 from nova_utils.utils.anno_utils import get_overlap, get_anno_majority, is_garbage
 import pandas as pd
-
-
 
 # Schemes
 class SchemeType(Enum):
@@ -37,7 +35,7 @@ class LabelType(Enum):
         ]
     )
 
-class AnnoMetaInfo(MetaInfo):
+class AnnoMetaData(MetaData):
     def __init__(self, *args, annotator: str = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.annotator = annotator
@@ -139,7 +137,7 @@ class IAnnotation(IDynamicData):
             annotator (str, optional): The annotator's name.
         """
         super().__init__(*args, **kwargs)
-        self.meta_info = AnnoMetaInfo(role=role, annotator=annotator, session=session, dataset=dataset)
+        self.meta_data = AnnoMetaData(role=role, annotator=annotator, session=session, dataset=dataset)
         self.annotation_scheme = annotation_scheme
 
     @property
@@ -153,13 +151,13 @@ class IAnnotation(IDynamicData):
         self._annotation_scheme = value
 
     @property
-    def meta_info(self) -> AnnoMetaInfo:
+    def meta_info(self) -> AnnoMetaData:
         return self._meta_info
 
     @meta_info.setter
-    def meta_info(self, value):
-        if not isinstance(value, AnnoMetaInfo):
-            raise TypeError(f"Expecting {AnnoMetaInfo}, got {type(value)}.")
+    def meta_data(self, value):
+        if not isinstance(value, AnnoMetaData):
+            raise TypeError(f"Expecting {AnnoMetaData}, got {type(value)}.")
         self._meta_info = value
 
 class DiscreteAnnotation(IAnnotation):

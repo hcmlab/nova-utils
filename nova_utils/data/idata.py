@@ -3,12 +3,12 @@ from enum import Enum
 
 import numpy as np
 
-
 class DataType(Enum):
+    """Enumeration of possible data types."""
 
     # Dynamic signals
     SIGNAL_VIDEO = 0
-    SIGNAL_AUDIO  = 1
+    SIGNAL_AUDIO = 1
     SIGNAL_FEATURE = 2
 
     # Static signals
@@ -21,29 +21,61 @@ class DataType(Enum):
     ANNOTATION_POINT = 7
     ANNOTATION_DISCRETE_POLYGON = 8
 
-class MetaInfo():
-    def __init__(self, role:str = None, dataset:str = None, session:str = None):
-        self.role = role
-        self.dataset = dataset
-        self.session = session
+
+class MetaData:
+    """Container for metadata information."""
+    # TODO define interfaces for separate metadata objects
+    def __init__(self, general: object = None, signal: object = None, handler: object = None):
+        """
+        Initialize metadata.
+
+        Args:
+            general (object, optional): General metadata for the data. E.g. country, dataset
+            signal (object, optional): Metadata that is dependent on the specific data type. E.g. codec, duration
+            handler (object, optional): Metadata that is dependent on the specific data handler. E.g. filepath, database connection
+        """
+        self.general = general
+        self.signal = signal
+        self.handler = handler
+
 
 class IData(ABC):
-    ''' Abstract base class for all data types '''
+    """Abstract base class for all data types."""
 
-    def __init__(self, data: np.ndarray = None, meta_info : MetaInfo = None):
+    def __init__(self, data: np.ndarray = None, meta_data: MetaData = None):
+        """
+        Initialize data.
+
+        Args:
+            data (np.ndarray, optional): The data array. Defaults to None.
+            meta_data (MetaInfo, optional): Metadata information. Defaults to None.
+        """
         self._data = data
-        self._meta_info = meta_info
+        self._meta_data = meta_data
+        self._lazy_loading = False
 
     @property
-    def meta_info(self) -> MetaInfo:
-        return self._meta_info
+    def meta_data(self) -> MetaData:
+        """
+        Get the metadata information.
 
-    @meta_info.setter
-    def meta_info(self, value):
-        self._meta_info = value
+        Returns:
+            MetaData: The metadata associated with the data.
+        """
+        return self._meta_data
+
+    @meta_data.setter
+    def meta_data(self, value):
+        self._meta_data = value
 
     @property
     def data(self) -> np.ndarray:
+        """
+        Get the full data array.
+
+        Returns:
+            np.ndarray: The data array.
+        """
         return self._data
 
     @data.setter
@@ -52,26 +84,87 @@ class IData(ABC):
 
 
 class IStaticData(IData):
-    pass
+    """Abstract base class for static data."""
+
 
 class IDynamicData(IData):
-    @abstractmethod
+    """Abstract base class for dynamic data."""
+
+    # @abstractmethod
+    # def _eager_sample_from_interval(self, start: int, end: int) -> np.ndarray:
+    #     """
+    #     Sample data from the specified interval.
+    #
+    #     Args:
+    #         start (int): The start time of the interval in milliseconds.
+    #         end (int): The end time of the interval in milliseconds.
+    #
+    #     Returns:
+    #         np.ndarray: The sampled data within the specified interval.
+    #     """
+    #     pass
+    #
+    # @abstractmethod
+    # def _lazy_sample_from_interval(self, start: int, end: int) -> np.ndarray:
+    #     """
+    #     Sample data from the specified time interval.
+    #
+    #     Args:
+    #         start (int): The start time of the interval in milliseconds.
+    #         end (int): The end time of the interval in milliseconds.
+    #
+    #     Returns:
+    #         np.ndarray: The sampled data within the specified interval.
+    #     """
+    #     pass
+
     def sample_from_interval(self, start: int, end: int) -> np.ndarray:
-        pass
+        """
+        Sample data from the specified time interval.
 
-class ITimeDiscreteData(IDynamicData):
-    pass
+        Args:
+            start (int): The start time of the interval in milliseconds.
+            end (int): The end time of the interval in milliseconds.
 
-class ITimeContinuousData(IDynamicData):
+        Returns:
+            np.ndarray: The sampled data within the specified interval.
+        """
+        if self._lazy_loading:
+            return self._lazy_sample_from_interval(start, end)
+        else:
+            if self.data is None:
 
-    @property
-    @abstractmethod
-    def sample_rate(self) -> float:
-        return self._sample_rate
+                return self._eager_sample_from_interval(start, end)
 
-    def __init__(self, *args, sample_rate = None, **kwargs):
+
+class ITimeDiscreteData(IDynamicData, ABC):
+    """Abstract base class for time-discrete dynamic data. Placeholder for future usage."""
+
+
+class ITimeContinuousData(IDynamicData, ABC):
+    """Abstract base class for time-continuous dynamic data. Placeholder for future usage."""
+
+
+    def __init__(self, *args, sample_rate=None, **kwargs):
+        """
+        Initialize time-continuous dynamic data.
+
+        Args:
+            sample_rate (float, optional): The sample rate of the data. Defaults to None.
+        """
         super().__init__(*args, **kwargs)
         self._sample_rate = sample_rate
+
+
+    @property
+    def sample_rate(self) -> float:
+        """
+        Get the sample rate of the data.
+
+        Returns:
+            float: The sample rate.
+        """
+        return self._sample_rate
 
     @sample_rate.setter
     def sample_rate(self, value):
@@ -79,7 +172,8 @@ class ITimeContinuousData(IDynamicData):
 
 
 class IValueContinuousData(IData):
-    pass
+    """Abstract base class for continuous value data. Placeholder for future usage."""
+
 
 class IValueDiscreteData(IData):
-    pass
+    """Abstract base class for discrete value data. Placeholder for future usage."""

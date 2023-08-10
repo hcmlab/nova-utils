@@ -1,11 +1,31 @@
-from idata import IDynamicData
+import numpy as np
+from nova_utils.data.idata import IDynamicData, MetaData
+
+
+class SignalMeta():
+
+    def __init__(self, duration: int = None, sample_shape: tuple = None, num_samples: int = None, sample_rate: float = None, codec_name: str = None):
+        self.duration = duration
+        self.sample_shape = sample_shape
+        self.num_samples = num_samples
+        self.sample_rate = sample_rate
+        self.codec_name = codec_name
+
+
 class AudioData(IDynamicData):
     ...
 class VideoData(IDynamicData):
-    def __init__(self, *args, **kwargs):
-        pass
+    ...
 class StreamData(IDynamicData):
     ...
+
+if __name__ == '__main__':
+
+    fake_audio = np.random.normal(size=16000).astype(np.float32)
+    meta_info = MetaData(dataset='test_dataset', session='test_session', role='test_role')
+    audio_signal = AudioData(data=fake_audio, MetaInfo=meta_info)
+
+    breakpoint()
 
 
 # from decord import VideoReader, AudioReader, cpu

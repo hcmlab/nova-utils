@@ -1,7 +1,12 @@
 import xml.etree.ElementTree as Et
 import numpy as np
 import csv
+import decord
+import subprocess
+import json
+from decord import cpu, gpu
 from struct import *
+from nova_utils.data.idata import IData, MetaData
 from nova_utils.data.ssi_data_types import FileTypes
 from pathlib import Path
 from nova_utils.data.data_handler.ihandler import IHandler
@@ -14,9 +19,18 @@ from nova_utils.data.annotation import (
     ContinuousAnnotation,
     ContinuousAnnotationScheme,
     FreeAnnotation,
-    FreeAnnotationScheme,
+    FreeAnnotationScheme
 )
+from nova_utils.data.signal import VideoData, AudioData, SignalMeta
 
+
+class FileHandlerMeta:
+
+    def __init__(self, file_path):
+        self.file_path = file_path
+
+
+# ANNOTATIONS
 class AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
     @staticmethod
@@ -283,38 +297,146 @@ class AnnotationFileHandler(IHandler):
             anno.data.tofile(data_path, sep="")
 
 
+# VIDEO
+class LazyVideoArray(np.ndarray):
+    def __new__(cls, video_reader, shape:tuple = (1, 720, 1280, 3 ), start_idx=0):
+        obj = np.empty(shape, dtype=object).view(cls)
+        obj.video_reader = video_reader
+        obj.start_idx = start_idx
+        return obj
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            start, stop, step = index.indices(len(self))
+            return self.video_reader.get_batch([self.start_idx + start, stop - start]).asnumpy()
+        else:
+            return self.video_reader.get_batch([index]).asnumpy()
+
+class VideoFileHandler(IHandler):
+
+    def _get_video_meta(self, fp) :
+        signal_meta = SignalMeta()
+        ffprobe_cmd = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-print_format", "json", "-show_streams", fp]
+        result = subprocess.run(ffprobe_cmd, capture_output=True, text=True)
+        metadata = json.loads(result.stdout)
+        if metadata:
+            metadata = metadata['streams'][0]
+            _width = metadata.get('width')
+            _height = metadata.get('height')
+            _sample_rate = metadata.get('avg_frame_rate')
+
+            signal_meta.sample_shape = (1, _height, _width, 3)
+            signal_meta.duration = float(metadata.get('duration'))
+            signal_meta.codec_name = metadata.get('codec_name')
+            signal_meta.sample_rate = eval(_sample_rate) if _sample_rate is not None else None
+            signal_meta.num_samples = int(metadata.get('nb_frames'))
+
+
+            return signal_meta
+
+    def load(self, fp: Path) -> IData:
+
+        # file loading
+        file_path = str(fp.resolve())
+        video_reader = decord.VideoReader(file_path, ctx=cpu(0))
+        lazy_video_data = LazyVideoArray(video_reader)
+
+        # meta information
+        general_meta = None
+        sig_meta = self._get_video_meta(file_path)
+        fh_meta = FileHandlerMeta(file_path=file_path)
+        meta_data = MetaData(general=general_meta, signal=sig_meta, handler=fh_meta)
+
+        video = VideoData(data=lazy_video_data, meta_data=meta_data)
+        return video
+
+
+    def save(self, *args, **kwargs) -> IData:
+        raise NotImplementedError()
+
+
+
+# AUDIO
+class LazyAudioArray(np.ndarray):
+    def __new__(cls, audio_reader, shape:tuple = (1, 16000, 1 ), start_idx=0):
+        obj = np.empty(shape, dtype=object).view(cls)
+        obj.audio_reader = audio_reader
+        obj.start_idx = start_idx
+        return obj
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            start, stop, step = index.indices(len(self))
+            return self.audio_reader.get_batch([self.start_idx + start, stop - start]).asnumpy()
+        else:
+            return self.audio_reader.get_batch([index]).asnumpy()
+class AudioFileHandler(IHandler):
+
+    def load(self, fp: Path) -> IData:
+
+        # file loading
+        file_path = str(fp.resolve())
+        audio_reader = decord.AudioReader(file_path, ctx=cpu(0))
+        lazy_audio_data = LazyAudioArray(audio_reader)
+
+        # meta information
+        general_meta = None
+        sig_meta = None
+        fh_meta = FileHandlerMeta(file_path=file_path)
+        meta_data = MetaData(general=general_meta, signal=sig_meta, handler=fh_meta)
+
+        audio = AudioData(data=lazy_audio_data, meta_data=meta_data)
+        return audio
+
+    def save(self, *args, **kwargs) -> IData:
+        pass
+
+
+# STREAMS
+
 if __name__ == "__main__":
 
-    """TESTCASE FOR ANNOTATIONS"""
-
+    test_annotations = False
+    test_streams = True
     base_dir = Path("../../../test_files/")
-    afh = AnnotationFileHandler()
 
-    # ascii read
-    discrete_anno_ascii = afh.load(base_dir / "discrete_ascii.annotation")
-    continuous_anno_ascii = afh.load(base_dir / "continuous_ascii.annotation")
-    free_anno_ascii = afh.load(base_dir / "free_ascii.annotation")
+    """TESTCASE FOR ANNOTATIONS"""
+    if test_annotations:
+        afh = AnnotationFileHandler()
 
-    # binary read
-    discrete_anno_binary = afh.load(base_dir / "discrete_binary.annotation")
-    continuous_anno_binary = afh.load(base_dir / "continuous_binary.annotation")
+        # ascii read
+        discrete_anno_ascii = afh.load(base_dir / "discrete_ascii.annotation")
+        continuous_anno_ascii = afh.load(base_dir / "continuous_ascii.annotation")
+        free_anno_ascii = afh.load(base_dir / "free_ascii.annotation")
 
-    # ascii write
-    afh.save(discrete_anno_ascii, base_dir / "discrete_ascii_new.annotation")
-    afh.save(continuous_anno_ascii, base_dir / "continuous_ascii_new.annotation")
-    afh.save(free_anno_ascii, base_dir / "free_ascii_new.annotation")
+        # binary read
+        discrete_anno_binary = afh.load(base_dir / "discrete_binary.annotation")
+        continuous_anno_binary = afh.load(base_dir / "continuous_binary.annotation")
 
-    # binary write
-    afh.save(discrete_anno_binary, base_dir / "discrete_binary_new.annotation", ftype=FileTypes.BINARY)
-    afh.save(continuous_anno_binary, base_dir / "continuous_binary_new.annotation", ftype=FileTypes.BINARY)
+        # ascii write
+        afh.save(discrete_anno_ascii, base_dir / "discrete_ascii_new.annotation")
+        afh.save(continuous_anno_ascii, base_dir / "continuous_ascii_new.annotation")
+        afh.save(free_anno_ascii, base_dir / "free_ascii_new.annotation")
 
-    # verify
-    discrete_anno_ascii_new = afh.load(base_dir / "discrete_ascii_new.annotation")
-    continuous_anno_ascii_new = afh.load(base_dir / "continuous_ascii_new.annotation")
-    free_anno_ascii_new = afh.load(base_dir / "free_ascii_new.annotation")
+        # binary write
+        afh.save(discrete_anno_binary, base_dir / "discrete_binary_new.annotation", ftype=FileTypes.BINARY)
+        afh.save(continuous_anno_binary, base_dir / "continuous_binary_new.annotation", ftype=FileTypes.BINARY)
 
-    # binary read
-    discrete_anno_binary_new = afh.load(base_dir / "discrete_binary_new.annotation")
-    continuous_anno_binary_new = afh.load(base_dir / "continuous_binary_new.annotation")
+        # verify
+        discrete_anno_ascii_new = afh.load(base_dir / "discrete_ascii_new.annotation")
+        continuous_anno_ascii_new = afh.load(base_dir / "continuous_ascii_new.annotation")
+        free_anno_ascii_new = afh.load(base_dir / "free_ascii_new.annotation")
 
-breakpoint()
+        # binary read
+        discrete_anno_binary_new = afh.load(base_dir / "discrete_binary_new.annotation")
+        continuous_anno_binary_new = afh.load(base_dir / "continuous_binary_new.annotation")
+
+    """TESTCASE FOR STREAMS"""
+    if test_streams:
+        afh = AudioFileHandler()
+        audio_data = afh.load(base_dir / 'test_audio.wav')
+
+        vfh = VideoFileHandler()
+        video_data = vfh.load(base_dir / 'test_video.mp4')
+
+        print()

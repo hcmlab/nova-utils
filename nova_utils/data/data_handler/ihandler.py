@@ -1,6 +1,6 @@
 from nova_utils.data.idata import IData
-
-class IHandler():
+from abc import ABC, abstractmethod
+class IHandler(ABC):
     """
     Abstract base class for data handlers.
 
@@ -40,6 +40,7 @@ class IHandler():
             Raises:
                 NotImplementedError: This error is raised when the child class does not implement the save method.
     """
+    @abstractmethod
     def load(self, *args, **kwargs) -> IData:
         """
         Abstract method for loading data from the data source.
@@ -58,6 +59,7 @@ class IHandler():
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def save(self, *args, **kwargs) -> IData:
         """
         Abstract method for saving data to the data source.
