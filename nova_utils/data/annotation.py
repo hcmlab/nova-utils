@@ -7,6 +7,7 @@ from nova_utils.data.idata import IDynamicData, MetaData
 from nova_utils.utils.anno_utils import get_overlap, get_anno_majority, is_garbage
 import pandas as pd
 
+
 # Schemes
 class SchemeType(Enum):
     """Predefined annotation schemes"""
@@ -14,7 +15,6 @@ class SchemeType(Enum):
     DISCRETE = 0
     CONTINUOUS = 1
     FREE = 2
-
 
 class LabelType(Enum):
     DISCRETE = np.dtype(
@@ -34,11 +34,6 @@ class LabelType(Enum):
             ("conf", np.float32),
         ]
     )
-
-class AnnoMetaData(MetaData):
-    def __init__(self, *args, annotator: str = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.annotator = annotator
 
 
 class IAnnotationScheme(ABC):
@@ -109,36 +104,33 @@ class FreeAnnotationScheme(IAnnotationScheme):
         super().__init__(*args, **kwargs)
 
 
+# Meta Information
+class AnnoMetaData():
+    def __init__(self, scheme: IAnnotationScheme, dataset: str = None, annotator: str = None, role: str = None, session: str = None):
+        self.annotation_scheme = scheme
+        self.dataset = dataset
+        self.annotator = annotator
+        self.role=role
+        self.session=session
+
 # Annotations
 class IAnnotation(IDynamicData):
-    """
-    Interface for annotations.
-
-    Attributes:
-        scheme (IAnnotationScheme): The annotation scheme used for the data.
-    """
-
     GARBAGE_LABEL_ID = np.NAN
 
     def __init__(
         self,
-        *args,
+        data: np.ndarray = None,
+        meta_data: MetaData = None,
         role: str = None,
         annotator: str = None,
         session: str = None,
         dataset: str = None,
         annotation_scheme: IAnnotationScheme = None,
-        **kwargs,
     ):
-        """
-        Initialize the IAnnotation instance.
-
-        Args:
-            annotator (str, optional): The annotator's name.
-        """
-        super().__init__(*args, **kwargs)
-        self.meta_data = AnnoMetaData(role=role, annotator=annotator, session=session, dataset=dataset)
-        self.annotation_scheme = annotation_scheme
+        super().__init__(data=data, meta_data=meta_data)
+        # If metadata for the annotation has not been set explicitly we create a new one
+        if self.meta_data.data is None:
+            self.meta_data.data = AnnoMetaData(scheme=annotation_scheme, role=role, annotator=annotator, session=session, dataset=dataset)
 
     @property
     @abstractmethod
@@ -148,17 +140,17 @@ class IAnnotation(IDynamicData):
 
     @annotation_scheme.setter
     def annotation_scheme(self, value):
-        self._annotation_scheme = value
+        pass
 
-    @property
-    def meta_info(self) -> AnnoMetaData:
-        return self._meta_info
-
-    @meta_info.setter
-    def meta_data(self, value):
-        if not isinstance(value, AnnoMetaData):
-            raise TypeError(f"Expecting {AnnoMetaData}, got {type(value)}.")
-        self._meta_info = value
+    # @property
+    # def meta_info(self) -> AnnoMetaData:
+    #     return self._meta_info
+    #
+    # @meta_info.setter
+    # def meta_data(self, value):
+    #     if not isinstance(value, AnnoMetaData):
+    #         raise TypeError(f"Expecting {AnnoMetaData}, got {type(value)}.")
+    #     self._meta_info = value
 
 class DiscreteAnnotation(IAnnotation):
 
@@ -171,13 +163,15 @@ class DiscreteAnnotation(IAnnotation):
 
     @property
     def annotation_scheme(self) -> DiscreteAnnotationScheme:
-        return self._annotation_scheme
+        assert isinstance(self.meta_data.data, AnnoMetaData)
+        assert isinstance(self.meta_data.data.annotation_scheme, DiscreteAnnotationScheme)
+        return self.meta_data.data.annotation_scheme
 
     @annotation_scheme.setter
     def annotation_scheme(self, value):
         if not isinstance(value, DiscreteAnnotationScheme):
             raise TypeError(f"Expecting {DiscreteAnnotationScheme}, got {type(value)}.")
-        self._annotation_scheme = value
+        self.meta_data.data.annotation_scheme = value
 
     @property
     def data(self) -> np.ndarray:
@@ -214,13 +208,15 @@ class FreeAnnotation(IAnnotation):
 
     @property
     def annotation_scheme(self) -> FreeAnnotationScheme:
-        return self._annotation_scheme
+        assert isinstance(self.meta_data.data, AnnoMetaData)
+        assert isinstance(self.meta_data.data.annotation_scheme, FreeAnnotationScheme)
+        return self.meta_data.data.annotation_scheme
 
     @annotation_scheme.setter
     def annotation_scheme(self, value):
         if not isinstance(value, FreeAnnotationScheme):
             raise TypeError(f"Expecting {FreeAnnotationScheme}, got {type(value)}.")
-        self._annotation_scheme = value
+        self.meta_data.data.annotation_scheme = value
 
     @property
     def data(self) -> np.ndarray:
@@ -253,7 +249,9 @@ class ContinuousAnnotation(IAnnotation):
 
     @property
     def annotation_scheme(self) -> ContinuousAnnotationScheme:
-        return self._annotation_scheme
+        assert isinstance(self.meta_data.data, AnnoMetaData)
+        assert isinstance(self.meta_data.data.annotation_scheme, ContinuousAnnotationScheme)
+        return self.meta_data.data.annotation_scheme
 
     @annotation_scheme.setter
     def annotation_scheme(self, value):
@@ -261,7 +259,7 @@ class ContinuousAnnotation(IAnnotation):
             raise TypeError(
                 f"Expecting {ContinuousAnnotationScheme}, got {type(value)}."
             )
-        self._annotation_scheme = value
+        self.meta_data.data.annotation_scheme = value
 
     @property
     def data(self) -> np.ndarray:
@@ -274,8 +272,8 @@ class ContinuousAnnotation(IAnnotation):
 
     def sample_from_interval(self, start, end):
         # returns zero if session duration is longer then labels
-        s = int(start * self.sr / 1000)
-        e = int(end * self.sr / 1000)
+        s = int(start * self.annotation_scheme.sample_rate/ 1000)
+        e = int(end * self.annotation_scheme.sample_rate / 1000)
 
         # Assure that indices for array are at least one integer apart
         if s == e:
@@ -315,6 +313,8 @@ if __name__ == "__main__":
     discrete_anno = DiscreteAnnotation(
         annotator="annotator",
         role="test_role",
+        session="test_session",
+        dataset='test_dataset',
         data=discrete_data,
         annotation_scheme=discrete_scheme,
     )
@@ -341,6 +341,8 @@ if __name__ == "__main__":
     continuous_anno = ContinuousAnnotation(
         annotator="annotator",
         role="test_role",
+        session="test_session",
+        dataset='test_dataset',
         data=continuous_data,
         annotation_scheme=continuous_scheme,
     )
@@ -359,42 +361,10 @@ if __name__ == "__main__":
     free_anno = FreeAnnotation(
         annotator="annotator",
         role="test_role",
+        session="test_session",
+        dataset='test_dataset',
         data=free_data,
         annotation_scheme=free_scheme,
     )
 
-
-
-# TODO: Rework
-
-# class DiscretePolygonAnnotation(Annotation):
-#     def __init__(self, labels={}, sr=0, **kwargs):
-#         super().__init__(**kwargs)
-#         self.type = nt.AnnoTypes.DISCRETE_POLYGON
-#
-#         self.labels = {
-#             str(x["id"]): (x["name"], x["color"]) if x["isValid"] else ""
-#             for x in sorted(labels, key=lambda k: k["id"])
-#         }
-#         self.sr = sr
-#
-#     # TODO MARCO type wird so für tensorflow nicht funktionieren
-#     def get_info(self):
-#         return merge_role_key(self.role, self.scheme), {
-#             "dtype": np.float64,
-#             "shape": (None, 2),
-#         }
-#
-#     def set_annotation_from_mongo_doc(self, mongo_doc, time_to_ms=False):
-#         self.data = mongo_doc
-#
-#     def get_label_for_frame(self, start, end):
-#         # return the last frame
-#         frame_nr = int((end / 1000) * self.sr)
-#         if len(self.data) > frame_nr:
-#             return self.data[frame_nr - 1]
-#         else:
-#             return -1
-#
-#     def postprocess(self):
-#         pass
+    breakpoint()

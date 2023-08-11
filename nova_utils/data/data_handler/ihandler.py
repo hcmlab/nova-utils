@@ -1,5 +1,6 @@
 from nova_utils.data.idata import IData
 from abc import ABC, abstractmethod
+
 class IHandler(ABC):
     """
     Abstract base class for data handlers.

@@ -16,6 +16,7 @@ from nova_utils.data.annotation import (
     ContinuousAnnotationScheme,
     FreeAnnotation,
     FreeAnnotationScheme,
+    AnnoMetaData
 )
 
 ANNOTATOR_COLLECTION = "Annotators"
@@ -26,21 +27,41 @@ ANNOTATION_COLLECTION = "Annotations"
 SESSION_COLLECTION = "Sessions"
 ANNOTATION_DATA_COLLECTION = "AnnotationData"
 
+class MongoHandlerMetaData():
+    def __init__(self, ip:str = None, port: int = None, user: str = None):
+        self.ip = ip
+        self.port = port
+        self.user = user
+
+class MongoHandlerAnnotationMetaData(MongoHandlerMetaData):
+    def __init__(self, *args, is_locked: bool = None, is_finished: bool = None, last_update: bool = None, annotation_document_id: ObjectId = None, data_document_id: ObjectId = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_locked = is_locked
+        self.is_finished = is_finished
+        self.last_update = last_update
+        self.annotation_document_id = annotation_document_id
+        self.data_document_id = data_document_id
+
 
 class MongoHandler(IHandler):
     def __init__(
         self, ip: str = None, port: int = None, user: str = None, password: str = None
     ):
         self._client = None
+        self._ip = None
+        self._port = None
+        self._user = None
         if ip and port and user and password:
-            self._client = MongoClient(
-                host=ip, port=port, username=user, password=password
-            )
+            self.connect(ip, port, user, password)
 
     def connect(
         self, ip: str = None, port: int = None, user: str = None, password: str = None
     ):
         self._client = MongoClient(host=ip, port=port, username=user, password=password)
+        self._ip = ip
+        self._port = port
+        self._user = user
+
 
     @property
     def client(self):
@@ -290,6 +311,11 @@ class AnnotationMongoHandler(MongoHandler):
         else:
             raise TypeError(f"Unknown scheme type {scheme_type}")
 
+        # handler meta data
+        handler_meta_data = MongoHandlerAnnotationMetaData(ip=self._ip, port=self._port, user=self._user, is_locked=anno_doc.get('isLocked'), is_finished=anno_doc.get('isFinished'), annotation_document_id=anno_doc.get('_id'), data_document_id=anno_doc.get('data_id'), last_update=anno_doc.get('date'))
+        annotation.meta_data.handler = handler_meta_data
+
+        # setting meta data
         return annotation
 
     def save(
@@ -378,6 +404,7 @@ class AnnotationMongoHandler(MongoHandler):
                 is_locked=is_locked,
             )
 
+        return success
         # TODO success error handling
 
 

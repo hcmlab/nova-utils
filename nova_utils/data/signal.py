@@ -1,28 +1,67 @@
 import numpy as np
+import subprocess
+import json
 from nova_utils.data.idata import IDynamicData, MetaData
 
 
-class SignalMeta():
-
-    def __init__(self, duration: int = None, sample_shape: tuple = None, num_samples: int = None, sample_rate: float = None, codec_name: str = None):
+class SignalMetaData:
+    def __init__(
+        self,
+        duration: int = None,
+        sample_shape: tuple = None,
+        num_samples: int = None,
+        sample_rate: float = None,
+        codec_name: str = None,
+        dtype: np.dtype = int
+    ):
         self.duration = duration
         self.sample_shape = sample_shape
         self.num_samples = num_samples
         self.sample_rate = sample_rate
         self.codec_name = codec_name
+        self.dtype = dtype
 
 
-class AudioData(IDynamicData):
-    ...
-class VideoData(IDynamicData):
-    ...
-class StreamData(IDynamicData):
+class ISignal(IDynamicData):
+    def __init__(
+        self,
+        data: np.ndarray = None,
+        meta_data: MetaData = None,
+        duration: int = None,
+        sample_shape: tuple = None,
+        num_samples: int = None,
+        sample_rate: float = None,
+        codec_name: str = None,
+    ):
+        super().__init__(data=data, meta_data=meta_data)
+        # If metadata for the signal has not been set explicitly we create a new one
+        if self.meta_data.data is None:
+            self.meta_data.data = SignalMetaData(
+                duration=duration,
+                sample_shape=sample_shape,
+                num_samples=num_samples,
+                sample_rate=sample_rate,
+                codec_name=codec_name,
+            )
+
+    def sample_from_interval(self, start: int, end: int) -> np.ndarray:
+        raise NotImplementedError
+class AudioData(ISignal):
     ...
 
-if __name__ == '__main__':
+class VideoData(ISignal):
+    ...
+
+class StreamData(ISignal):
+    ...
+
+
+if __name__ == "__main__":
 
     fake_audio = np.random.normal(size=16000).astype(np.float32)
-    meta_info = MetaData(dataset='test_dataset', session='test_session', role='test_role')
+    meta_info = MetaData(
+        dataset="test_dataset", session="test_session", role="test_role"
+    )
     audio_signal = AudioData(data=fake_audio, MetaInfo=meta_info)
 
     breakpoint()

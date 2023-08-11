@@ -4,7 +4,7 @@ import csv
 import decord
 import subprocess
 import json
-from decord import cpu, gpu
+from decord import cpu
 from struct import *
 from nova_utils.data.idata import IData, MetaData
 from nova_utils.data.ssi_data_types import FileTypes
@@ -21,10 +21,11 @@ from nova_utils.data.annotation import (
     FreeAnnotation,
     FreeAnnotationScheme
 )
-from nova_utils.data.signal import VideoData, AudioData, SignalMeta
+from nova_utils.data.signal import VideoData, AudioData, SignalMetaData
+import mmap
 
 
-class FileHandlerMeta:
+class FileHandlerMetaData:
 
     def __init__(self, file_path):
         self.file_path = file_path
@@ -224,6 +225,8 @@ class AnnotationFileHandler(IHandler):
         else:
             raise TypeError(f"Unknown scheme type {type}")
 
+        handler_meta_data = FileHandlerMetaData(file_path=fp)
+        annotation.meta_data.handler = handler_meta_data
         return annotation
 
     def save(self, anno: IAnnotation, fp: Path, ftype=FileTypes.ASCII):
@@ -238,8 +241,8 @@ class AnnotationFileHandler(IHandler):
         Et.SubElement(root, "info", attrib={"ftype": ftype.name, "size": size})
 
         # meta
-        role = anno.meta_info.role
-        annotator = anno.meta_info.annotator
+        role = anno.meta_data.data.role
+        annotator = anno.meta_data.data.annotator
         Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
 
         # scheme
@@ -298,24 +301,28 @@ class AnnotationFileHandler(IHandler):
 
 
 # VIDEO
-class LazyVideoArray(np.ndarray):
-    def __new__(cls, video_reader, shape:tuple = (1, 720, 1280, 3 ), start_idx=0):
-        obj = np.empty(shape, dtype=object).view(cls)
-        obj.video_reader = video_reader
-        obj.start_idx = start_idx
+class LazyArray(np.ndarray):
+    def __new__(cls, decord_reader, shape:tuple, dtype: np.dtype):
+        buffer = mmap.mmap(-1, dtype.itemsize * np.prod(shape), access=mmap.ACCESS_READ)
+        obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
+
+        obj.decord_reader = decord_reader
+        obj.start_idx = 0
         return obj
 
     def __getitem__(self, index):
         if isinstance(index, slice):
             start, stop, step = index.indices(len(self))
-            return self.video_reader.get_batch([self.start_idx + start, stop - start]).asnumpy()
+            print(index)
+            indices = list(range(index.start,index.stop))
+            return self.decord_reader.get_batch(indices).asnumpy()
         else:
-            return self.video_reader.get_batch([index]).asnumpy()
+            return self.decord_reader.get_batch([index]).asnumpy()
 
 class VideoFileHandler(IHandler):
 
     def _get_video_meta(self, fp) :
-        signal_meta = SignalMeta()
+        signal_meta = SignalMetaData()
         ffprobe_cmd = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-print_format", "json", "-show_streams", fp]
         result = subprocess.run(ffprobe_cmd, capture_output=True, text=True)
         metadata = json.loads(result.stdout)
@@ -330,22 +337,20 @@ class VideoFileHandler(IHandler):
             signal_meta.codec_name = metadata.get('codec_name')
             signal_meta.sample_rate = eval(_sample_rate) if _sample_rate is not None else None
             signal_meta.num_samples = int(metadata.get('nb_frames'))
-
-
+            signal_meta.dtype = np.dtype(np.uint8)
             return signal_meta
 
     def load(self, fp: Path) -> IData:
-
-        # file loading
         file_path = str(fp.resolve())
-        video_reader = decord.VideoReader(file_path, ctx=cpu(0))
-        lazy_video_data = LazyVideoArray(video_reader)
 
         # meta information
-        general_meta = None
-        sig_meta = self._get_video_meta(file_path)
-        fh_meta = FileHandlerMeta(file_path=file_path)
-        meta_data = MetaData(general=general_meta, signal=sig_meta, handler=fh_meta)
+        signal_meta_data = self._get_video_meta(file_path)
+        handler_meta_data = FileHandlerMetaData(file_path=file_path)
+        meta_data = MetaData(data=signal_meta_data, handler=handler_meta_data)
+
+        # file loading
+        video_reader = decord.VideoReader(file_path, ctx=cpu(0))
+        lazy_video_data = LazyArray(video_reader, shape=(meta_data.data.num_samples,) + meta_data.data.sample_shape[1:], dtype=signal_meta_data.dtype)
 
         video = VideoData(data=lazy_video_data, meta_data=meta_data)
         return video
@@ -357,39 +362,52 @@ class VideoFileHandler(IHandler):
 
 
 # AUDIO
-class LazyAudioArray(np.ndarray):
-    def __new__(cls, audio_reader, shape:tuple = (1, 16000, 1 ), start_idx=0):
-        obj = np.empty(shape, dtype=object).view(cls)
-        obj.audio_reader = audio_reader
-        obj.start_idx = start_idx
-        return obj
-
-    def __getitem__(self, index):
-        if isinstance(index, slice):
-            start, stop, step = index.indices(len(self))
-            return self.audio_reader.get_batch([self.start_idx + start, stop - start]).asnumpy()
-        else:
-            return self.audio_reader.get_batch([index]).asnumpy()
 class AudioFileHandler(IHandler):
+    def _get_audio_meta(self, fp) :
+        signal_meta = SignalMetaData()
+        ffprobe_cmd = ["ffprobe",
+                       "-v",
+                       "error",
 
+                       "-print_format",
+                       "json",
+                       "-show_streams",
+                       "-i", fp]
+        result = subprocess.run(ffprobe_cmd, capture_output=True, text=True)
+        metadata = json.loads(result.stdout)
+        if metadata:
+            metadata = metadata['streams'][0]
+            _channels = metadata.get('channels')
+            _sample_rate = int(metadata.get('sample_rate'))
+            _duration = float(metadata.get('duration'))
+            _num_samples = round(_duration * _sample_rate)
+
+            signal_meta.sample_shape = (1, None, _channels)
+            signal_meta.duration = _duration
+            signal_meta.codec_name = metadata.get('codec_name')
+            signal_meta.sample_rate = _sample_rate
+            signal_meta.dtype = np.dtype(metadata.get('sample_fmt'))
+
+            signal_meta.num_samples = _num_samples
+            return signal_meta
     def load(self, fp: Path) -> IData:
 
-        # file loading
         file_path = str(fp.resolve())
-        audio_reader = decord.AudioReader(file_path, ctx=cpu(0))
-        lazy_audio_data = LazyAudioArray(audio_reader)
 
         # meta information
-        general_meta = None
-        sig_meta = None
-        fh_meta = FileHandlerMeta(file_path=file_path)
-        meta_data = MetaData(general=general_meta, signal=sig_meta, handler=fh_meta)
+        signal_meta_data = self._get_audio_meta(file_path)
+        handler_meta_data = FileHandlerMetaData(file_path=file_path)
+        meta_data = MetaData(data=signal_meta_data, handler=handler_meta_data)
+
+        # file loading
+        audio_reader = decord.AudioReader(file_path, ctx=cpu(0))
+        lazy_audio_data = LazyArray(audio_reader, shape=audio_reader.shape, dtype=signal_meta_data.dtype)
 
         audio = AudioData(data=lazy_audio_data, meta_data=meta_data)
         return audio
 
     def save(self, *args, **kwargs) -> IData:
-        pass
+        raise NotImplementedError()
 
 
 # STREAMS
