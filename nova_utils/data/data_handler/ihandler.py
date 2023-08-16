@@ -26,7 +26,7 @@ class IHandler(ABC):
             Raises:
                 NotImplementedError: This error is raised when the child class does not implement the load method.
 
-        save(*args, **kwargs) -> IData:
+        save(*args, **kwargs):
             Abstract method for saving data to the data source.
 
             This method must be implemented in the child classes to provide specific data saving functionality.
@@ -61,7 +61,7 @@ class IHandler(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def save(self, *args, **kwargs) -> IData:
+    def save(self, *args, **kwargs):
         """
         Abstract method for saving data to the data source.
 

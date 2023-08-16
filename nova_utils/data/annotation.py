@@ -142,16 +142,6 @@ class IAnnotation(IDynamicData):
     def annotation_scheme(self, value):
         pass
 
-    # @property
-    # def meta_info(self) -> AnnoMetaData:
-    #     return self._meta_info
-    #
-    # @meta_info.setter
-    # def meta_data(self, value):
-    #     if not isinstance(value, AnnoMetaData):
-    #         raise TypeError(f"Expecting {AnnoMetaData}, got {type(value)}.")
-    #     self._meta_info = value
-
 class DiscreteAnnotation(IAnnotation):
 
     # Class ids and string names as provided from NOVA-DB and required by SSI

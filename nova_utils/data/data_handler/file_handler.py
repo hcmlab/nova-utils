@@ -4,10 +4,11 @@ import csv
 import decord
 import subprocess
 import json
+from typing import Union
 from decord import cpu
 from struct import *
 from nova_utils.data.idata import IData, MetaData
-from nova_utils.data.ssi_data_types import FileTypes
+from nova_utils.data.ssi_data_types import FileTypes, NPDataTypes, string_to_enum
 from pathlib import Path
 from nova_utils.data.data_handler.ihandler import IHandler
 from nova_utils.data.annotation import (
@@ -19,33 +20,47 @@ from nova_utils.data.annotation import (
     ContinuousAnnotation,
     ContinuousAnnotationScheme,
     FreeAnnotation,
-    FreeAnnotationScheme
+    FreeAnnotationScheme,
 )
-from nova_utils.data.signal import VideoData, AudioData, SignalMetaData
+from nova_utils.data.signal import (
+    Video,
+    Audio,
+    SignalMetaData,
+    SSIStreamMetaData,
+    SSIStream,
+)
 import mmap
+import ffmpegio
 
-
-class FileHandlerMetaData:
-
+# METADATA
+class _FileMetaData:
     def __init__(self, file_path):
         self.file_path = file_path
 
 
+class _FileSSIStreamMetaData(_FileMetaData):
+    def __init__(self, ftype: str, delim: str, **kwargs):
+        super().__init__(**kwargs)
+        self.ftype = ftype
+        self.delim = delim
+
+
 # ANNOTATIONS
-class AnnotationFileHandler(IHandler):
+class _AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
+
     @staticmethod
     def _load_data_discrete(path, ftype):
         """
-       Load discrete annotation data from a file.
+        Load discrete annotation data from a file.
 
-       Parameters:
-           path: The path of the file containing the annotation data.
-           ftype: The file type (ASCII or BINARY) of the annotation data.
+        Parameters:
+            path: The path of the file containing the annotation data.
+            ftype: The file type (ASCII or BINARY) of the annotation data.
 
-       Returns:
-           numpy.ndarray: The loaded discrete annotation data as a NumPy array.
-       """
+        Returns:
+            numpy.ndarray: The loaded discrete annotation data as a NumPy array.
+        """
         dt = LabelType.DISCRETE.value
         if ftype == FileTypes.ASCII.name:
             return np.loadtxt(path, dtype=dt, delimiter=";")
@@ -125,14 +140,14 @@ class AnnotationFileHandler(IHandler):
     @staticmethod
     def _str_format_from_dtype(dtype: np.dtype):
         """
-       Generate a string format for a given numpy dtype.
+        Generate a string format for a given numpy dtype.
 
-       Parameters:
-           dtype (numpy.dtype): The numpy dtype.
+        Parameters:
+            dtype (numpy.dtype): The numpy dtype.
 
-       Returns:
-           list: A list of format strings for each field in the dtype.
-       """
+        Returns:
+            list: A list of format strings for each field in the dtype.
+        """
         fmt = []
 
         for _, field_info in dtype.fields.items():
@@ -225,11 +240,9 @@ class AnnotationFileHandler(IHandler):
         else:
             raise TypeError(f"Unknown scheme type {type}")
 
-        handler_meta_data = FileHandlerMetaData(file_path=fp)
-        annotation.meta_data.handler = handler_meta_data
         return annotation
 
-    def save(self, anno: IAnnotation, fp: Path, ftype=FileTypes.ASCII):
+    def save(self, data: IAnnotation, fp: Path, ftype: FileTypes = FileTypes.ASCII):
 
         data_path = fp.with_suffix(fp.suffix + "~")
 
@@ -237,53 +250,50 @@ class AnnotationFileHandler(IHandler):
         root = Et.Element("annotation", attrib={"ssi-v ": "3"})
 
         # info
-        size = str(len(anno.data))
+        size = str(len(data.data))
         Et.SubElement(root, "info", attrib={"ftype": ftype.name, "size": size})
 
         # meta
-        role = anno.meta_data.data.role
-        annotator = anno.meta_data.data.annotator
+        role = data.meta_data.data.role
+        annotator = data.meta_data.data.annotator
         Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
 
         # scheme
-        scheme_name = anno.annotation_scheme.name
-        scheme_type = anno.annotation_scheme.scheme_type
+        scheme_name = data.annotation_scheme.name
+        scheme_type = data.annotation_scheme.scheme_type
 
         if scheme_type == SchemeType.DISCRETE:
-            anno: DiscreteAnnotation
+            data: DiscreteAnnotation
             scheme = Et.SubElement(
                 root, "scheme", attrib={"name": scheme_name, "type": scheme_type.name}
             )
-            for class_id, class_name in anno.annotation_scheme.classes.items():
+            for class_id, class_name in data.annotation_scheme.classes.items():
                 Et.SubElement(
                     scheme, "item", attrib={"name": class_name, "id": class_id}
                 )
 
         elif scheme_type == SchemeType.CONTINUOUS:
-            anno: ContinuousAnnotation
+            data: ContinuousAnnotation
             Et.SubElement(
                 root,
                 "scheme",
                 attrib={
                     "name": scheme_name,
                     "type": scheme_type.name,
-                    "sr": f"{anno.annotation_scheme.sample_rate:.3f}",
-                    "min": f"{anno.annotation_scheme.min_val:.3f}",
-                    "max": f"{anno.annotation_scheme.max_val:.3f}",
-                }
+                    "sr": f"{data.annotation_scheme.sample_rate:.3f}",
+                    "min": f"{data.annotation_scheme.min_val:.3f}",
+                    "max": f"{data.annotation_scheme.max_val:.3f}",
+                },
             )
 
         elif scheme_type == SchemeType.FREE:
             if ftype == FileTypes.BINARY:
-                raise TypeError("Binary output format is not supported for free annotation schemes")
-            anno: FreeAnnotation
+                raise TypeError(
+                    "Binary output format is not supported for free annotation schemes"
+                )
+            data: FreeAnnotation
             Et.SubElement(
-                root,
-                "scheme",
-                attrib={
-                    "name" : scheme_name,
-                    "type" : scheme_type.name
-                }
+                root, "scheme", attrib={"name": scheme_name, "type": scheme_type.name}
             )
         else:
             raise TypeError(f"Unknown scheme type {type}")
@@ -294,15 +304,149 @@ class AnnotationFileHandler(IHandler):
 
         # save data
         if ftype == FileTypes.ASCII:
-            fmt = self._str_format_from_dtype(anno.annotation_scheme.label_dtype)
-            np.savetxt(data_path, anno.data, fmt=fmt, delimiter=";")
+            fmt = self._str_format_from_dtype(data.annotation_scheme.label_dtype)
+            np.savetxt(data_path, data.data, fmt=fmt, delimiter=";")
         if ftype == FileTypes.BINARY:
-            anno.data.tofile(data_path, sep="")
+            data.data.tofile(data_path, sep="")
+
+
+# SSI STREAMS
+class _SSIStreamFileHandler(IHandler):
+    def _load_header(self, fp):
+        tree = Et.parse(fp)
+
+        # info
+        info = tree.find("info")
+        ftype = info.get("ftype")
+        sr = info.get("sr")
+        dim = info.get("dim")
+        byte = info.get("byte")
+        dtype = info.get("type")
+        delim = info.get("delim")
+
+        # chunks
+        chunks = []
+        for chunk in tree.findall("chunk"):
+            from_ = chunk.get("from")
+            to_ = chunk.get("to")
+            byte_ = chunk.get("byte")
+            num_ = chunk.get("num")
+            chunks.append((from_, to_, byte_, num_))
+
+        chunks = np.array(chunks, dtype=SSIStreamMetaData.CHUNK_DTYPE)
+        num_samples = int(sum(chunks["num"]))
+        duration = num_samples * float(sr)
+
+        ssistream_meta_data = SSIStreamMetaData(
+            duration=duration,
+            sample_shape=(int(dim),),
+            num_samples=num_samples,
+            sample_rate=float(sr),
+            dtype=string_to_enum(NPDataTypes, dtype).value,
+            chunks=chunks,
+        )
+        file_metadata = _FileSSIStreamMetaData(file_path=fp, delim=delim, ftype=ftype)
+
+        return ssistream_meta_data, file_metadata
+
+    def _load_data(
+        self,
+        fp: Path,
+        size: int,
+        dim: int,
+        ftype=FileTypes.ASCII,
+        dtype: np.dtype = NPDataTypes.FLOAT.value,
+        delim=" ",
+    ):
+        if ftype == FileTypes.ASCII:
+            return np.loadtxt(fp, dtype=dtype, delimiter=delim)
+        elif ftype == FileTypes.BINARY:
+            return np.fromfile(fp, dtype=dtype).reshape(size, dim)
+        else:
+            raise ValueError("FileType {} not supported".format(self))
+
+    def save(
+        self,
+        data: SSIStream,
+        fp: Path,
+        ftype: FileTypes = FileTypes.BINARY,
+        delim: str = " ",
+    ):
+
+        # save header
+        data_path = fp.with_suffix(fp.suffix + "~")
+
+        # header
+        root = Et.Element("annotation", attrib={"ssi-v ": "2"})
+
+        # info
+        meta_data: SSIStreamMetaData = data.meta_data.data
+        sr = meta_data.sample_rate
+        dim = meta_data.sample_shape[0]
+        byte = np.dtype(meta_data.dtype).itemsize
+        dtype = NPDataTypes(meta_data.dtype).name
+        Et.SubElement(
+            root,
+            "info",
+            attrib={
+                "ftype": ftype.name,
+                "sr": f"{sr:.3f}",
+                "dim": str(dim),
+                "byte": str(byte),
+                "type": dtype,
+                "delim": delim,
+            },
+        )
+
+        # meta
+        Et.SubElement(root, "meta")
+
+        # chunks
+        for chunk in meta_data.chunks:
+            Et.SubElement(
+                root,
+                "chunk",
+                attrib={
+                    "fromm": f"{chunk['from']:.3f}",
+                    "to": f"{chunk['to']:.3f}",
+                    "byte": str(chunk["byte"]),
+                    "num": str(chunk["num"]),
+                },
+            )
+
+        # saving
+        root = Et.ElementTree(root)
+        Et.indent(root, space="    ", level=0)
+        root.write(fp)
+
+        # save data
+        if ftype == FileTypes.ASCII:
+            np.savetxt(data_path, data.data, delimiter=delim)
+        if ftype == FileTypes.BINARY:
+            data.data.tofile(data_path)
+
+    def load(self, fp, **kwargs) -> IData:
+        data_path = fp.with_suffix(fp.suffix + "~")
+
+        ssistream_meta_data, file_handler_meta_data = self._load_header(fp)
+
+        ssistream_data = self._load_data(
+            fp=data_path,
+            size=ssistream_meta_data.num_samples,
+            dim=ssistream_meta_data.sample_shape[0],
+            ftype=FileTypes[file_handler_meta_data.ftype],
+            dtype=ssistream_meta_data.dtype,
+            delim=file_handler_meta_data.delim,
+        )
+
+        meta_data = MetaData(ssistream_meta_data, file_handler_meta_data)
+        ssi_stream = SSIStream(data=ssistream_data, meta_data=meta_data)
+        return ssi_stream
 
 
 # VIDEO
-class LazyArray(np.ndarray):
-    def __new__(cls, decord_reader, shape:tuple, dtype: np.dtype):
+class _LazyArray(np.ndarray):
+    def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
         buffer = mmap.mmap(-1, dtype.itemsize * np.prod(shape), access=mmap.ACCESS_READ)
         obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
 
@@ -312,31 +456,41 @@ class LazyArray(np.ndarray):
 
     def __getitem__(self, index):
         if isinstance(index, slice):
-            start, stop, step = index.indices(len(self))
-            print(index)
-            indices = list(range(index.start,index.stop))
+            indices = list(range(index.start, index.stop))
             return self.decord_reader.get_batch(indices).asnumpy()
         else:
             return self.decord_reader.get_batch([index]).asnumpy()
 
-class VideoFileHandler(IHandler):
 
-    def _get_video_meta(self, fp) :
+class _VideoFileHandler(IHandler):
+    def _get_video_meta(self, fp):
         signal_meta = SignalMetaData()
-        ffprobe_cmd = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-print_format", "json", "-show_streams", fp]
+        ffprobe_cmd = [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-print_format",
+            "json",
+            "-show_streams",
+            fp,
+        ]
         result = subprocess.run(ffprobe_cmd, capture_output=True, text=True)
         metadata = json.loads(result.stdout)
         if metadata:
-            metadata = metadata['streams'][0]
-            _width = metadata.get('width')
-            _height = metadata.get('height')
-            _sample_rate = metadata.get('avg_frame_rate')
+            metadata = metadata["streams"][0]
+            _width = metadata.get("width")
+            _height = metadata.get("height")
+            _sample_rate = metadata.get("avg_frame_rate")
 
             signal_meta.sample_shape = (1, _height, _width, 3)
-            signal_meta.duration = float(metadata.get('duration'))
-            signal_meta.codec_name = metadata.get('codec_name')
-            signal_meta.sample_rate = eval(_sample_rate) if _sample_rate is not None else None
-            signal_meta.num_samples = int(metadata.get('nb_frames'))
+            signal_meta.duration = float(metadata.get("duration"))
+            signal_meta.codec_name = metadata.get("codec_name")
+            signal_meta.sample_rate = (
+                eval(_sample_rate) if _sample_rate is not None else None
+            )
+            signal_meta.num_samples = int(metadata.get("nb_frames"))
             signal_meta.dtype = np.dtype(np.uint8)
             return signal_meta
 
@@ -345,116 +499,216 @@ class VideoFileHandler(IHandler):
 
         # meta information
         signal_meta_data = self._get_video_meta(file_path)
-        handler_meta_data = FileHandlerMetaData(file_path=file_path)
+        handler_meta_data = _FileMetaData(file_path=file_path)
         meta_data = MetaData(data=signal_meta_data, handler=handler_meta_data)
 
         # file loading
         video_reader = decord.VideoReader(file_path, ctx=cpu(0))
-        lazy_video_data = LazyArray(video_reader, shape=(meta_data.data.num_samples,) + meta_data.data.sample_shape[1:], dtype=signal_meta_data.dtype)
+        lazy_video_data = _LazyArray(
+            video_reader,
+            shape=(meta_data.data.num_samples,) + meta_data.data.sample_shape[1:],
+            dtype=signal_meta_data.dtype,
+        )
 
-        video = VideoData(data=lazy_video_data, meta_data=meta_data)
+        video = Video(data=lazy_video_data, meta_data=meta_data)
         return video
 
+    def save(self, data: Video, fp: Path):
+        meta_data : SignalMetaData = video.meta_data.data
+        sr = meta_data.sample_rate
 
-    def save(self, *args, **kwargs) -> IData:
-        raise NotImplementedError()
-
+        ffmpegio.video.write(
+            str(fp.resolve()),
+            int(sr),
+            np.vstack(data.data),
+            overwrite=True
+        )
 
 
 # AUDIO
-class AudioFileHandler(IHandler):
-    def _get_audio_meta(self, fp) :
+class _AudioFileHandler(IHandler):
+    def _get_audio_meta(self, fp):
         signal_meta = SignalMetaData()
-        ffprobe_cmd = ["ffprobe",
-                       "-v",
-                       "error",
-
-                       "-print_format",
-                       "json",
-                       "-show_streams",
-                       "-i", fp]
+        ffprobe_cmd = [
+            "ffprobe",
+            "-v",
+            "error",
+            "-print_format",
+            "json",
+            "-show_streams",
+            "-i",
+            fp,
+        ]
         result = subprocess.run(ffprobe_cmd, capture_output=True, text=True)
         metadata = json.loads(result.stdout)
         if metadata:
-            metadata = metadata['streams'][0]
-            _channels = metadata.get('channels')
-            _sample_rate = int(metadata.get('sample_rate'))
-            _duration = float(metadata.get('duration'))
+            metadata = metadata["streams"][0]
+            _channels = metadata.get("channels")
+            _sample_rate = int(metadata.get("sample_rate"))
+            _duration = float(metadata.get("duration"))
             _num_samples = round(_duration * _sample_rate)
 
             signal_meta.sample_shape = (1, None, _channels)
             signal_meta.duration = _duration
-            signal_meta.codec_name = metadata.get('codec_name')
+            signal_meta.codec_name = metadata.get("codec_name")
             signal_meta.sample_rate = _sample_rate
-            signal_meta.dtype = np.dtype(metadata.get('sample_fmt'))
+            signal_meta.dtype = np.dtype(np.float32)
 
             signal_meta.num_samples = _num_samples
             return signal_meta
+
     def load(self, fp: Path) -> IData:
 
         file_path = str(fp.resolve())
 
         # meta information
         signal_meta_data = self._get_audio_meta(file_path)
-        handler_meta_data = FileHandlerMetaData(file_path=file_path)
+        handler_meta_data = _FileMetaData(file_path=file_path)
         meta_data = MetaData(data=signal_meta_data, handler=handler_meta_data)
 
         # file loading
         audio_reader = decord.AudioReader(file_path, ctx=cpu(0))
-        lazy_audio_data = LazyArray(audio_reader, shape=audio_reader.shape, dtype=signal_meta_data.dtype)
+        lazy_audio_data = _LazyArray(
+            audio_reader, shape=audio_reader.shape, dtype=signal_meta_data.dtype
+        )
 
-        audio = AudioData(data=lazy_audio_data, meta_data=meta_data)
+        audio = Audio(data=lazy_audio_data, meta_data=meta_data)
         return audio
 
-    def save(self, *args, **kwargs) -> IData:
-        raise NotImplementedError()
+    def save(self, data: Audio, fp: Path):
+        meta_data : SignalMetaData = audio.meta_data.data
+        sr = meta_data.sample_rate
+        ffmpegio.audio.write(
+            str(fp.resolve()),
+            int(sr),
+            np.swapaxes(np.hstack(audio.data), 0, -1),
+            overwrite=True,
+        )
 
 
-# STREAMS
+class FileHandler(IHandler):
+    def _get_handler_for_file(
+        self, fp
+    ) -> Union[
+        _AnnotationFileHandler,
+        _SSIStreamFileHandler,
+        _AudioFileHandler,
+        _VideoFileHandler,
+    ]:
+        if not self.data_type:
+            ext = fp.suffix[1:]
+            if ext == "annotation":
+                return _AnnotationFileHandler()
+            elif ext == "stream":
+                return _SSIStreamFileHandler()
+            elif ext == "wav":
+                return _AudioFileHandler()
+            elif ext == "mp4":
+                return _VideoFileHandler()
+            else:
+                raise ValueError(f"Unsupported file extension {fp.suffix}")
+        else:
+            # TODO provide option to load data with unknown extensions by specifying the datatype
+            raise NotImplementedError
+
+    def __init__(self, data_type: int = None):
+        self.data_type = data_type
+
+    def load(self, fp: Path) -> IData:
+        handler = self._get_handler_for_file(fp)
+        data = handler.load(fp)
+        return data
+
+    def save(self, data: any, fp: Path, *args, **kwargs):
+        handler = self._get_handler_for_file(fp)
+        return handler.save(data, fp, *args, **kwargs)
+
 
 if __name__ == "__main__":
 
     test_annotations = False
     test_streams = True
     base_dir = Path("../../../test_files/")
+    fh = FileHandler()
 
     """TESTCASE FOR ANNOTATIONS"""
     if test_annotations:
-        afh = AnnotationFileHandler()
 
         # ascii read
-        discrete_anno_ascii = afh.load(base_dir / "discrete_ascii.annotation")
-        continuous_anno_ascii = afh.load(base_dir / "continuous_ascii.annotation")
-        free_anno_ascii = afh.load(base_dir / "free_ascii.annotation")
+        discrete_anno_ascii = fh.load(base_dir / "discrete_ascii.annotation")
+        continuous_anno_ascii = fh.load(base_dir / "continuous_ascii.annotation")
+        free_anno_ascii = fh.load(base_dir / "free_ascii.annotation")
 
         # binary read
-        discrete_anno_binary = afh.load(base_dir / "discrete_binary.annotation")
-        continuous_anno_binary = afh.load(base_dir / "continuous_binary.annotation")
+        discrete_anno_binary = fh.load(base_dir / "discrete_binary.annotation")
+        continuous_anno_binary = fh.load(base_dir / "continuous_binary.annotation")
 
         # ascii write
-        afh.save(discrete_anno_ascii, base_dir / "discrete_ascii_new.annotation")
-        afh.save(continuous_anno_ascii, base_dir / "continuous_ascii_new.annotation")
-        afh.save(free_anno_ascii, base_dir / "free_ascii_new.annotation")
+        fh.save(discrete_anno_ascii, base_dir / "new_discrete_ascii.annotation")
+        fh.save(continuous_anno_ascii, base_dir / "new_continuous_ascii.annotation")
+        fh.save(free_anno_ascii, base_dir / "new_free_ascii.annotation")
 
         # binary write
-        afh.save(discrete_anno_binary, base_dir / "discrete_binary_new.annotation", ftype=FileTypes.BINARY)
-        afh.save(continuous_anno_binary, base_dir / "continuous_binary_new.annotation", ftype=FileTypes.BINARY)
+        fh.save(
+            discrete_anno_binary,
+            base_dir / "new_discrete_binary.annotation",
+            ftype=FileTypes.BINARY,
+        )
+        fh.save(
+            continuous_anno_binary,
+            base_dir / "new_continuous_binary.annotation",
+            ftype=FileTypes.BINARY,
+        )
 
         # verify
-        discrete_anno_ascii_new = afh.load(base_dir / "discrete_ascii_new.annotation")
-        continuous_anno_ascii_new = afh.load(base_dir / "continuous_ascii_new.annotation")
-        free_anno_ascii_new = afh.load(base_dir / "free_ascii_new.annotation")
+        discrete_anno_ascii_new = fh.load(base_dir / "new_discrete_ascii.annotation")
+        continuous_anno_ascii_new = fh.load(
+            base_dir / "new_continuous_ascii.annotation"
+        )
+        free_anno_ascii_new = fh.load(base_dir / "new_free_ascii.annotation")
 
         # binary read
-        discrete_anno_binary_new = afh.load(base_dir / "discrete_binary_new.annotation")
-        continuous_anno_binary_new = afh.load(base_dir / "continuous_binary_new.annotation")
+        discrete_anno_binary_new = fh.load(base_dir / "new_discrete_binary.annotation")
+        continuous_anno_binary_new = fh.load(
+            base_dir / "new_continuous_binary.annotation"
+        )
 
     """TESTCASE FOR STREAMS"""
     if test_streams:
-        afh = AudioFileHandler()
-        audio_data = afh.load(base_dir / 'test_audio.wav')
 
-        vfh = VideoFileHandler()
-        video_data = vfh.load(base_dir / 'test_video.mp4')
+        # ssistream read
+        ssistream_ascii = fh.load(base_dir / "ascii.stream")
+        ssistream_binary = fh.load(base_dir / "binary.stream")
 
-        print()
+        # Replace one dimension with random data
+        new_data = ssistream_binary.data.copy()
+        replacement_dimension = 0
+        random_data = np.random.rand(
+            new_data.shape[replacement_dimension]
+        )  # Generate random data
+        new_data[:, replacement_dimension] = random_data
+        ssistream_binary.data = new_data
+        ssistream_ascii.data = new_data
+
+        # ssistream write
+        fh.save(ssistream_ascii, base_dir / "new_ascii.stream", FileTypes.ASCII)
+        fh.save(ssistream_binary, base_dir / "new_binary.stream", FileTypes.BINARY)
+
+        # audio
+        audio = fh.load(base_dir / "test_audio.wav")
+
+        fh.save(audio, base_dir / "new_test_audio.wav")
+
+        new_audio = fh.load(base_dir / "new_test_audio.wav")
+
+        np.allclose(audio.data[0:10000], new_audio.data[0:10000])
+
+        # video
+        video = fh.load(base_dir / "test_video.mp4")
+
+        fh.save(video, base_dir / "new_test_video.mp4")
+
+        new_video = fh.load(base_dir / "new_test_video.mp4")
+
+        assert new_video.data[0:30].all() == video.data[0:30].all()
+        breakpoint()

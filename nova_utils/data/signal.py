@@ -2,12 +2,13 @@ import numpy as np
 import subprocess
 import json
 from nova_utils.data.idata import IDynamicData, MetaData
+from nova_utils.data.ssi_data_types import NPDataTypes
 
 
 class SignalMetaData:
     def __init__(
         self,
-        duration: int = None,
+        duration: float = None,
         sample_shape: tuple = None,
         num_samples: int = None,
         sample_rate: float = None,
@@ -21,6 +22,13 @@ class SignalMetaData:
         self.codec_name = codec_name
         self.dtype = dtype
 
+class SSIStreamMetaData(SignalMetaData):
+
+    CHUNK_DTYPE = np.dtype([("from", NPDataTypes.FLOAT.value), ("to", NPDataTypes.FLOAT.value), ("byte", NPDataTypes.INT.value), ("num", NPDataTypes.INT.value) ])
+
+    def __init__(self, *args, chunks: np.ndarray, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.chunks = chunks
 
 class ISignal(IDynamicData):
     def __init__(
@@ -46,13 +54,13 @@ class ISignal(IDynamicData):
 
     def sample_from_interval(self, start: int, end: int) -> np.ndarray:
         raise NotImplementedError
-class AudioData(ISignal):
+class Audio(ISignal):
     ...
 
-class VideoData(ISignal):
+class Video(ISignal):
     ...
 
-class StreamData(ISignal):
+class SSIStream(ISignal):
     ...
 
 
@@ -62,7 +70,7 @@ if __name__ == "__main__":
     meta_info = MetaData(
         dataset="test_dataset", session="test_session", role="test_role"
     )
-    audio_signal = AudioData(data=fake_audio, MetaInfo=meta_info)
+    audio_signal = Audio(data=fake_audio, MetaInfo=meta_info)
 
     breakpoint()
 

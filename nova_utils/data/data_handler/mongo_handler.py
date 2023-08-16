@@ -27,13 +27,13 @@ ANNOTATION_COLLECTION = "Annotations"
 SESSION_COLLECTION = "Sessions"
 ANNOTATION_DATA_COLLECTION = "AnnotationData"
 
-class MongoHandlerMetaData():
+class _MongoMetaData:
     def __init__(self, ip:str = None, port: int = None, user: str = None):
         self.ip = ip
         self.port = port
         self.user = user
 
-class MongoHandlerAnnotationMetaData(MongoHandlerMetaData):
+class _MongoAnnotationMetaData(_MongoMetaData):
     def __init__(self, *args, is_locked: bool = None, is_finished: bool = None, last_update: bool = None, annotation_document_id: ObjectId = None, data_document_id: ObjectId = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_locked = is_locked
@@ -43,7 +43,7 @@ class MongoHandlerAnnotationMetaData(MongoHandlerMetaData):
         self.data_document_id = data_document_id
 
 
-class MongoHandler(IHandler):
+class _IMongoHandler:
     def __init__(
         self, ip: str = None, port: int = None, user: str = None, password: str = None
     ):
@@ -72,7 +72,7 @@ class MongoHandler(IHandler):
         return self._client
 
 
-class AnnotationMongoHandler(MongoHandler):
+class AnnotationHandler(IHandler, _IMongoHandler):
     """
     Class for handling download of annotation data from Mongo db.
     """
@@ -312,7 +312,7 @@ class AnnotationMongoHandler(MongoHandler):
             raise TypeError(f"Unknown scheme type {scheme_type}")
 
         # handler meta data
-        handler_meta_data = MongoHandlerAnnotationMetaData(ip=self._ip, port=self._port, user=self._user, is_locked=anno_doc.get('isLocked'), is_finished=anno_doc.get('isFinished'), annotation_document_id=anno_doc.get('_id'), data_document_id=anno_doc.get('data_id'), last_update=anno_doc.get('date'))
+        handler_meta_data = _MongoAnnotationMetaData(ip=self._ip, port=self._port, user=self._user, is_locked=anno_doc.get('isLocked'), is_finished=anno_doc.get('isFinished'), annotation_document_id=anno_doc.get('_id'), data_document_id=anno_doc.get('data_id'), last_update=anno_doc.get('date'))
         annotation.meta_data.handler = handler_meta_data
 
         # setting meta data
@@ -408,7 +408,7 @@ class AnnotationMongoHandler(MongoHandler):
         # TODO success error handling
 
 
-class StreamDataHandler(MongoHandler):
+class StreamHandler(IHandler, _IMongoHandler):
     """
     Class for handling download of data streams from Mongo db.
     """
@@ -456,7 +456,7 @@ if __name__ == "__main__":
     USER = os.getenv("NOVA_USER", "")
     PASSWORD = os.getenv("NOVA_PASSWORD", "")
 
-    amh = AnnotationMongoHandler(ip=IP, port=PORT, user=USER, password=PASSWORD)
+    amh = AnnotationHandler(ip=IP, port=PORT, user=USER, password=PASSWORD)
 
     # load
     fs = "Loading {} took {}ms"
