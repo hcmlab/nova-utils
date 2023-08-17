@@ -3,21 +3,23 @@ import warnings
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult, UpdateResult
-from typing import List
+from nova_utils.data.data_handler.file_handler import FileHandler, FileMetaData
 from bson.objectid import ObjectId
+from pathlib import Path
 from nova_utils.data.data_handler.ihandler import IHandler
 from nova_utils.data.annotation import (
     LabelType,
     SchemeType,
-    IAnnotation,
+    Annotation,
     DiscreteAnnotation,
     DiscreteAnnotationScheme,
     ContinuousAnnotation,
     ContinuousAnnotationScheme,
     FreeAnnotation,
     FreeAnnotationScheme,
-    AnnoMetaData
 )
+from nova_utils.data.stream import Stream, SSIStream, Video, Audio
+
 
 ANNOTATOR_COLLECTION = "Annotators"
 SCHEME_COLLECTION = "Schemes"
@@ -27,14 +29,26 @@ ANNOTATION_COLLECTION = "Annotations"
 SESSION_COLLECTION = "Sessions"
 ANNOTATION_DATA_COLLECTION = "AnnotationData"
 
-class _MongoMetaData:
-    def __init__(self, ip:str = None, port: int = None, user: str = None):
+# METADATA
+class MongoMetaData():
+    def __init__(self, ip: str = None, port: int = None, user: str = None, dataset: str = None):
         self.ip = ip
         self.port = port
         self.user = user
+        self.dataset = dataset
 
-class _MongoAnnotationMetaData(_MongoMetaData):
-    def __init__(self, *args, is_locked: bool = None, is_finished: bool = None, last_update: bool = None, annotation_document_id: ObjectId = None, data_document_id: ObjectId = None, **kwargs):
+
+class MongoAnnotationMetaData(MongoMetaData):
+    def __init__(
+        self,
+        is_locked: bool = None,
+        is_finished: bool = None,
+        last_update: bool = None,
+        annotation_document_id: ObjectId = None,
+        data_document_id: ObjectId = None,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.is_locked = is_locked
         self.is_finished = is_finished
@@ -43,14 +57,46 @@ class _MongoAnnotationMetaData(_MongoMetaData):
         self.data_document_id = data_document_id
 
 
+class MongoStreamMetaData(MongoMetaData):
+    def __init__(
+        self,
+        name: str = None,
+        dim_labels: dict = None,
+        file_ext: str = None,
+        is_valid: bool = None,
+        stream_document_id: ObjectId = None,
+        sr: float = None,
+        type: str = None,
+        file_handler_meta_data: FileMetaData = None,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.name = name
+        self.dim_labels = dim_labels
+        self.file_ext = file_ext
+        self.is_valid = is_valid
+        self.stream_document_id = stream_document_id
+        self.db_sample_rate = sr
+        self.type = type
+        self.file_handler_meta_data = file_handler_meta_data
+
+
+# DATA
 class _IMongoHandler:
     def __init__(
-        self, ip: str = None, port: int = None, user: str = None, password: str = None
+        self,
+        ip: str = None,
+        port: int = None,
+        user: str = None,
+        password: str = None,
+        data_dir: Path = None,
     ):
         self._client = None
         self._ip = None
         self._port = None
         self._user = None
+        self.data_dir = data_dir
         if ip and port and user and password:
             self.connect(ip, port, user, password)
 
@@ -61,7 +107,6 @@ class _IMongoHandler:
         self._ip = ip
         self._port = port
         self._user = user
-
 
     @property
     def client(self):
@@ -232,7 +277,7 @@ class AnnotationHandler(IHandler, _IMongoHandler):
 
     def load(
         self, dataset: str, scheme: str, session: str, annotator: str, role: str
-    ) -> IAnnotation:
+    ) -> Annotation:
 
         # load annotation from mongo db
         anno_doc = self._load_annotation(dataset, session, annotator, role, scheme)
@@ -261,12 +306,13 @@ class AnnotationHandler(IHandler, _IMongoHandler):
             )
             anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes)
             annotation = DiscreteAnnotation(
-                role=role,
-                annotator=annotator,
-                annotation_scheme=anno_scheme,
-                session=session,
-                dataset=dataset,
+                #role=role,
+                #annotator=annotator,
+                #annotation_scheme=anno_scheme,
+                #session=session,
+                #dataset=dataset,
                 data=anno_data,
+                scheme=anno_scheme
             )
 
         # continuous scheme
@@ -282,12 +328,13 @@ class AnnotationHandler(IHandler, _IMongoHandler):
                 name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val
             )
             annotation = ContinuousAnnotation(
-                role=role,
-                annotator=annotator,
-                annotation_scheme=anno_scheme,
-                session=session,
-                dataset=dataset,
+                #role=role,
+                #annotator=annotator,
+                #annotation_scheme=anno_scheme,
+                #session=session,
+                #dataset=dataset,
                 data=anno_data,
+                scheme=anno_scheme
             )
 
             # free scheme
@@ -301,40 +348,50 @@ class AnnotationHandler(IHandler, _IMongoHandler):
             )
             anno_scheme = FreeAnnotationScheme(name=scheme)
             annotation = FreeAnnotation(
-                role=role,
-                annotator=annotator,
-                annotation_scheme=anno_scheme,
-                session=session,
-                dataset=dataset,
+                #role=role,
+                #annotator=annotator,
+                #annotation_scheme=anno_scheme,
+                #session=session,
+                #dataset=dataset,
                 data=anno_data,
+                scheme=anno_scheme
             )
         else:
             raise TypeError(f"Unknown scheme type {scheme_type}")
 
         # handler meta data
-        handler_meta_data = _MongoAnnotationMetaData(ip=self._ip, port=self._port, user=self._user, is_locked=anno_doc.get('isLocked'), is_finished=anno_doc.get('isFinished'), annotation_document_id=anno_doc.get('_id'), data_document_id=anno_doc.get('data_id'), last_update=anno_doc.get('date'))
-        annotation.meta_data.handler = handler_meta_data
+        # handler_meta_data = MongoAnnotationMetaData(
+        #     ip=self._ip,
+        #     port=self._port,
+        #     user=self._user,
+        #     is_locked=anno_doc.get("isLocked"),
+        #     is_finished=anno_doc.get("isFinished"),
+        #     annotation_document_id=anno_doc.get("_id"),
+        #     data_document_id=anno_doc.get("data_id"),
+        #     last_update=anno_doc.get("date"),
+        # )
+        # annotation.info.handler = handler_meta_data
 
         # setting meta data
         return annotation
 
     def save(
         self,
-        annotation: IAnnotation,
-        dataset: str = None,
-        session: str = None,
-        annotator: str = None,
-        role: str = None,
+        annotation: Annotation,
+        dataset: str,
+        session: str,
+        annotator: str,
+        role: str,
         is_finished: bool = False,
         is_locked: bool = False,
         overwrite: bool = False,
     ):
 
         # overwrite default values
-        dataset = dataset if dataset else annotation.meta_info.dataset
-        session = session if session else annotation.meta_info.session
-        annotator = annotator if annotator else annotation.meta_info.annotator
-        role = role if role else annotation.meta_info.role
+        dataset = dataset
+        session = session
+        annotator = annotator
+        role = role
         scheme = annotation.annotation_scheme.name
 
         # TODO check for none values
@@ -409,105 +466,237 @@ class AnnotationHandler(IHandler, _IMongoHandler):
 
 
 class StreamHandler(IHandler, _IMongoHandler):
-    """
-    Class for handling download of data streams from Mongo db.
-    """
+    def _load_stream(
+        self,
+        dataset: str,
+        stream_name: str,
+    ) -> dict:
 
-    def load(self, dataset: str, name: str):
-        """
-        Load data streams from Mongo db based on the provided parameters.
+        result = self.client[dataset][STREAM_COLLECTION].find_one({"name": stream_name})
+        if not result:
+            return {}
+        return result
 
-        Parameters:
-            dataset (str): The dataset name.
-            name (str): The name of the data stream.
+    def load(self, dataset: str, session: str, role: str, name: str) -> Stream:
+        result = self._load_stream(dataset=dataset, stream_name=name)
+        if not result:
+            raise ValueError(f"No stream {name} found for dataset {dataset}")
+        if not self.data_dir:
+            raise FileNotFoundError("Data directory was not set. Can't access files")
 
-        Returns:
-            List[DataStream]: A list of data stream objects.
-        """
-        # Retrieve data streams from Mongo db using provided parameters
-        # Placeholder: Replace with the actual Mongo db query based on your implementation
-        data_streams = self.db_connection.get_data_streams(dataset, name)
+        file_path = Path(
+            self.data_dir
+            / dataset
+            / session
+            / (role + "." + result["name"] + "." + result["fileExt"])
+        )
 
-        return data_streams
+        if not file_path.is_file():
+            raise FileNotFoundError(f"No such file {file_path}")
 
-    def save(self, data_streams):
-        """
-        Save data streams to Mongo db.
+        # data
+        data = FileHandler().load(file_path)
+        assert isinstance(data, Stream)
 
-        Parameters:
-            data_streams (List[DataStream]): A list of data stream objects to save.
+        # meta data
+        # handler_meta_data = MongoStreamMetaData(
+        #     ip=self._ip,
+        #     port=self._port,
+        #     user=self._user,
+        #     name=result.get("name"),
+        #     dim_labels=result.get("dimLabels"),
+        #     file_ext=result.get("fileExt"),
+        #     is_valid=result.get("isValid"),
+        #     stream_document_id=result.get("_id"),
+        #     sr=result.get("sr"),
+        #     type=result.get("type"),
+        #     file_handler_meta_data=data.info.handler,
+        # )
+        # data.info.handler = handler_meta_data
 
-        Returns:
-            None
-        """
-        # Save data streams to Mongo db
-        # Placeholder: Replace with the actual Mongo db save method based on your implementation
-        self.db_connection.save_data_streams(data_streams)
+        return data
+
+    def save(self,
+             stream: Stream,
+             dataset: str,
+             session: str,
+             role: str,
+             name: str,
+             data_type: str,
+             file_ext: str = None,
+             dim_labels: [] = None,
+             is_valid: bool = True,
+
+             ):
+
+        if not self.data_dir:
+            raise FileNotFoundError("Data directory was not set. Can't access files")
+
+        # write file
+        if file_ext is None:
+            if isinstance(stream, SSIStream):
+                file_ext = 'stream'
+            elif isinstance(stream, Audio):
+                file_ext = 'wav'
+            elif isinstance(stream, Video):
+                file_ext = 'mp4'
+
+        file_name = (role + "." + name + "." + file_ext)
+        file_path = Path(
+            self.data_dir
+            / dataset
+            / session
+            / file_name
+        )
+
+        FileHandler().save(stream, file_path)
+
+        # write db entry
+        stream_document = {
+            "fileExt" : file_ext,
+            "name" : name,
+            "sr" : stream.sample_rate,
+            "type" : data_type,
+            "dimlabels" : dim_labels if dim_labels else [],
+            "isValid" : is_valid
+        }
+
+        # check if stream exists
+        result = self.client[dataset][STREAM_COLLECTION].find_one({"name": name})
+
+        # update existing
+        if result:
+            update_query_annotation = {
+                "$set": stream_document
+            }
+            self.client[dataset][STREAM_COLLECTION].update_one(
+                {"_id": result["_id"]}, update_query_annotation
+            )
+
+        # insert new
+        else:
+            self.client[dataset][STREAM_COLLECTION].insert_one(
+                stream_document
+            )
+
+
 
 
 if __name__ == "__main__":
     import os
+    import random
     from time import perf_counter
     from dotenv import load_dotenv
+
+    test_annotations = False
+    test_streams = True
 
     load_dotenv("../../../.env")
     IP = os.getenv("NOVA_IP", "")
     PORT = int(os.getenv("NOVA_PORT", 0))
     USER = os.getenv("NOVA_USER", "")
     PASSWORD = os.getenv("NOVA_PASSWORD", "")
+    DATA_DIR = os.getenv("NOVA_DATA_DIR", None)
 
-    amh = AnnotationHandler(ip=IP, port=PORT, user=USER, password=PASSWORD)
+    if test_annotations:
+        amh = AnnotationHandler(ip=IP, port=PORT, user=USER, password=PASSWORD)
 
-    # load
-    fs = "Loading {} took {}ms"
-    t_start = perf_counter()
-    discrete_anno = amh.load(
-        dataset="test",
-        scheme="diarization",
-        annotator="schildom",
-        session="04_Oesterreich_test",
-        role="testrole2",
-    )
-    t_stop = perf_counter()
-    print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
+        # load
+        fs = "Loading {} took {}ms"
+        t_start = perf_counter()
+        discrete_anno = amh.load(
+            dataset="test",
+            scheme="diarization",
+            annotator="schildom",
+            session="04_Oesterreich_test",
+            role="testrole2",
+        )
+        t_stop = perf_counter()
+        print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
 
-    t_start = perf_counter()
-    continuous_anno = amh.load(
-        dataset="test",
-        scheme="arousal",
-        annotator="emow2v",
-        session="01_AffWild2_video1",
-        role="testrole",
-    )
-    t_stop = perf_counter()
-    print(fs.format("Continuous annotation", int((t_stop - t_start) * 1000)))
+        t_start = perf_counter()
+        continuous_anno = amh.load(
+            dataset="test",
+            scheme="arousal",
+            annotator="emow2v",
+            session="01_AffWild2_video1",
+            role="testrole",
+        )
+        t_stop = perf_counter()
+        print(fs.format("Continuous annotation", int((t_stop - t_start) * 1000)))
 
-    t_start = perf_counter()
-    free_anno = amh.load(
-        dataset="test",
-        scheme="transcript",
-        annotator="whisperx",
-        session="04_Oesterreich_test",
-        role="testrole",
-    )
-    t_stop = perf_counter()
-    print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))
+        t_start = perf_counter()
+        free_anno = amh.load(
+            dataset="test",
+            scheme="transcript",
+            annotator="whisperx",
+            session="04_Oesterreich_test",
+            role="testrole",
+        )
+        t_stop = perf_counter()
+        print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))
 
-    # save
-    fs = "Saving {} took {}ms"
-    t_start = perf_counter()
-    amh.save(discrete_anno, annotator="testuser", overwrite=True)
-    t_stop = perf_counter()
-    print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
+        # save
+        fs = "Saving {} took {}ms"
+        t_start = perf_counter()
+        #amh.save(discrete_anno, annotator="testuser", overwrite=True)
+        t_stop = perf_counter()
+        print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
 
-    fs = "Saving {} took {}ms"
-    t_start = perf_counter()
-    amh.save(continuous_anno, annotator="testuser", overwrite=True)
-    t_stop = perf_counter()
-    print(fs.format("Continuous annotation", int((t_stop - t_start) * 1000)))
+        t_start = perf_counter()
+        #amh.save(continuous_anno, annotator="testuser", overwrite=True)
+        t_stop = perf_counter()
+        print(fs.format("Continuous annotation", int((t_stop - t_start) * 1000)))
 
-    fs = "Saving {} took {}ms"
-    t_start = perf_counter()
-    amh.save(free_anno, annotator="testuser", overwrite=True)
-    t_stop = perf_counter()
-    print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))
+        t_start = perf_counter()
+        #amh.save(free_anno, annotator="testuser", overwrite=True)
+        t_stop = perf_counter()
+        print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))
+
+    if test_streams:
+
+        smh = StreamHandler(
+            ip=IP, port=PORT, user=USER, password=PASSWORD, data_dir=Path(DATA_DIR)
+        )
+
+        # Loading
+        fs = "Loading {} took {}ms"
+        t_start = perf_counter()
+        feature_stream = smh.load(
+            dataset="test",
+            session="04_Oesterreich_test",
+            role="testrole",
+            name="arousal.synchrony[testrole]",
+        )
+        t_stop = perf_counter()
+        print(fs.format("Video", int((t_stop - t_start) * 1000)))
+
+        suffix = "_testing"
+        feature_stream.sample_rate = random.uniform(0, 16000)
+        smh.save(
+            stream=feature_stream,
+            dataset="test",
+            session="04_Oesterreich_test",
+            role="testrole",
+            name="arousal.synchrony[testrole]" + suffix,
+            data_type='video',
+            dim_labels=[{'1' : 'hallo'}, {'2' : 'nope'}]
+        )
+
+
+        t_start = perf_counter()
+        audio_stream = smh.load(
+            dataset="test", session="01_AffWild2_video1", role="testrole", name="audio"
+        )
+        t_stop = perf_counter()
+        print(fs.format("Audio", int((t_stop - t_start) * 1000)))
+
+        t_start = perf_counter()
+        video_stream = smh.load(
+            dataset="test", session="01_AffWild2_video1", role="testrole", name="video"
+        )
+        t_stop = perf_counter()
+        print(fs.format("Video", int((t_stop - t_start) * 1000)))
+
+
+        breakpoint()

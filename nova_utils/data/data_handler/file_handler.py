@@ -7,14 +7,14 @@ import json
 from typing import Union
 from decord import cpu
 from struct import *
-from nova_utils.data.idata import IData, MetaData
+from nova_utils.data.idata import IData
 from nova_utils.data.ssi_data_types import FileTypes, NPDataTypes, string_to_enum
 from pathlib import Path
 from nova_utils.data.data_handler.ihandler import IHandler
 from nova_utils.data.annotation import (
     LabelType,
     SchemeType,
-    IAnnotation,
+    Annotation,
     DiscreteAnnotation,
     DiscreteAnnotationScheme,
     ContinuousAnnotation,
@@ -22,23 +22,24 @@ from nova_utils.data.annotation import (
     FreeAnnotation,
     FreeAnnotationScheme,
 )
-from nova_utils.data.signal import (
+from nova_utils.data.stream import (
     Video,
     Audio,
-    SignalMetaData,
-    SSIStreamMetaData,
     SSIStream,
+    StreamMetaData,
+    SSIStreamMetaData,
+
 )
 import mmap
 import ffmpegio
 
 # METADATA
-class _FileMetaData:
+class FileMetaData:
     def __init__(self, file_path):
         self.file_path = file_path
 
 
-class _FileSSIStreamMetaData(_FileMetaData):
+class FileSSIStreamMetaData(FileMetaData):
     def __init__(self, ftype: str, delim: str, **kwargs):
         super().__init__(**kwargs)
         self.ftype = ftype
@@ -165,7 +166,7 @@ class _AnnotationFileHandler(IHandler):
 
         return fmt
 
-    def load(self, fp) -> IAnnotation:
+    def load(self, fp) -> Annotation:
         """
         Load annotation data from an XML file.
 
@@ -173,7 +174,7 @@ class _AnnotationFileHandler(IHandler):
             fp (Path): The file path of the XML annotation file.
 
         Returns:
-            IAnnotation: The loaded annotation data as an IAnnotation object.
+            Annotation: The loaded annotation data as an IAnnotation object.
         """
         data_path = fp.with_suffix(fp.suffix + "~")
         tree = Et.parse(fp)
@@ -185,8 +186,9 @@ class _AnnotationFileHandler(IHandler):
 
         # meta
         meta = tree.find("meta")
-        role = meta.get("role")
-        annotator = meta.get("annotator")
+        if meta:
+            role = meta.get("role")
+            annotator = meta.get("annotator")
 
         # scheme
         scheme = tree.find("scheme")
@@ -205,9 +207,9 @@ class _AnnotationFileHandler(IHandler):
                 name=scheme_name, classes=scheme_classes
             )
             annotation = DiscreteAnnotation(
-                role=role,
-                annotator=annotator,
-                annotation_scheme=anno_scheme,
+                #role=role,
+                #annotator=annotator,
+                scheme=anno_scheme,
                 data=anno_data,
             )
 
@@ -221,9 +223,9 @@ class _AnnotationFileHandler(IHandler):
                 name=scheme_name, sample_rate=sr, min_val=min_val, max_val=max_val
             )
             annotation = ContinuousAnnotation(
-                role=role,
-                annotator=annotator,
-                annotation_scheme=anno_scheme,
+                #role=role,
+                #annotator=annotator,
+                scheme=anno_scheme,
                 data=anno_data,
             )
 
@@ -232,9 +234,9 @@ class _AnnotationFileHandler(IHandler):
             anno_data = self._load_data_free(data_path, ftype, size)
             anno_scheme = FreeAnnotationScheme(name=scheme_name)
             annotation = FreeAnnotation(
-                role=role,
-                annotator=annotator,
-                annotation_scheme=anno_scheme,
+                #role=role,
+                #annotator=annotator,
+                scheme=anno_scheme,
                 data=anno_data,
             )
         else:
@@ -242,7 +244,7 @@ class _AnnotationFileHandler(IHandler):
 
         return annotation
 
-    def save(self, data: IAnnotation, fp: Path, ftype: FileTypes = FileTypes.ASCII):
+    def save(self, data: Annotation, fp: Path, ftype: FileTypes = FileTypes.ASCII):
 
         data_path = fp.with_suffix(fp.suffix + "~")
 
@@ -254,9 +256,10 @@ class _AnnotationFileHandler(IHandler):
         Et.SubElement(root, "info", attrib={"ftype": ftype.name, "size": size})
 
         # meta
-        role = data.meta_data.data.role
-        annotator = data.meta_data.data.annotator
-        Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
+        #TODO include meta again when implemented
+        #role = data.info.meta_data.role
+        #annotator = data.info.meta_data.annotator
+        #Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
 
         # scheme
         scheme_name = data.annotation_scheme.name
@@ -312,7 +315,7 @@ class _AnnotationFileHandler(IHandler):
 
 # SSI STREAMS
 class _SSIStreamFileHandler(IHandler):
-    def _load_header(self, fp):
+    def _load_header(self, fp) -> dict:
         tree = Et.parse(fp)
 
         # info
@@ -337,17 +340,20 @@ class _SSIStreamFileHandler(IHandler):
         num_samples = int(sum(chunks["num"]))
         duration = num_samples * float(sr)
 
-        ssistream_meta_data = SSIStreamMetaData(
-            duration=duration,
-            sample_shape=(int(dim),),
-            num_samples=num_samples,
-            sample_rate=float(sr),
-            dtype=string_to_enum(NPDataTypes, dtype).value,
-            chunks=chunks,
-        )
-        file_metadata = _FileSSIStreamMetaData(file_path=fp, delim=delim, ftype=ftype)
+        ssistream_meta_data = {
+            "duration":duration,
+            "sample_shape":(int(dim),),
+            "num_samples":num_samples,
+            "sample_rate":float(sr),
+            "dtype":string_to_enum(NPDataTypes, dtype).value,
+            "chunks":chunks,
+            "fp": fp,
+            "delim": delim,
+            "ftype": ftype
+        }
+        #file_metadata = FileSSIStreamMetaData(file_path=fp, delim=delim, ftype=ftype)
 
-        return ssistream_meta_data, file_metadata
+        return ssistream_meta_data
 
     def _load_data(
         self,
@@ -380,11 +386,11 @@ class _SSIStreamFileHandler(IHandler):
         root = Et.Element("annotation", attrib={"ssi-v ": "2"})
 
         # info
-        meta_data: SSIStreamMetaData = data.meta_data.data
-        sr = meta_data.sample_rate
-        dim = meta_data.sample_shape[0]
-        byte = np.dtype(meta_data.dtype).itemsize
-        dtype = NPDataTypes(meta_data.dtype).name
+        #meta_data: SSIStreamMetaData = data.info.meta_data
+        sr = data.sample_rate
+        dim = data.sample_shape[0]
+        byte = np.dtype(data.dtype).itemsize
+        dtype = NPDataTypes(data.dtype).name
         Et.SubElement(
             root,
             "info",
@@ -402,7 +408,7 @@ class _SSIStreamFileHandler(IHandler):
         Et.SubElement(root, "meta")
 
         # chunks
-        for chunk in meta_data.chunks:
+        for chunk in data.chunks:
             Et.SubElement(
                 root,
                 "chunk",
@@ -428,19 +434,26 @@ class _SSIStreamFileHandler(IHandler):
     def load(self, fp, **kwargs) -> IData:
         data_path = fp.with_suffix(fp.suffix + "~")
 
-        ssistream_meta_data, file_handler_meta_data = self._load_header(fp)
+        ssistream_meta_data = self._load_header(fp)
 
         ssistream_data = self._load_data(
             fp=data_path,
-            size=ssistream_meta_data.num_samples,
-            dim=ssistream_meta_data.sample_shape[0],
-            ftype=FileTypes[file_handler_meta_data.ftype],
-            dtype=ssistream_meta_data.dtype,
-            delim=file_handler_meta_data.delim,
+            size=ssistream_meta_data['num_samples'],
+            dim=ssistream_meta_data['sample_shape'][0],
+            ftype=FileTypes[ssistream_meta_data['ftype']],
+            dtype=ssistream_meta_data['dtype'],
+            delim=ssistream_meta_data['delim'],
         )
 
-        meta_data = MetaData(ssistream_meta_data, file_handler_meta_data)
-        ssi_stream = SSIStream(data=ssistream_data, meta_data=meta_data)
+        #info = Info(handler=file_handler_meta_data)
+        #ssi_stream = SSIStream(**ssistream_meta_data, data=ssistream_data, info=info)
+        duration = ssistream_meta_data.get('duration')
+        sample_shape = ssistream_meta_data.get('sample_shape')
+        num_samples = ssistream_meta_data.get('num_samples')
+        sample_rate = ssistream_meta_data.get('sample_rate')
+        dtype = ssistream_meta_data.get('dtype')
+        chunks = ssistream_meta_data.get('chunks')
+        ssi_stream = SSIStream(data=ssistream_data, duration=duration, sample_shape=sample_shape, num_samples=num_samples, sample_rate=sample_rate, dtype = dtype, chunks=chunks)
         return ssi_stream
 
 
@@ -463,8 +476,7 @@ class _LazyArray(np.ndarray):
 
 
 class _VideoFileHandler(IHandler):
-    def _get_video_meta(self, fp):
-        signal_meta = SignalMetaData()
+    def _get_video_meta(self, fp) -> dict:
         ffprobe_cmd = [
             "ffprobe",
             "-v",
@@ -478,44 +490,40 @@ class _VideoFileHandler(IHandler):
         ]
         result = subprocess.run(ffprobe_cmd, capture_output=True, text=True)
         metadata = json.loads(result.stdout)
-        if metadata:
-            metadata = metadata["streams"][0]
-            _width = metadata.get("width")
-            _height = metadata.get("height")
-            _sample_rate = metadata.get("avg_frame_rate")
+        return metadata
 
-            signal_meta.sample_shape = (1, _height, _width, 3)
-            signal_meta.duration = float(metadata.get("duration"))
-            signal_meta.codec_name = metadata.get("codec_name")
-            signal_meta.sample_rate = (
-                eval(_sample_rate) if _sample_rate is not None else None
-            )
-            signal_meta.num_samples = int(metadata.get("nb_frames"))
-            signal_meta.dtype = np.dtype(np.uint8)
-            return signal_meta
 
     def load(self, fp: Path) -> IData:
         file_path = str(fp.resolve())
 
         # meta information
-        signal_meta_data = self._get_video_meta(file_path)
-        handler_meta_data = _FileMetaData(file_path=file_path)
-        meta_data = MetaData(data=signal_meta_data, handler=handler_meta_data)
+        metadata = self._get_video_meta(file_path)
+        metadata = metadata["streams"][0]
+        _width = metadata.get("width")
+        _height = metadata.get("height")
+        _sample_rate = metadata.get("avg_frame_rate")
+
+        sample_shape = (1, _height, _width, 3)
+        duration = float(metadata.get("duration"))
+        sample_rate = (
+            eval(_sample_rate) if _sample_rate is not None else None
+        )
+        num_samples = int(metadata.get("nb_frames"))
+        dtype = np.dtype(np.uint8)
 
         # file loading
         video_reader = decord.VideoReader(file_path, ctx=cpu(0))
         lazy_video_data = _LazyArray(
             video_reader,
-            shape=(meta_data.data.num_samples,) + meta_data.data.sample_shape[1:],
-            dtype=signal_meta_data.dtype,
+            shape=(num_samples,) + sample_shape[1:],
+            dtype=dtype,
         )
 
-        video = Video(data=lazy_video_data, meta_data=meta_data)
-        return video
+        video_ = Video(data=lazy_video_data, duration=duration, sample_shape=sample_shape, num_samples=num_samples, sample_rate=sample_rate, dtype=dtype)
+        return video_
 
     def save(self, data: Video, fp: Path):
-        meta_data : SignalMetaData = video.meta_data.data
-        sr = meta_data.sample_rate
+        sr = data.sample_rate
 
         ffmpegio.video.write(
             str(fp.resolve()),
@@ -527,8 +535,7 @@ class _VideoFileHandler(IHandler):
 
 # AUDIO
 class _AudioFileHandler(IHandler):
-    def _get_audio_meta(self, fp):
-        signal_meta = SignalMetaData()
+    def _get_audio_meta(self, fp) -> dict:
         ffprobe_cmd = [
             "ffprobe",
             "-v",
@@ -541,43 +548,38 @@ class _AudioFileHandler(IHandler):
         ]
         result = subprocess.run(ffprobe_cmd, capture_output=True, text=True)
         metadata = json.loads(result.stdout)
-        if metadata:
-            metadata = metadata["streams"][0]
-            _channels = metadata.get("channels")
-            _sample_rate = int(metadata.get("sample_rate"))
-            _duration = float(metadata.get("duration"))
-            _num_samples = round(_duration * _sample_rate)
-
-            signal_meta.sample_shape = (1, None, _channels)
-            signal_meta.duration = _duration
-            signal_meta.codec_name = metadata.get("codec_name")
-            signal_meta.sample_rate = _sample_rate
-            signal_meta.dtype = np.dtype(np.float32)
-
-            signal_meta.num_samples = _num_samples
-            return signal_meta
+        return metadata
 
     def load(self, fp: Path) -> IData:
 
         file_path = str(fp.resolve())
 
         # meta information
-        signal_meta_data = self._get_audio_meta(file_path)
-        handler_meta_data = _FileMetaData(file_path=file_path)
-        meta_data = MetaData(data=signal_meta_data, handler=handler_meta_data)
+        stream_meta_data = self._get_audio_meta(file_path)
+
+        metadata = stream_meta_data["streams"][0]
+        _channels = metadata.get("channels")
+        _sample_rate = int(metadata.get("sample_rate"))
+        _duration = float(metadata.get("duration"))
+        _num_samples = round(_duration * _sample_rate)
+
+        sample_shape = (1, None, _channels)
+        duration = _duration
+        sample_rate = _sample_rate
+        dtype = np.dtype(np.float32)
+        num_samples = _num_samples
 
         # file loading
         audio_reader = decord.AudioReader(file_path, ctx=cpu(0))
         lazy_audio_data = _LazyArray(
-            audio_reader, shape=audio_reader.shape, dtype=signal_meta_data.dtype
+            audio_reader, shape=audio_reader.shape, dtype=dtype
         )
 
-        audio = Audio(data=lazy_audio_data, meta_data=meta_data)
-        return audio
+        audio_ = Audio(data=lazy_audio_data, duration=duration, sample_shape=sample_shape, num_samples=num_samples, sample_rate=sample_rate, dtype=dtype)
+        return audio_
 
     def save(self, data: Audio, fp: Path):
-        meta_data : SignalMetaData = audio.meta_data.data
-        sr = meta_data.sample_rate
+        sr = data.sample_rate
         ffmpegio.audio.write(
             str(fp.resolve()),
             int(sr),
@@ -626,8 +628,8 @@ class FileHandler(IHandler):
 
 if __name__ == "__main__":
 
-    test_annotations = False
-    test_streams = True
+    test_annotations = True
+    test_streams = False
     base_dir = Path("../../../test_files/")
     fh = FileHandler()
 
@@ -685,7 +687,9 @@ if __name__ == "__main__":
         replacement_dimension = 0
         random_data = np.random.rand(
             new_data.shape[replacement_dimension]
-        )  # Generate random data
+        )
+
+        # Generate random data
         new_data[:, replacement_dimension] = random_data
         ssistream_binary.data = new_data
         ssistream_ascii.data = new_data

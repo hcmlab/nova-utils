@@ -3,7 +3,7 @@ import sys
 from abc import ABC, abstractmethod
 from numpy import dtype
 from enum import Enum
-from nova_utils.data.idata import IDynamicData, MetaData
+from nova_utils.data.idata import IDynamicData, GeneralMetaData
 from nova_utils.utils.anno_utils import get_overlap, get_anno_majority, is_garbage
 import pandas as pd
 
@@ -105,32 +105,15 @@ class FreeAnnotationScheme(IAnnotationScheme):
 
 
 # Meta Information
-class AnnoMetaData():
-    def __init__(self, scheme: IAnnotationScheme, dataset: str = None, annotator: str = None, role: str = None, session: str = None):
+class AnnoMetaData(GeneralMetaData):
+    def __init__(self, *args, scheme: IAnnotationScheme, annotator: str = None, **kwargs):
+        super().__init__(*args, **kwargs)
         self.annotation_scheme = scheme
-        self.dataset = dataset
         self.annotator = annotator
-        self.role=role
-        self.session=session
 
 # Annotations
-class IAnnotation(IDynamicData):
+class Annotation(IDynamicData):
     GARBAGE_LABEL_ID = np.NAN
-
-    def __init__(
-        self,
-        data: np.ndarray = None,
-        meta_data: MetaData = None,
-        role: str = None,
-        annotator: str = None,
-        session: str = None,
-        dataset: str = None,
-        annotation_scheme: IAnnotationScheme = None,
-    ):
-        super().__init__(data=data, meta_data=meta_data)
-        # If metadata for the annotation has not been set explicitly we create a new one
-        if self.meta_data.data is None:
-            self.meta_data.data = AnnoMetaData(scheme=annotation_scheme, role=role, annotator=annotator, session=session, dataset=dataset)
 
     @property
     @abstractmethod
@@ -138,11 +121,19 @@ class IAnnotation(IDynamicData):
         """Get the annotation scheme used for the data."""
         pass
 
+    def __init__(
+        self,
+        data: np.ndarray,
+        scheme : IAnnotationScheme,
+    ):
+        super().__init__(data=data)
+        self._annotation_scheme = scheme
+
     @annotation_scheme.setter
     def annotation_scheme(self, value):
         pass
 
-class DiscreteAnnotation(IAnnotation):
+class DiscreteAnnotation(Annotation):
 
     # Class ids and string names as provided from NOVA-DB and required by SSI
     NOVA_REST_CLASS_NAME = "REST"
@@ -151,17 +142,25 @@ class DiscreteAnnotation(IAnnotation):
     # Initialize Rest class id with garbage class id
     REST_LABEL_ID = NOVA_GARBAGE_LABEL_ID
 
+    def __init__(
+            self,
+            data: np.ndarray,
+            scheme : DiscreteAnnotationScheme,
+    ):
+        super().__init__(data=data, scheme=scheme)
+        self._data_values = None
+        self._data_interval = None
+
     @property
     def annotation_scheme(self) -> DiscreteAnnotationScheme:
-        assert isinstance(self.meta_data.data, AnnoMetaData)
-        assert isinstance(self.meta_data.data.annotation_scheme, DiscreteAnnotationScheme)
-        return self.meta_data.data.annotation_scheme
+        assert isinstance(self._annotation_scheme, DiscreteAnnotationScheme)
+        return self._annotation_scheme
 
     @annotation_scheme.setter
     def annotation_scheme(self, value):
         if not isinstance(value, DiscreteAnnotationScheme):
             raise TypeError(f"Expecting {DiscreteAnnotationScheme}, got {type(value)}.")
-        self.meta_data.data.annotation_scheme = value
+        self._annotation_scheme = value
 
     @property
     def data(self) -> np.ndarray:
@@ -190,23 +189,30 @@ class DiscreteAnnotation(IAnnotation):
             return self.GARBAGE_LABEL_ID
         return label
 
-
-class FreeAnnotation(IAnnotation):
+class FreeAnnotation(Annotation):
     """
     The FREE annotation scheme is used for any form of free text.
     """
 
+    def __init__(
+            self,
+            data: np.ndarray,
+            scheme : FreeAnnotationScheme,
+    ):
+        super().__init__(data=data, scheme=scheme)
+        self._data_values = None
+        self._data_interval = None
+
     @property
     def annotation_scheme(self) -> FreeAnnotationScheme:
-        assert isinstance(self.meta_data.data, AnnoMetaData)
-        assert isinstance(self.meta_data.data.annotation_scheme, FreeAnnotationScheme)
-        return self.meta_data.data.annotation_scheme
+        assert isinstance(self._annotation_scheme, FreeAnnotationScheme)
+        return self._annotation_scheme
 
     @annotation_scheme.setter
     def annotation_scheme(self, value):
         if not isinstance(value, FreeAnnotationScheme):
             raise TypeError(f"Expecting {FreeAnnotationScheme}, got {type(value)}.")
-        self.meta_data.data.annotation_scheme = value
+        self._annotation_scheme = value
 
     @property
     def data(self) -> np.ndarray:
@@ -230,8 +236,7 @@ class FreeAnnotation(IAnnotation):
 
         return self._data_values[annos_for_sample, 0]
 
-
-class ContinuousAnnotation(IAnnotation):
+class ContinuousAnnotation(Annotation):
 
     # Class ids and string names as provided from NOVA-DB and required by SSI
     NOVA_GARBAGE_LABEL_VALUE = np.NAN
@@ -239,9 +244,8 @@ class ContinuousAnnotation(IAnnotation):
 
     @property
     def annotation_scheme(self) -> ContinuousAnnotationScheme:
-        assert isinstance(self.meta_data.data, AnnoMetaData)
-        assert isinstance(self.meta_data.data.annotation_scheme, ContinuousAnnotationScheme)
-        return self.meta_data.data.annotation_scheme
+        assert isinstance(self._annotation_scheme, ContinuousAnnotationScheme)
+        return self._annotation_scheme
 
     @annotation_scheme.setter
     def annotation_scheme(self, value):
@@ -249,7 +253,7 @@ class ContinuousAnnotation(IAnnotation):
             raise TypeError(
                 f"Expecting {ContinuousAnnotationScheme}, got {type(value)}."
             )
-        self.meta_data.data.annotation_scheme = value
+        self._annotation_scheme = value
 
     @property
     def data(self) -> np.ndarray:
@@ -300,13 +304,10 @@ if __name__ == "__main__":
         ],
         dtype=discrete_scheme.label_dtype,
     )
+
     discrete_anno = DiscreteAnnotation(
-        annotator="annotator",
-        role="test_role",
-        session="test_session",
-        dataset='test_dataset',
         data=discrete_data,
-        annotation_scheme=discrete_scheme,
+        scheme=discrete_scheme
     )
 
     # Continuous anno
@@ -329,12 +330,8 @@ if __name__ == "__main__":
         dtype=continuous_scheme.label_dtype,
     )
     continuous_anno = ContinuousAnnotation(
-        annotator="annotator",
-        role="test_role",
-        session="test_session",
-        dataset='test_dataset',
         data=continuous_data,
-        annotation_scheme=continuous_scheme,
+        scheme=continuous_scheme,
     )
 
     # Free anno
@@ -349,12 +346,8 @@ if __name__ == "__main__":
         dtype=free_scheme.label_dtype,
     )
     free_anno = FreeAnnotation(
-        annotator="annotator",
-        role="test_role",
-        session="test_session",
-        dataset='test_dataset',
         data=free_data,
-        annotation_scheme=free_scheme,
+        scheme=free_scheme,
     )
 
     breakpoint()
