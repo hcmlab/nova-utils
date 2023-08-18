@@ -28,7 +28,6 @@ from nova_utils.data.stream import (
     SSIStream,
     StreamMetaData,
     SSIStreamMetaData,
-
 )
 import mmap
 import ffmpegio
@@ -39,9 +38,8 @@ class FileMetaData:
         self.file_path = file_path
 
 
-class FileSSIStreamMetaData(FileMetaData):
-    def __init__(self, ftype: str, delim: str, **kwargs):
-        super().__init__(**kwargs)
+class FileSSIStreamMetaData():
+    def __init__(self, ftype: str, delim: str):
         self.ftype = ftype
         self.delim = delim
 
@@ -180,18 +178,17 @@ class _AnnotationFileHandler(IHandler):
         tree = Et.parse(fp)
 
         # info
-        info = tree.find("info")
+        info = tree.find("info", {})
         ftype = info.get("ftype")
         size = info.get("size")
 
         # meta
-        meta = tree.find("meta")
-        if meta:
-            role = meta.get("role")
-            annotator = meta.get("annotator")
+        meta = tree.find("meta", {})
+        role = meta.get("role")
+        annotator = meta.get("annotator")
 
         # scheme
-        scheme = tree.find("scheme")
+        scheme = tree.find("scheme", {})
         scheme_name = scheme.get("name")
         scheme_type = scheme.get("type")
 
@@ -207,10 +204,10 @@ class _AnnotationFileHandler(IHandler):
                 name=scheme_name, classes=scheme_classes
             )
             annotation = DiscreteAnnotation(
-                #role=role,
-                #annotator=annotator,
-                scheme=anno_scheme,
                 data=anno_data,
+                scheme=anno_scheme,
+                role=role,
+                annotator=annotator,
             )
 
         # continuous scheme
@@ -223,10 +220,10 @@ class _AnnotationFileHandler(IHandler):
                 name=scheme_name, sample_rate=sr, min_val=min_val, max_val=max_val
             )
             annotation = ContinuousAnnotation(
-                #role=role,
-                #annotator=annotator,
                 scheme=anno_scheme,
                 data=anno_data,
+                role=role,
+                annotator=annotator,
             )
 
         # free scheme
@@ -234,10 +231,10 @@ class _AnnotationFileHandler(IHandler):
             anno_data = self._load_data_free(data_path, ftype, size)
             anno_scheme = FreeAnnotationScheme(name=scheme_name)
             annotation = FreeAnnotation(
-                #role=role,
-                #annotator=annotator,
                 scheme=anno_scheme,
                 data=anno_data,
+                role=role,
+                annotator=annotator,
             )
         else:
             raise TypeError(f"Unknown scheme type {type}")
@@ -319,7 +316,7 @@ class _SSIStreamFileHandler(IHandler):
         tree = Et.parse(fp)
 
         # info
-        info = tree.find("info")
+        info = tree.find("info", {})
         ftype = info.get("ftype")
         sr = info.get("sr")
         dim = info.get("dim")
@@ -336,7 +333,7 @@ class _SSIStreamFileHandler(IHandler):
             num_ = chunk.get("num")
             chunks.append((from_, to_, byte_, num_))
 
-        chunks = np.array(chunks, dtype=SSIStreamMetaData.CHUNK_DTYPE)
+        chunks = np.array(chunks, dtype=SSIStream.CHUNK_DTYPE)
         num_samples = int(sum(chunks["num"]))
         duration = num_samples * float(sr)
 
@@ -351,8 +348,6 @@ class _SSIStreamFileHandler(IHandler):
             "delim": delim,
             "ftype": ftype
         }
-        #file_metadata = FileSSIStreamMetaData(file_path=fp, delim=delim, ftype=ftype)
-
         return ssistream_meta_data
 
     def _load_data(
@@ -386,11 +381,11 @@ class _SSIStreamFileHandler(IHandler):
         root = Et.Element("annotation", attrib={"ssi-v ": "2"})
 
         # info
-        #meta_data: SSIStreamMetaData = data.info.meta_data
-        sr = data.sample_rate
-        dim = data.sample_shape[0]
-        byte = np.dtype(data.dtype).itemsize
-        dtype = NPDataTypes(data.dtype).name
+        meta_data: StreamMetaData | SSIStreamMetaData = data.meta_data
+        sr = meta_data.sample_rate
+        dim = meta_data.sample_shape[0]
+        byte = np.dtype(meta_data.dtype).itemsize
+        dtype = NPDataTypes(meta_data.dtype).name
         Et.SubElement(
             root,
             "info",
@@ -408,7 +403,7 @@ class _SSIStreamFileHandler(IHandler):
         Et.SubElement(root, "meta")
 
         # chunks
-        for chunk in data.chunks:
+        for chunk in meta_data.chunks:
             Et.SubElement(
                 root,
                 "chunk",
@@ -432,28 +427,29 @@ class _SSIStreamFileHandler(IHandler):
             data.data.tofile(data_path)
 
     def load(self, fp, **kwargs) -> IData:
+
         data_path = fp.with_suffix(fp.suffix + "~")
+        header = self._load_header(fp)
+        duration = header.get('duration')
+        sample_shape = header.get('sample_shape')
+        num_samples = header.get('num_samples')
+        sample_rate = header.get('sample_rate')
+        dtype = header.get('dtype')
+        chunks = header.get('chunks')
+        delim = header['delim']
+        ftype = header['ftype']
 
-        ssistream_meta_data = self._load_header(fp)
-
-        ssistream_data = self._load_data(
+        data = self._load_data(
             fp=data_path,
-            size=ssistream_meta_data['num_samples'],
-            dim=ssistream_meta_data['sample_shape'][0],
-            ftype=FileTypes[ssistream_meta_data['ftype']],
-            dtype=ssistream_meta_data['dtype'],
-            delim=ssistream_meta_data['delim'],
+            size=num_samples,
+            dtype=dtype,
+            dim=sample_shape[0],
+            delim=delim,
+            ftype=FileTypes[ftype]
         )
 
-        #info = Info(handler=file_handler_meta_data)
-        #ssi_stream = SSIStream(**ssistream_meta_data, data=ssistream_data, info=info)
-        duration = ssistream_meta_data.get('duration')
-        sample_shape = ssistream_meta_data.get('sample_shape')
-        num_samples = ssistream_meta_data.get('num_samples')
-        sample_rate = ssistream_meta_data.get('sample_rate')
-        dtype = ssistream_meta_data.get('dtype')
-        chunks = ssistream_meta_data.get('chunks')
-        ssi_stream = SSIStream(data=ssistream_data, duration=duration, sample_shape=sample_shape, num_samples=num_samples, sample_rate=sample_rate, dtype = dtype, chunks=chunks)
+        ssi_stream = SSIStream(data=data, duration=duration, sample_shape=sample_shape, num_samples=num_samples, sample_rate=sample_rate, dtype = dtype, chunks=chunks)
+        ssi_stream.meta_data.expand( FileSSIStreamMetaData ( delim= delim, ftype=ftype) )
         return ssi_stream
 
 
@@ -523,11 +519,14 @@ class _VideoFileHandler(IHandler):
         return video_
 
     def save(self, data: Video, fp: Path):
-        sr = data.sample_rate
+
+        meta_data : StreamMetaData = data.meta_data
+        sample_rate = int(meta_data.sample_rate)
+        file_path = str(fp.resolve())
 
         ffmpegio.video.write(
-            str(fp.resolve()),
-            int(sr),
+            file_path,
+            sample_rate,
             np.vstack(data.data),
             overwrite=True
         )
@@ -579,10 +578,11 @@ class _AudioFileHandler(IHandler):
         return audio_
 
     def save(self, data: Audio, fp: Path):
-        sr = data.sample_rate
+
+        meta_data : StreamMetaData = data.meta_data
         ffmpegio.audio.write(
             str(fp.resolve()),
-            int(sr),
+            int(meta_data.sample_rate),
             np.swapaxes(np.hstack(audio.data), 0, -1),
             overwrite=True,
         )
@@ -619,9 +619,13 @@ class FileHandler(IHandler):
     def load(self, fp: Path) -> IData:
         handler = self._get_handler_for_file(fp)
         data = handler.load(fp)
+        data.meta_data.expand( FileMetaData (fp)  )
         return data
 
-    def save(self, data: any, fp: Path, *args, **kwargs):
+    def save(self, data: any, fp: Path, overwrite=True, *args, **kwargs):
+
+        if fp.exists() and not overwrite:
+            raise FileExistsError(f'Cannot write {fp} because file already exists')
         handler = self._get_handler_for_file(fp)
         return handler.save(data, fp, *args, **kwargs)
 

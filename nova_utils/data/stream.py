@@ -1,20 +1,17 @@
 import numpy as np
-import subprocess
-import json
-from nova_utils.data.idata import IDynamicData, GeneralMetaData
+from nova_utils.data.idata import IDynamicData
 from nova_utils.data.ssi_data_types import NPDataTypes
 
-# METADATA
-class StreamMetaData(GeneralMetaData):
-    def __init__(self, *args, duration: float, sample_shape: tuple, num_samples: int, sample_rate: float, dtype: np.dtype, **kwargs):
-        super().__init__(*args, **kwargs)
+#METADATA
+class StreamMetaData():
+    def __init__(self, duration: float = None, sample_shape: tuple = None, num_samples: int = None, sample_rate: float = None, dtype: np.dtype = None):
         self.duration = duration
         self.sample_shape = sample_shape
         self.num_samples = num_samples
         self.sample_rate = sample_rate
         self.dtype = dtype
 
-class SSIStreamMetaData(StreamMetaData):
+class SSIStreamMetaData():
 
     CHUNK_DTYPE = np.dtype(
         [
@@ -27,16 +24,8 @@ class SSIStreamMetaData(StreamMetaData):
 
     def __init__(
             self,
-            *args,
             chunks: np.ndarray,
-            duration: float,
-            sample_shape: tuple,
-            num_samples: int,
-            sample_rate: float,
-            dtype: np.dtype,
-            **kwargs
     ):
-        super().__init__(*args, duration, sample_shape, num_samples, sample_rate, dtype, **kwargs)
         self.chunks = chunks
 
 
@@ -46,19 +35,18 @@ class Stream(IDynamicData):
     def __init__(
         self,
         data: np.ndarray,
-        duration: float,
-        sample_shape: tuple,
-        num_samples: int,
         sample_rate: float,
-        dtype: np.dtype
+        duration: float = None,
+        sample_shape: tuple = None,
+        num_samples: int = None,
+        dtype: np.dtype = None,
+        **kwargs
     ):
-        super().__init__(data=data)
-        self.duration = duration
-        self.sample_rate = sample_rate
-        self.num_samples = num_samples
-        self.sample_rate = sample_rate
-        self.dtype = dtype
-        self.sample_shape = sample_shape
+        super().__init__(data=data, **kwargs)
+
+        # Add Metadata
+        stream_meta_data = StreamMetaData(duration, sample_shape, num_samples, sample_rate, dtype)
+        self.meta_data.expand( stream_meta_data )
 
     def sample_from_interval(self, start: int, end: int) -> np.ndarray:
         raise NotImplementedError
@@ -66,20 +54,26 @@ class Stream(IDynamicData):
 
 class SSIStream(Stream):
 
+    CHUNK_DTYPE = np.dtype(
+            [
+                ("from", NPDataTypes.FLOAT.value),
+                ("to", NPDataTypes.FLOAT.value),
+                ("byte", NPDataTypes.INT.value),
+                ("num", NPDataTypes.INT.value),
+            ]
+        )
+
     def __init__(
             self,
             data: np.ndarray,
-            duration: float,
-            sample_shape: tuple,
-            num_samples: int,
-            sample_rate: float,
-            dtype: np.dtype,
             chunks: np.ndarray = None,
+            **kwargs
         ):
-            super().__init__(
-                data, duration, sample_shape, num_samples, sample_rate, dtype
-            )
-            self.chunks = chunks
+            super().__init__(data=data, **kwargs)
+
+            # Add Metadata
+            ssistream_meta = SSIStreamMetaData(chunks=chunks)
+            self.meta_data.expand(ssistream_meta)
 
 
 class Audio(Stream):
@@ -92,13 +86,6 @@ class Video(Stream):
 
 if __name__ == "__main__":
     ...
-    # fake_audio = np.random.normal(size=16000).astype(np.float32)
-    # meta_info = Info(
-    #     dataset="test_dataset", session="test_session", role="test_role"
-    # )
-    # audio_signal = Audio(data=fake_audio, MetaInfo=meta_info)
-    #
-    # breakpoint()
 
 
 # from decord import VideoReader, AudioReader, cpu

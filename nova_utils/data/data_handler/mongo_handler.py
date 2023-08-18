@@ -20,7 +20,6 @@ from nova_utils.data.annotation import (
 )
 from nova_utils.data.stream import Stream, SSIStream, Video, Audio
 
-
 ANNOTATOR_COLLECTION = "Annotators"
 SCHEME_COLLECTION = "Schemes"
 STREAM_COLLECTION = "Streams"
@@ -39,16 +38,8 @@ class MongoMetaData():
 
 
 class MongoAnnotationMetaData(MongoMetaData):
-    def __init__(
-        self,
-        is_locked: bool = None,
-        is_finished: bool = None,
-        last_update: bool = None,
-        annotation_document_id: ObjectId = None,
-        data_document_id: ObjectId = None,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, *args, is_locked: bool = None, is_finished: bool = None, last_update: bool = None,
+                 annotation_document_id: ObjectId = None, data_document_id: ObjectId = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_locked = is_locked
         self.is_finished = is_finished
@@ -60,6 +51,7 @@ class MongoAnnotationMetaData(MongoMetaData):
 class MongoStreamMetaData(MongoMetaData):
     def __init__(
         self,
+        *args,
         name: str = None,
         dim_labels: dict = None,
         file_ext: str = None,
@@ -67,8 +59,6 @@ class MongoStreamMetaData(MongoMetaData):
         stream_document_id: ObjectId = None,
         sr: float = None,
         type: str = None,
-        file_handler_meta_data: FileMetaData = None,
-        *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -79,11 +69,15 @@ class MongoStreamMetaData(MongoMetaData):
         self.stream_document_id = stream_document_id
         self.db_sample_rate = sr
         self.type = type
-        self.file_handler_meta_data = file_handler_meta_data
 
 
 # DATA
-class _IMongoHandler:
+class MongoHandler:
+
+    @staticmethod
+    def get_meta_type() -> tuple:
+        return (MongoMetaData,)
+
     def __init__(
         self,
         ip: str = None,
@@ -117,10 +111,14 @@ class _IMongoHandler:
         return self._client
 
 
-class AnnotationHandler(IHandler, _IMongoHandler):
+class AnnotationHandler(IHandler, MongoHandler):
     """
     Class for handling download of annotation data from Mongo db.
     """
+
+    @staticmethod
+    def get_meta_type() -> tuple:
+        return Annotation.get_meta_type() + (MongoAnnotationMetaData,)
 
     def _load_annotation(
         self,
@@ -338,6 +336,8 @@ class AnnotationHandler(IHandler, _IMongoHandler):
             )
 
             # free scheme
+
+        # free scheme
         elif scheme_type == SchemeType.FREE.name:
             anno_data = np.array(
                 [
@@ -359,20 +359,19 @@ class AnnotationHandler(IHandler, _IMongoHandler):
         else:
             raise TypeError(f"Unknown scheme type {scheme_type}")
 
-        # handler meta data
-        # handler_meta_data = MongoAnnotationMetaData(
-        #     ip=self._ip,
-        #     port=self._port,
-        #     user=self._user,
-        #     is_locked=anno_doc.get("isLocked"),
-        #     is_finished=anno_doc.get("isFinished"),
-        #     annotation_document_id=anno_doc.get("_id"),
-        #     data_document_id=anno_doc.get("data_id"),
-        #     last_update=anno_doc.get("date"),
-        # )
-        # annotation.info.handler = handler_meta_data
-
         # setting meta data
+        handler_meta_data = MongoAnnotationMetaData(
+            ip=self._ip,
+            port=self._port,
+            user=self._user,
+            is_locked=anno_doc.get("isLocked"),
+            is_finished=anno_doc.get("isFinished"),
+            annotation_document_id=anno_doc.get("_id"),
+            data_document_id=anno_doc.get("data_id"),
+            last_update=anno_doc.get("date"),
+        )
+        annotation.meta_data.expand(handler_meta_data)
+
         return annotation
 
     def save(
@@ -465,7 +464,7 @@ class AnnotationHandler(IHandler, _IMongoHandler):
         # TODO success error handling
 
 
-class StreamHandler(IHandler, _IMongoHandler):
+class StreamHandler(IHandler, MongoHandler):
     def _load_stream(
         self,
         dataset: str,
@@ -499,20 +498,20 @@ class StreamHandler(IHandler, _IMongoHandler):
         assert isinstance(data, Stream)
 
         # meta data
-        # handler_meta_data = MongoStreamMetaData(
-        #     ip=self._ip,
-        #     port=self._port,
-        #     user=self._user,
-        #     name=result.get("name"),
-        #     dim_labels=result.get("dimLabels"),
-        #     file_ext=result.get("fileExt"),
-        #     is_valid=result.get("isValid"),
-        #     stream_document_id=result.get("_id"),
-        #     sr=result.get("sr"),
-        #     type=result.get("type"),
-        #     file_handler_meta_data=data.info.handler,
-        # )
-        # data.info.handler = handler_meta_data
+        handler_meta_data = MongoStreamMetaData(
+            ip=self._ip,
+            port=self._port,
+            user=self._user,
+            name=result.get("name"),
+            dim_labels=result.get("dimLabels"),
+            file_ext=result.get("fileExt"),
+            is_valid=result.get("isValid"),
+            stream_document_id=result.get("_id"),
+            sr=result.get("sr"),
+            type=result.get("type"),
+
+        )
+        data.meta_data.expand(handler_meta_data)
 
         return data
 
@@ -659,7 +658,7 @@ if __name__ == "__main__":
             ip=IP, port=PORT, user=USER, password=PASSWORD, data_dir=Path(DATA_DIR)
         )
 
-        # Loading
+        # Stream
         fs = "Loading {} took {}ms"
         t_start = perf_counter()
         feature_stream = smh.load(
@@ -680,10 +679,10 @@ if __name__ == "__main__":
             role="testrole",
             name="arousal.synchrony[testrole]" + suffix,
             data_type='video',
-            dim_labels=[{'1' : 'hallo'}, {'2' : 'nope'}]
+            dim_labels=[{'id' : 1, 'name': 'hallo'}, {'id' : 2, 'name' : 'nope'}]
         )
 
-
+        # Audio
         t_start = perf_counter()
         audio_stream = smh.load(
             dataset="test", session="01_AffWild2_video1", role="testrole", name="audio"
@@ -691,6 +690,7 @@ if __name__ == "__main__":
         t_stop = perf_counter()
         print(fs.format("Audio", int((t_stop - t_start) * 1000)))
 
+        # Video
         t_start = perf_counter()
         video_stream = smh.load(
             dataset="test", session="01_AffWild2_video1", role="testrole", name="video"

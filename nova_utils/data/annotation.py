@@ -3,9 +3,14 @@ import sys
 from abc import ABC, abstractmethod
 from numpy import dtype
 from enum import Enum
-from nova_utils.data.idata import IDynamicData, GeneralMetaData
+from nova_utils.data.idata import IDynamicData
 from nova_utils.utils.anno_utils import get_overlap, get_anno_majority, is_garbage
 import pandas as pd
+
+# MetaData
+class AnnoMetaData:
+    def __init__(self, annotator: str = None):
+        self.annotator = annotator
 
 
 # Schemes
@@ -104,13 +109,6 @@ class FreeAnnotationScheme(IAnnotationScheme):
         super().__init__(*args, **kwargs)
 
 
-# Meta Information
-class AnnoMetaData(GeneralMetaData):
-    def __init__(self, *args, scheme: IAnnotationScheme, annotator: str = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.annotation_scheme = scheme
-        self.annotator = annotator
-
 # Annotations
 class Annotation(IDynamicData):
     GARBAGE_LABEL_ID = np.NAN
@@ -125,9 +123,16 @@ class Annotation(IDynamicData):
         self,
         data: np.ndarray,
         scheme : IAnnotationScheme,
+        annotator : str = None,
+        **kwargs
     ):
-        super().__init__(data=data)
+
+        super().__init__(data=data, **kwargs)
         self._annotation_scheme = scheme
+
+        # Create meta data
+        anno_meta_data = AnnoMetaData(annotator = annotator)
+        self.meta_data.expand( anno_meta_data )
 
     @annotation_scheme.setter
     def annotation_scheme(self, value):
@@ -146,8 +151,9 @@ class DiscreteAnnotation(Annotation):
             self,
             data: np.ndarray,
             scheme : DiscreteAnnotationScheme,
+            **kwargs
     ):
-        super().__init__(data=data, scheme=scheme)
+        super().__init__(data=data, scheme=scheme, **kwargs)
         self._data_values = None
         self._data_interval = None
 
@@ -198,8 +204,9 @@ class FreeAnnotation(Annotation):
             self,
             data: np.ndarray,
             scheme : FreeAnnotationScheme,
+            **kwargs
     ):
-        super().__init__(data=data, scheme=scheme)
+        super().__init__(data=data, scheme=scheme, **kwargs)
         self._data_values = None
         self._data_interval = None
 
