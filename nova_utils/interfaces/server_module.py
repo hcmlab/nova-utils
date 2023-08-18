@@ -34,7 +34,7 @@ class Processor(ABC):
                     if v in ("True", "False"):
                         self.options[k] = True if v == "True" else False
                     elif v == "None":
-                        self.options[k] = True if v == "True" else False
+                        self.options[k] = None
                     else:
                         self.options[k] = v
                     logger.info(k + "=" + v)
