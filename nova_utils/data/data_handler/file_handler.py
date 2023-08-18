@@ -1,3 +1,9 @@
+"""
+Module for handling File data operations related to annotations and streams.
+Author: Dominik Schiller
+Date: 18.8.2023
+"""
+
 import xml.etree.ElementTree as Et
 import numpy as np
 import csv
@@ -7,7 +13,7 @@ import json
 from typing import Union
 from decord import cpu
 from struct import *
-from nova_utils.data.idata import IData
+from nova_utils.data.data import Data
 from nova_utils.data.ssi_data_types import FileTypes, NPDataTypes, string_to_enum
 from pathlib import Path
 from nova_utils.data.data_handler.ihandler import IHandler
@@ -34,12 +40,39 @@ import ffmpegio
 
 # METADATA
 class FileMetaData:
-    def __init__(self, file_path):
+    """Metadata for a file.
+
+    Attributes:
+        file_path (Path): The filepath from which the data has been loaded
+    """
+
+    def __init__(self, file_path: Path):
+        """
+        Initialize metadata for any file.
+
+        Args:
+        file_path (Path): The filepath from which the data has been loaded
+        """
         self.file_path = file_path
 
 
-class FileSSIStreamMetaData():
+class FileSSIStreamMetaData:
+    """Metadata for a file.
+
+    Attributes:
+        ftype (str): The file type.
+        delim (str): The delimiter used to separate entries in the file.
+    """
+
     def __init__(self, ftype: str, delim: str):
+        """
+        Initialize additional metadata for a file-based SSIStream.
+        FileMetaData needs to be set separately.
+
+        Args:
+            ftype (str): The file type.
+            delim (str): The delimiter used in the file.
+        """
         self.ftype = ftype
         self.delim = delim
 
@@ -49,16 +82,16 @@ class _AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
 
     @staticmethod
-    def _load_data_discrete(path, ftype):
+    def _load_data_discrete(path: Path, ftype: str):
         """
         Load discrete annotation data from a file.
 
-        Parameters:
-            path: The path of the file containing the annotation data.
-            ftype: The file type (ASCII or BINARY) of the annotation data.
+        Args:
+            path (Path): The path of the file containing the annotation data.
+            ftype (str): The file type (ASCII or BINARY) of the annotation data.
 
         Returns:
-            numpy.ndarray: The loaded discrete annotation data as a NumPy array.
+            np.ndarray: The loaded discrete annotation data as a NumPy array.
         """
         dt = LabelType.DISCRETE.value
         if ftype == FileTypes.ASCII.name:
@@ -73,12 +106,12 @@ class _AnnotationFileHandler(IHandler):
         """
         Load continuous annotation data from a file.
 
-        Parameters:
-            path: The path of the file containing the annotation data.
-            ftype: The file type (ASCII or BINARY) of the annotation data.
+        Args:
+            path (Path): The path of the file containing the annotation data.
+            ftype (str): The file type (ASCII or BINARY) of the annotation data.
 
         Returns:
-            numpy.ndarray: The loaded continuous annotation data as a NumPy array.
+            np.ndarray: The loaded continuous annotation data as a NumPy array.
         """
         dt = LabelType.CONTINUOUS.value
         if ftype == FileTypes.ASCII.name:
@@ -93,13 +126,13 @@ class _AnnotationFileHandler(IHandler):
         """
         Load free annotation data from a file.
 
-        Parameters:
-            path: The path of the file containing the annotation data.
-            ftype: The file type (ASCII or BINARY) of the annotation data.
-            size: The size of the data to be loaded.
+        Args:
+            path (Path): The path of the file containing the annotation data.
+            ftype (str): The file type (ASCII or BINARY) of the annotation data.
+            size (int): The size of the data to be loaded.
 
         Returns:
-            numpy.ndarray: The loaded free annotation data as a NumPy array.
+            np.ndarray: The loaded free annotation data as a NumPy array.
         """
         data = []
         if ftype == FileTypes.ASCII.name:
@@ -141,8 +174,8 @@ class _AnnotationFileHandler(IHandler):
         """
         Generate a string format for a given numpy dtype.
 
-        Parameters:
-            dtype (numpy.dtype): The numpy dtype.
+        Args:
+            dtype (np.dtype): The numpy dtype.
 
         Returns:
             list: A list of format strings for each field in the dtype.
@@ -164,15 +197,15 @@ class _AnnotationFileHandler(IHandler):
 
         return fmt
 
-    def load(self, fp) -> Annotation:
+    def load(self, fp: Path) -> Annotation:
         """
         Load annotation data from an XML file.
 
-        Parameters:
+        Args:
             fp (Path): The file path of the XML annotation file.
 
         Returns:
-            Annotation: The loaded annotation data as an IAnnotation object.
+            Annotation: The loaded annotation data as an Annotation object.
         """
         data_path = fp.with_suffix(fp.suffix + "~")
         tree = Et.parse(fp)
@@ -180,7 +213,7 @@ class _AnnotationFileHandler(IHandler):
         # info
         info = tree.find("info", {})
         ftype = info.get("ftype")
-        size = info.get("size")
+        size = int(info.get("size", 0))
 
         # meta
         meta = tree.find("meta", {})
@@ -242,7 +275,17 @@ class _AnnotationFileHandler(IHandler):
         return annotation
 
     def save(self, data: Annotation, fp: Path, ftype: FileTypes = FileTypes.ASCII):
+        """
+        Save annotation data to a file.
 
+        Args:
+            data (Annotation): The annotation data to be saved.
+            fp (Path): The file path for saving the data.
+            ftype (FileTypes, optional): The file type (ASCII or BINARY) for saving.
+
+        Raises:
+            TypeError: If filetype is not supported for saving or unknown
+        """
         data_path = fp.with_suffix(fp.suffix + "~")
 
         # header
@@ -253,10 +296,9 @@ class _AnnotationFileHandler(IHandler):
         Et.SubElement(root, "info", attrib={"ftype": ftype.name, "size": size})
 
         # meta
-        #TODO include meta again when implemented
-        #role = data.info.meta_data.role
-        #annotator = data.info.meta_data.annotator
-        #Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
+        role = "" if data.meta_data.role is None else data.meta_data.role
+        annotator = "" if data.meta_data.annotator is None else data.meta_data.annotator
+        Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
 
         # scheme
         scheme_name = data.annotation_scheme.name
@@ -312,7 +354,19 @@ class _AnnotationFileHandler(IHandler):
 
 # SSI STREAMS
 class _SSIStreamFileHandler(IHandler):
-    def _load_header(self, fp) -> dict:
+    """Class for handling the loading and saving of SSIStreams."""
+
+    def _load_header(self, fp: Path) -> dict:
+        """
+        Load SSIStream header from a file.
+
+        Args:
+            fp (Path): The file path of the SSIStream.
+
+        Returns:
+            dict: A dictionary containing SSIStream header data.
+        """
+
         tree = Et.parse(fp)
 
         # info
@@ -338,15 +392,15 @@ class _SSIStreamFileHandler(IHandler):
         duration = num_samples * float(sr)
 
         ssistream_meta_data = {
-            "duration":duration,
-            "sample_shape":(int(dim),),
-            "num_samples":num_samples,
-            "sample_rate":float(sr),
-            "dtype":string_to_enum(NPDataTypes, dtype).value,
-            "chunks":chunks,
+            "duration": duration,
+            "sample_shape": (int(dim),),
+            "num_samples": num_samples,
+            "sample_rate": float(sr),
+            "dtype": string_to_enum(NPDataTypes, dtype).value,
+            "chunks": chunks,
             "fp": fp,
             "delim": delim,
-            "ftype": ftype
+            "ftype": ftype,
         }
         return ssistream_meta_data
 
@@ -359,6 +413,23 @@ class _SSIStreamFileHandler(IHandler):
         dtype: np.dtype = NPDataTypes.FLOAT.value,
         delim=" ",
     ):
+        """
+        Load SSIStream data from a file.
+
+        Args:
+            fp (Path): The file path of the SSIStream data.
+            size (int): The size of the data.
+            dim (int): The dimension of the data.
+            ftype (FileTypes, optional): The file type (ASCII or BINARY) of the SSIStream data.
+            dtype (np.dtype, optional): The data type.
+            delim (str, optional): The delimiter used in the file.
+
+        Returns:
+            np.ndarray: The loaded SSIStream data as a NumPy array.
+
+        Raises:
+            ValueError: If the provided filetype is not supported
+        """
         if ftype == FileTypes.ASCII:
             return np.loadtxt(fp, dtype=dtype, delimiter=delim)
         elif ftype == FileTypes.BINARY:
@@ -373,7 +444,15 @@ class _SSIStreamFileHandler(IHandler):
         ftype: FileTypes = FileTypes.BINARY,
         delim: str = " ",
     ):
+        """
+        Save SSIStream data to a file.
 
+        Args:
+            data (SSIStream): The SSIStream data to be saved.
+            fp (Path): The file path for saving the data.
+            ftype (FileTypes, optional): The file type (ASCII or BINARY) for saving.
+            delim (str, optional): The delimiter to be used in the file.
+        """
         # save header
         data_path = fp.with_suffix(fp.suffix + "~")
 
@@ -426,18 +505,27 @@ class _SSIStreamFileHandler(IHandler):
         if ftype == FileTypes.BINARY:
             data.data.tofile(data_path)
 
-    def load(self, fp, **kwargs) -> IData:
+    def load(self, fp, **kwargs) -> Data:
+        """
+        Load SSIStream data from a file.
 
+        Args:
+            fp (Path): The file path of the SSIStream.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Data: The loaded SSIStream data.
+        """
         data_path = fp.with_suffix(fp.suffix + "~")
         header = self._load_header(fp)
-        duration = header.get('duration')
-        sample_shape = header.get('sample_shape')
-        num_samples = header.get('num_samples')
-        sample_rate = header.get('sample_rate')
-        dtype = header.get('dtype')
-        chunks = header.get('chunks')
-        delim = header['delim']
-        ftype = header['ftype']
+        duration = header.get("duration")
+        sample_shape = header.get("sample_shape")
+        num_samples = header.get("num_samples")
+        sample_rate = header.get("sample_rate")
+        dtype = header.get("dtype")
+        chunks = header.get("chunks")
+        delim = header["delim"]
+        ftype = header["ftype"]
 
         data = self._load_data(
             fp=data_path,
@@ -445,16 +533,26 @@ class _SSIStreamFileHandler(IHandler):
             dtype=dtype,
             dim=sample_shape[0],
             delim=delim,
-            ftype=FileTypes[ftype]
+            ftype=FileTypes[ftype],
         )
 
-        ssi_stream = SSIStream(data=data, duration=duration, sample_shape=sample_shape, num_samples=num_samples, sample_rate=sample_rate, dtype = dtype, chunks=chunks)
-        ssi_stream.meta_data.expand( FileSSIStreamMetaData ( delim= delim, ftype=ftype) )
+        ssi_stream = SSIStream(
+            data=data,
+            duration=duration,
+            sample_shape=sample_shape,
+            num_samples=num_samples,
+            sample_rate=sample_rate,
+            dtype=dtype,
+            chunks=chunks,
+        )
+        ssi_stream.meta_data.expand(FileSSIStreamMetaData(delim=delim, ftype=ftype))
         return ssi_stream
 
 
 # VIDEO
 class _LazyArray(np.ndarray):
+    """LazyArray class extending numpy.ndarray for video and audio loading."""
+
     def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
         buffer = mmap.mmap(-1, dtype.itemsize * np.prod(shape), access=mmap.ACCESS_READ)
         obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
@@ -472,7 +570,18 @@ class _LazyArray(np.ndarray):
 
 
 class _VideoFileHandler(IHandler):
+    """Class for handling the loading and saving of video data."""
+
     def _get_video_meta(self, fp) -> dict:
+        """
+        Get video metadata using ffprobe.
+
+        Args:
+            fp (Path): The file path of the video.
+
+        Returns:
+            dict: A dictionary containing video metadata.
+        """
         ffprobe_cmd = [
             "ffprobe",
             "-v",
@@ -482,18 +591,25 @@ class _VideoFileHandler(IHandler):
             "-print_format",
             "json",
             "-show_streams",
-            fp,
+            str(fp.resolve()),
         ]
         result = subprocess.run(ffprobe_cmd, capture_output=True, text=True)
         metadata = json.loads(result.stdout)
         return metadata
 
+    def load(self, fp: Path) -> Data:
+        """
+        Load video data from a file.
 
-    def load(self, fp: Path) -> IData:
-        file_path = str(fp.resolve())
+        Args:
+            fp (Path): The file path of the video.
+
+        Returns:
+            Data: The loaded video data.
+        """
 
         # meta information
-        metadata = self._get_video_meta(file_path)
+        metadata = self._get_video_meta(fp)
         metadata = metadata["streams"][0]
         _width = metadata.get("width")
         _height = metadata.get("height")
@@ -501,40 +617,59 @@ class _VideoFileHandler(IHandler):
 
         sample_shape = (1, _height, _width, 3)
         duration = float(metadata.get("duration"))
-        sample_rate = (
-            eval(_sample_rate) if _sample_rate is not None else None
-        )
+        sample_rate = eval(_sample_rate) if _sample_rate is not None else None
         num_samples = int(metadata.get("nb_frames"))
         dtype = np.dtype(np.uint8)
 
         # file loading
-        video_reader = decord.VideoReader(file_path, ctx=cpu(0))
+        video_reader = decord.VideoReader(str(fp.resolve()), ctx=cpu(0))
         lazy_video_data = _LazyArray(
             video_reader,
             shape=(num_samples,) + sample_shape[1:],
             dtype=dtype,
         )
 
-        video_ = Video(data=lazy_video_data, duration=duration, sample_shape=sample_shape, num_samples=num_samples, sample_rate=sample_rate, dtype=dtype)
+        video_ = Video(
+            data=lazy_video_data,
+            duration=duration,
+            sample_shape=sample_shape,
+            num_samples=num_samples,
+            sample_rate=sample_rate,
+            dtype=dtype,
+        )
         return video_
 
     def save(self, data: Video, fp: Path):
+        """
+        Save video data to a file.
 
-        meta_data : StreamMetaData = data.meta_data
+        Args:
+            data (Video): The video data to be saved.
+            fp (Path): The file path for saving the data.
+        """
+        meta_data: StreamMetaData = data.meta_data
         sample_rate = int(meta_data.sample_rate)
         file_path = str(fp.resolve())
 
         ffmpegio.video.write(
-            file_path,
-            sample_rate,
-            np.vstack(data.data),
-            overwrite=True
+            file_path, sample_rate, np.vstack(data.data), overwrite=True
         )
 
 
 # AUDIO
 class _AudioFileHandler(IHandler):
-    def _get_audio_meta(self, fp) -> dict:
+    """Class for handling the loading and saving of audio data."""
+
+    def _get_audio_meta(self, fp: Path) -> dict:
+        """
+        Get audio metadata using ffprobe.
+
+        Args:
+            fp (Path): The file path of the audio.
+
+        Returns:
+            dict: A dictionary containing audio metadata.
+        """
         ffprobe_cmd = [
             "ffprobe",
             "-v",
@@ -543,18 +678,24 @@ class _AudioFileHandler(IHandler):
             "json",
             "-show_streams",
             "-i",
-            fp,
+            str(fp.resolve()),
         ]
         result = subprocess.run(ffprobe_cmd, capture_output=True, text=True)
         metadata = json.loads(result.stdout)
         return metadata
 
-    def load(self, fp: Path) -> IData:
+    def load(self, fp: Path) -> Data:
+        """
+        Load audio data from a file.
 
-        file_path = str(fp.resolve())
+        Args:
+            fp (Path): The file path of the audio.
 
+        Returns:
+            Data: The loaded audio data.
+        """
         # meta information
-        stream_meta_data = self._get_audio_meta(file_path)
+        stream_meta_data = self._get_audio_meta(fp)
 
         metadata = stream_meta_data["streams"][0]
         _channels = metadata.get("channels")
@@ -569,17 +710,30 @@ class _AudioFileHandler(IHandler):
         num_samples = _num_samples
 
         # file loading
-        audio_reader = decord.AudioReader(file_path, ctx=cpu(0))
+        audio_reader = decord.AudioReader(str(fp.resolve()), ctx=cpu(0))
         lazy_audio_data = _LazyArray(
             audio_reader, shape=audio_reader.shape, dtype=dtype
         )
 
-        audio_ = Audio(data=lazy_audio_data, duration=duration, sample_shape=sample_shape, num_samples=num_samples, sample_rate=sample_rate, dtype=dtype)
+        audio_ = Audio(
+            data=lazy_audio_data,
+            duration=duration,
+            sample_shape=sample_shape,
+            num_samples=num_samples,
+            sample_rate=sample_rate,
+            dtype=dtype,
+        )
         return audio_
 
     def save(self, data: Audio, fp: Path):
+        """
+        Save audio data to a file.
 
-        meta_data : StreamMetaData = data.meta_data
+        Args:
+            data (Audio): The audio data to be saved.
+            fp (Path): The file path for saving the data.
+        """
+        meta_data: StreamMetaData = data.meta_data
         ffmpegio.audio.write(
             str(fp.resolve()),
             int(meta_data.sample_rate),
@@ -589,6 +743,8 @@ class _AudioFileHandler(IHandler):
 
 
 class FileHandler(IHandler):
+    """Class for handling different types of data files."""
+
     def _get_handler_for_file(
         self, fp
     ) -> Union[
@@ -597,6 +753,15 @@ class FileHandler(IHandler):
         _AudioFileHandler,
         _VideoFileHandler,
     ]:
+        """
+        Get the appropriate handler for a given file.
+
+        Args:
+            fp (Path): The file path.
+
+        Returns:
+            IHandler: An instance of the appropriate data handler.
+        """
         if not self.data_type:
             ext = fp.suffix[1:]
             if ext == "annotation":
@@ -616,22 +781,43 @@ class FileHandler(IHandler):
     def __init__(self, data_type: int = None):
         self.data_type = data_type
 
-    def load(self, fp: Path) -> IData:
+    def load(self, fp: Path) -> Data:
+        """
+        Load data from a file.
+
+        Args:
+            fp (Path): The file path.
+
+        Returns:
+            Data: The loaded data.
+        """
         handler = self._get_handler_for_file(fp)
         data = handler.load(fp)
-        data.meta_data.expand( FileMetaData (fp)  )
+        data.meta_data.expand(FileMetaData(fp))
         return data
 
     def save(self, data: any, fp: Path, overwrite=True, *args, **kwargs):
+        """
+        Save data to a file.
 
+        Args:
+            data (any): The data to be saved.
+            fp (Path): The file path for saving the data.
+            overwrite (bool, optional): Whether to overwrite the file if it exists.
+            *args: Variable length argument list.
+             **kwargs: Arbitrary keyword arguments.
+
+        Raises:
+            FileExistsError: If the file already exists and overwrite is not allowed.
+        """
         if fp.exists() and not overwrite:
-            raise FileExistsError(f'Cannot write {fp} because file already exists')
+            raise FileExistsError(f"Cannot write {fp} because file already exists")
         handler = self._get_handler_for_file(fp)
         return handler.save(data, fp, *args, **kwargs)
 
 
 if __name__ == "__main__":
-
+    # Test cases...
     test_annotations = True
     test_streams = False
     base_dir = Path("../../../test_files/")
@@ -689,9 +875,7 @@ if __name__ == "__main__":
         # Replace one dimension with random data
         new_data = ssistream_binary.data.copy()
         replacement_dimension = 0
-        random_data = np.random.rand(
-            new_data.shape[replacement_dimension]
-        )
+        random_data = np.random.rand(new_data.shape[replacement_dimension])
 
         # Generate random data
         new_data[:, replacement_dimension] = random_data

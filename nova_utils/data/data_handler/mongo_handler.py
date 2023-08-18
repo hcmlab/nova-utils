@@ -1,9 +1,15 @@
+"""
+Module for handling MongoDB data operations related to annotations and streams.
+Author: Dominik Schiller
+Date: 18.8.2023
+"""
+
 import numpy as np
 import warnings
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult, UpdateResult
-from nova_utils.data.data_handler.file_handler import FileHandler, FileMetaData
+from nova_utils.data.data_handler.file_handler import FileHandler
 from bson.objectid import ObjectId
 from pathlib import Path
 from nova_utils.data.data_handler.ihandler import IHandler
@@ -18,7 +24,7 @@ from nova_utils.data.annotation import (
     FreeAnnotation,
     FreeAnnotationScheme,
 )
-from nova_utils.data.stream import Stream, SSIStream, Video, Audio
+from nova_utils.data.stream import Stream, SSIStream, Video, Audio, StreamMetaData
 
 ANNOTATOR_COLLECTION = "Annotators"
 SCHEME_COLLECTION = "Schemes"
@@ -29,8 +35,20 @@ SESSION_COLLECTION = "Sessions"
 ANNOTATION_DATA_COLLECTION = "AnnotationData"
 
 # METADATA
-class MongoMetaData():
-    def __init__(self, ip: str = None, port: int = None, user: str = None, dataset: str = None):
+class MongoMetaData:
+    """
+    Metadata for MongoDB connection.
+
+    Attributes:
+        ip (str, optional): IP address of the MongoDB server.
+        port (int, optional): Port number of the MongoDB server.
+        user (str, optional): Username for authentication.
+        dataset (str, optional): Name of the dataset.
+    """
+
+    def __init__(
+        self, ip: str = None, port: int = None, user: str = None, dataset: str = None
+    ):
         self.ip = ip
         self.port = port
         self.user = user
@@ -38,9 +56,28 @@ class MongoMetaData():
 
 
 class MongoAnnotationMetaData(MongoMetaData):
-    def __init__(self, *args, is_locked: bool = None, is_finished: bool = None, last_update: bool = None,
-                 annotation_document_id: ObjectId = None, data_document_id: ObjectId = None, **kwargs):
-        super().__init__(*args, **kwargs)
+    """
+    Metadata for MongoDB annotations.
+
+    Attributes:
+        is_locked (bool, optional): Indicates if the annotation is locked.
+        is_finished (bool, optional): Indicates if the annotation is finished.
+        last_update (bool, optional): Timestamp of the last update.
+        annotation_document_id (ObjectId, optional): ID of the annotation document.
+        data_document_id (ObjectId, optional): ID of the associated data document.
+        **kwargs: Arbitrary keyword arguments.
+    """
+
+    def __init__(
+        self,
+        is_locked: bool = None,
+        is_finished: bool = None,
+        last_update: bool = None,
+        annotation_document_id: ObjectId = None,
+        data_document_id: ObjectId = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
         self.is_locked = is_locked
         self.is_finished = is_finished
         self.last_update = last_update
@@ -49,9 +86,22 @@ class MongoAnnotationMetaData(MongoMetaData):
 
 
 class MongoStreamMetaData(MongoMetaData):
+    """
+    Metadata for MongoDB streams.
+
+    Attributes:
+        name (str, optional): Name of the stream.
+        dim_labels (dict, optional): Dimension labels of the stream.
+        file_ext (str, optional): File extension of the stream data.
+        is_valid (bool, optional): Indicates if the stream data is valid.
+        stream_document_id (ObjectId, optional): ID of the stream document.
+        db_sample_rate (float, optional): Sample rate of the stream data in the database.
+        type (str, optional): Type of the stream data.
+         **kwargs: Arbitrary keyword arguments.
+    """
+
     def __init__(
         self,
-        *args,
         name: str = None,
         dim_labels: dict = None,
         file_ext: str = None,
@@ -61,7 +111,7 @@ class MongoStreamMetaData(MongoMetaData):
         type: str = None,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self.name = name
         self.dim_labels = dim_labels
         self.file_ext = file_ext
@@ -73,10 +123,20 @@ class MongoStreamMetaData(MongoMetaData):
 
 # DATA
 class MongoHandler:
+    """
+    Base class for handling MongoDB connections.
 
-    @staticmethod
-    def get_meta_type() -> tuple:
-        return (MongoMetaData,)
+     Args:
+        ip (str, optional): IP address of the MongoDB server.
+        port (int, optional): Port number of the MongoDB server.
+        user (str, optional): Username for authentication.
+        password (str, optional): Password for authentication.
+        data_dir (Path, optional): Path to the data directory for stream files
+
+    Attributes:
+        data_dir (Path, optional): Path to the data directory for stream files
+        client (MongoClient): The MongoDB client connected to the database. Readonly
+    """
 
     def __init__(
         self,
@@ -97,17 +157,25 @@ class MongoHandler:
     def connect(
         self, ip: str = None, port: int = None, user: str = None, password: str = None
     ):
+        """
+        Connects to the MongoDB server.
+
+        Args:
+            ip (str): IP address of the MongoDB server.
+            port (int): Port number of the MongoDB server.
+            user (str): Username for authentication.
+            password (str): Password for authentication.
+        """
         self._client = MongoClient(host=ip, port=port, username=user, password=password)
         self._ip = ip
         self._port = port
         self._user = user
 
     @property
-    def client(self):
-        if self._client is None:
-            raise ValueError(
-                "Connection to mongo DB is not established. Call connect() first."
-            )
+    def client(self) -> MongoClient:
+        """
+        Returns the MongoDB client instance.
+        """
         return self._client
 
 
@@ -115,10 +183,6 @@ class AnnotationHandler(IHandler, MongoHandler):
     """
     Class for handling download of annotation data from Mongo db.
     """
-
-    @staticmethod
-    def get_meta_type() -> tuple:
-        return Annotation.get_meta_type() + (MongoAnnotationMetaData,)
 
     def _load_annotation(
         self,
@@ -129,6 +193,20 @@ class AnnotationHandler(IHandler, MongoHandler):
         scheme: str,
         project: dict = None,
     ) -> dict:
+        """
+        Load annotation data from MongoDB.
+
+        Args:
+            dataset (str): Name of the dataset.
+            session (str): Name of the session.
+            annotator (str): Name of the annotator.
+            role (str): Name of the role.
+            scheme (str): Name of the annotation scheme.
+            project (dict, optional): Projection for MongoDB query to filter attributes. Defaults to None.
+
+        Returns:
+            dict: Loaded annotation data.
+        """
         pipeline = [
             {
                 "$lookup": {
@@ -196,11 +274,24 @@ class AnnotationHandler(IHandler, MongoHandler):
         dataset: str,
         annotation_id: ObjectId,
         annotation_data_id: ObjectId,
-        annotation_data: list,
+        annotation_data: list[dict],
         is_finished: bool,
         is_locked: bool,
     ) -> UpdateResult:
+        """
+        Updates existing annotation the Mongo database
 
+        Args:
+            dataset (str): Name of the dataset.
+            annotation_id (ObjectId): ObjectId of the annotation in the database
+            annotation_data_id (ObjectId): ObjectId of the corresponding annotation data object in the database
+            annotation_data (list[dict]): List of dictionaries containing the annotation data. Each dictionary represents one sample. Keys must match the annotation types.
+            is_finished (bool): Whether the annotation has already been fully completed or not
+            is_locked (bool): Whether the annotation should be locked and can therefore not be overwritten anymore.
+
+        Returns:
+            UpdateResult: The success status of the update operation
+        """
         update_query_annotation = {
             "$set": {
                 "date": datetime.now(),
@@ -223,7 +314,16 @@ class AnnotationHandler(IHandler, MongoHandler):
         return success
 
     def _insert_annotation_data(self, dataset: str, data: list) -> InsertOneResult:
+        """
+        Insert annotation data into the MongoDB database.
 
+        Args:
+            dataset (str): Name of the dataset.
+            data (list): List of annotation data to be inserted.
+
+        Returns:
+            InsertOneResult: The result of the insertion operation.
+        """
         annotation_data = {"labels": data}
 
         success = self.client[dataset][ANNOTATION_DATA_COLLECTION].insert_one(
@@ -242,7 +342,22 @@ class AnnotationHandler(IHandler, MongoHandler):
         is_finished: bool,
         is_locked: bool,
     ):
+        """
+        Insert annotation and associated annotation data into the MongoDB database.
 
+        Args:
+            dataset (str): Name of the dataset.
+            session_id (ObjectId): ID of the associated session.
+            annotator_id (ObjectId): ID of the annotator.
+            scheme_id (ObjectId): ID of the annotation scheme.
+            role_id (ObjectId): ID of the role.
+            data (list): List of annotation data to be inserted.
+            is_finished (bool): Indicates if the annotation is finished.
+            is_locked (bool): Indicates if the annotation is locked.
+
+        Returns:
+            InsertOneResult: The result of the insertion operation.
+        """
         # insert annotation data first
         success = self._insert_annotation_data(dataset, data)
         if not success.acknowledged:
@@ -276,7 +391,23 @@ class AnnotationHandler(IHandler, MongoHandler):
     def load(
         self, dataset: str, scheme: str, session: str, annotator: str, role: str
     ) -> Annotation:
+        """
+        Load annotation data from MongoDB and create an Annotation object.
 
+        Args:
+            dataset (str): Name of the dataset.
+            scheme (str): Name of the annotation scheme.
+            session (str): Name of the session.
+            annotator (str): Name of the annotator.
+            role (str): Name of the role.
+
+        Returns:
+            Annotation: An Annotation object loaded from the database.
+
+        Raises:
+            FileNotFoundError: If the requested annotation data is not found in the database.
+            TypeError: If the scheme type is unknown.
+        """
         # load annotation from mongo db
         anno_doc = self._load_annotation(dataset, session, annotator, role, scheme)
 
@@ -304,13 +435,13 @@ class AnnotationHandler(IHandler, MongoHandler):
             )
             anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes)
             annotation = DiscreteAnnotation(
-                #role=role,
-                #annotator=annotator,
-                #annotation_scheme=anno_scheme,
-                #session=session,
-                #dataset=dataset,
+                # role=role,
+                # annotator=annotator,
+                # annotation_scheme=anno_scheme,
+                # session=session,
+                # dataset=dataset,
                 data=anno_data,
-                scheme=anno_scheme
+                scheme=anno_scheme,
             )
 
         # continuous scheme
@@ -326,13 +457,13 @@ class AnnotationHandler(IHandler, MongoHandler):
                 name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val
             )
             annotation = ContinuousAnnotation(
-                #role=role,
-                #annotator=annotator,
-                #annotation_scheme=anno_scheme,
-                #session=session,
-                #dataset=dataset,
+                # role=role,
+                # annotator=annotator,
+                # annotation_scheme=anno_scheme,
+                # session=session,
+                # dataset=dataset,
                 data=anno_data,
-                scheme=anno_scheme
+                scheme=anno_scheme,
             )
 
             # free scheme
@@ -348,13 +479,13 @@ class AnnotationHandler(IHandler, MongoHandler):
             )
             anno_scheme = FreeAnnotationScheme(name=scheme)
             annotation = FreeAnnotation(
-                #role=role,
-                #annotator=annotator,
-                #annotation_scheme=anno_scheme,
-                #session=session,
-                #dataset=dataset,
+                # role=role,
+                # annotator=annotator,
+                # annotation_scheme=anno_scheme,
+                # session=session,
+                # dataset=dataset,
                 data=anno_data,
-                scheme=anno_scheme
+                scheme=anno_scheme,
             )
         else:
             raise TypeError(f"Unknown scheme type {scheme_type}")
@@ -385,7 +516,25 @@ class AnnotationHandler(IHandler, MongoHandler):
         is_locked: bool = False,
         overwrite: bool = False,
     ):
+        """
+        Save an Annotation object to the MongoDB database.
 
+        Args:
+            annotation (Annotation): The Annotation object to be saved.
+            dataset (str): Name of the dataset.
+            session (str): Name of the session.
+            annotator (str): Name of the annotator.
+            role (str): Name of the role.
+            is_finished (bool, optional): Indicates if the annotation is finished. Defaults to False.
+            is_locked (bool, optional): Indicates if the annotation is locked. Defaults to False.
+            overwrite (bool, optional): If True, overwrite an existing annotation. Defaults to False.
+
+        Returns:
+            UpdateResult: The result of the update operation.
+
+        Raises:
+            FileExistError: If annotation exists and is locked or annotation exists and overwrite is set to false
+        """
         # overwrite default values
         dataset = dataset
         session = session
@@ -412,15 +561,13 @@ class AnnotationHandler(IHandler, MongoHandler):
         # update existing annotations
         if anno_doc:
             if anno_doc["isLocked"]:
-                warnings.warn(
+                raise FileExistsError(
                     f"Can't overwrite locked annotation \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}"
                 )
-                return None
             elif not overwrite:
-                warnings.warn(
+                raise FileExistsError(
                     f"Can't overwrite annotation \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}. Because overwrite is disabled."
                 )
-                return None
             else:
                 warnings.warn(
                     f"Overwriting existing annotation \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}"
@@ -465,18 +612,47 @@ class AnnotationHandler(IHandler, MongoHandler):
 
 
 class StreamHandler(IHandler, MongoHandler):
+    """
+    Class for handling download and upload of stream data from MongoDB.
+    """
+
     def _load_stream(
         self,
         dataset: str,
         stream_name: str,
     ) -> dict:
+        """
+        Load stream data from MongoDB.
 
+        Args:
+            dataset (str): Name of the dataset.
+            stream_name (str): Name of the stream.
+
+        Returns:
+            dict: Loaded stream data.
+        """
         result = self.client[dataset][STREAM_COLLECTION].find_one({"name": stream_name})
         if not result:
             return {}
         return result
 
     def load(self, dataset: str, session: str, role: str, name: str) -> Stream:
+        """
+        Load a Stream object from MongoDB and create a Stream instance.
+
+        Args:
+            dataset (str): Name of the dataset.
+            session (str): Name of the session.
+            role (str): Name of the role.
+            name (str): Name of the stream.
+
+        Returns:
+            Stream: A Stream object loaded from the database.
+
+        Raises:
+            ValueError: If the requested stream is not found for the given dataset.
+            FileNotFoundError: If the data directory is not set or the file is not found on disc.
+        """
         result = self._load_stream(dataset=dataset, stream_name=name)
         if not result:
             raise ValueError(f"No stream {name} found for dataset {dataset}")
@@ -509,24 +685,40 @@ class StreamHandler(IHandler, MongoHandler):
             stream_document_id=result.get("_id"),
             sr=result.get("sr"),
             type=result.get("type"),
-
         )
         data.meta_data.expand(handler_meta_data)
 
         return data
 
-    def save(self,
-             stream: Stream,
-             dataset: str,
-             session: str,
-             role: str,
-             name: str,
-             data_type: str,
-             file_ext: str = None,
-             dim_labels: [] = None,
-             is_valid: bool = True,
+    def save(
+        self,
+        stream: Stream,
+        dataset: str,
+        session: str,
+        role: str,
+        name: str,
+        data_type: str,
+        file_ext: str = None,
+        dim_labels: [] = None,
+        is_valid: bool = True,
+    ):
+        """
+        Save a Stream object to the MongoDB database and store associated file.
 
-             ):
+        Args:
+            stream (Stream): The Stream object to be saved.
+            dataset (str): Name of the dataset.
+            session (str): Name of the session.
+            role (str): Name of the role.
+            name (str): Name of the stream.
+            data_type (str): Type of the stream data.
+            file_ext (str, optional): File extension. Defaults to None.
+            dim_labels (list, optional): Dimension labels. Defaults to None.
+            is_valid (bool, optional): Indicates if the stream data is valid. Defaults to True.
+
+        Raises:
+            FileNotFoundError: If the data directory is not set.
+        """
 
         if not self.data_dir:
             raise FileNotFoundError("Data directory was not set. Can't access files")
@@ -534,30 +726,27 @@ class StreamHandler(IHandler, MongoHandler):
         # write file
         if file_ext is None:
             if isinstance(stream, SSIStream):
-                file_ext = 'stream'
+                file_ext = "stream"
             elif isinstance(stream, Audio):
-                file_ext = 'wav'
+                file_ext = "wav"
             elif isinstance(stream, Video):
-                file_ext = 'mp4'
+                file_ext = "mp4"
 
-        file_name = (role + "." + name + "." + file_ext)
-        file_path = Path(
-            self.data_dir
-            / dataset
-            / session
-            / file_name
-        )
+        file_name = role + "." + name + "." + file_ext
+        file_path = Path(self.data_dir / dataset / session / file_name)
 
         FileHandler().save(stream, file_path)
 
+        meta_data: StreamMetaData = stream.meta_data
+
         # write db entry
         stream_document = {
-            "fileExt" : file_ext,
-            "name" : name,
-            "sr" : stream.sample_rate,
-            "type" : data_type,
-            "dimlabels" : dim_labels if dim_labels else [],
-            "isValid" : is_valid
+            "fileExt": file_ext,
+            "name": name,
+            "sr": meta_data.sample_rate,
+            "type": data_type,
+            "dimlabels": dim_labels if dim_labels else [],
+            "isValid": is_valid,
         }
 
         # check if stream exists
@@ -565,20 +754,14 @@ class StreamHandler(IHandler, MongoHandler):
 
         # update existing
         if result:
-            update_query_annotation = {
-                "$set": stream_document
-            }
+            update_query_annotation = {"$set": stream_document}
             self.client[dataset][STREAM_COLLECTION].update_one(
                 {"_id": result["_id"]}, update_query_annotation
             )
 
         # insert new
         else:
-            self.client[dataset][STREAM_COLLECTION].insert_one(
-                stream_document
-            )
-
-
+            self.client[dataset][STREAM_COLLECTION].insert_one(stream_document)
 
 
 if __name__ == "__main__":
@@ -638,17 +821,17 @@ if __name__ == "__main__":
         # save
         fs = "Saving {} took {}ms"
         t_start = perf_counter()
-        #amh.save(discrete_anno, annotator="testuser", overwrite=True)
+        # amh.save(discrete_anno, annotator="testuser", overwrite=True)
         t_stop = perf_counter()
         print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
 
         t_start = perf_counter()
-        #amh.save(continuous_anno, annotator="testuser", overwrite=True)
+        # amh.save(continuous_anno, annotator="testuser", overwrite=True)
         t_stop = perf_counter()
         print(fs.format("Continuous annotation", int((t_stop - t_start) * 1000)))
 
         t_start = perf_counter()
-        #amh.save(free_anno, annotator="testuser", overwrite=True)
+        # amh.save(free_anno, annotator="testuser", overwrite=True)
         t_stop = perf_counter()
         print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))
 
@@ -678,8 +861,8 @@ if __name__ == "__main__":
             session="04_Oesterreich_test",
             role="testrole",
             name="arousal.synchrony[testrole]" + suffix,
-            data_type='video',
-            dim_labels=[{'id' : 1, 'name': 'hallo'}, {'id' : 2, 'name' : 'nope'}]
+            data_type="video",
+            dim_labels=[{"id": 1, "name": "hallo"}, {"id": 2, "name": "nope"}],
         )
 
         # Audio
@@ -697,6 +880,5 @@ if __name__ == "__main__":
         )
         t_stop = perf_counter()
         print(fs.format("Video", int((t_stop - t_start) * 1000)))
-
 
         breakpoint()

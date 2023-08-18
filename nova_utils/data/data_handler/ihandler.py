@@ -1,80 +1,47 @@
-from nova_utils.data.idata import IData
+"""Interface class for all data handlers
+Author: Dominik Schiller
+Date: 18.8.2023
+"""
+
+from nova_utils.data.data import Data
 from abc import ABC, abstractmethod
+
 
 class IHandler(ABC):
     """
-    Abstract base class for data handlers.
+    Abstract base class for data handling operations.
 
-    This class defines the interface for handling data loading and saving from a data source, such as Mongo db.
-
-    Attributes:
-        None
-
-    Methods:
-        load(*args, **kwargs) -> IData:
-            Abstract method for loading data from the data source.
-
-            This method must be implemented in the child classes to provide specific data loading functionality.
-
-            Parameters:
-                *args: Variable-length argument list.
-                **kwargs: Arbitrary keyword arguments.
-
-            Returns:
-                IData: An object representing the loaded data.
-
-            Raises:
-                NotImplementedError: This error is raised when the child class does not implement the load method.
-
-        save(*args, **kwargs):
-            Abstract method for saving data to the data source.
-
-            This method must be implemented in the child classes to provide specific data saving functionality.
-
-            Parameters:
-                *args: Variable-length argument list.
-                **kwargs: Arbitrary keyword arguments.
-
-            Returns:
-                IData: An object representing the saved data.
-
-            Raises:
-                NotImplementedError: This error is raised when the child class does not implement the save method.
+    Subclasses of IHandler must implement the methods 'load' and 'save'
+    to handle data loading and saving operations, respectively.
     """
+
     @abstractmethod
-    def load(self, *args, **kwargs) -> IData:
+    def load(self, *args, **kwargs) -> Data:
         """
-        Abstract method for loading data from the data source.
+        Load data using specified arguments and keyword arguments.
 
-        This method must be implemented in the child classes to provide specific data loading functionality.
-
-        Parameters:
-            *args: Variable-length argument list.
+        Args:
+            *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
 
         Returns:
-            IData: An object representing the loaded data.
+            Data: A Data object representing the loaded data.
 
         Raises:
-            NotImplementedError: This error is raised when the child class does not implement the load method.
+            NotImplementedError: If the method is not implemented by a subclass.
         """
         raise NotImplementedError()
 
     @abstractmethod
     def save(self, *args, **kwargs):
         """
-        Abstract method for saving data to the data source.
+        Save data using specified arguments and keyword arguments.
 
-        This method must be implemented in the child classes to provide specific data saving functionality.
-
-        Parameters:
-            *args: Variable-length argument list.
+        Args:
+            *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
 
-        Returns:
-            IData: An object representing the saved data.
-
         Raises:
-            NotImplementedError: This error is raised when the child class does not implement the save method.
+            NotImplementedError: If the method is not implemented by a subclass.
         """
         raise NotImplementedError()
