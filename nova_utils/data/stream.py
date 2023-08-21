@@ -5,7 +5,8 @@ Date: 18.8.2023
 
 import numpy as np
 from nova_utils.data.data import DynamicData
-from nova_utils.data.ssi_data_types import NPDataTypes
+from nova_utils.data.types.ssi_data_types import NPDataTypes
+from nova_utils.utils.stream_utils import time_to_sample_interval
 
 
 class StreamMetaData:
@@ -128,7 +129,9 @@ class Stream(DynamicData):
         Returns:
             np.ndarray: The sampled data within the interval.
         """
-        raise NotImplementedError
+
+        start_sample, end_sample = time_to_sample_interval(start, end, self.meta_data.sample_rate)
+        return self.data[start_sample : end_sample]
 
 
 class SSIStream(Stream):

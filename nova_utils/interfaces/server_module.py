@@ -3,8 +3,6 @@ from abc import ABC, abstractmethod
 from nova_utils.deprecated_ssi_utils.ssi_anno_utils import Anno
 
 
-REQUIREMENTS = []
-
 class Processor(ABC):
     """
     Base class of a data processor. This interface builds the foundation for all data processing classes.

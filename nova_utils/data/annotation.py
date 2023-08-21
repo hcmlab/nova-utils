@@ -10,54 +10,31 @@ from enum import Enum
 from nova_utils.data.data import DynamicData
 from nova_utils.utils.anno_utils import get_overlap, get_anno_majority, is_garbage
 import pandas as pd
-
+from nova_utils.utils.type_definitions import LabelDType, SchemeType
 
 class AnnoMetaData:
     """
     Metadata for annotations, providing information about the annotator.
 
     Attributes:
-        annotator (str): Annotator identifier.
+        annotator (str, optional): Annotator identifier.
+        duration (float, optional): Duration of the stream in ms.
 
     Args:
         annotator (str, optional): Annotator identifier.
     """
 
-    def __init__(self, annotator: str = None):
+    def __init__(self, annotator: str = None, duration: int = None):
         """
         Initialize an AnnoMetaData instance with annotator information.
         """
         self.annotator = annotator
+        self.duration = duration
 
 
-class SchemeType(Enum):
-    """Predefined annotation schemes"""
-
-    DISCRETE = 0
-    CONTINUOUS = 1
-    FREE = 2
 
 
-class LabelType(Enum):
-    """Predefined label types for different annotation schemes."""
 
-    DISCRETE = np.dtype(
-        [
-            ("from", np.float64),
-            ("to", np.float64),
-            ("id", np.int32),
-            ("conf", np.float32),
-        ]
-    )
-    CONTINUOUS = np.dtype([("score", np.float32), ("conf", np.float32)])
-    FREE = np.dtype(
-        [
-            ("from", np.float64),
-            ("to", np.float64),
-            ("name", np.object_),
-            ("conf", np.float32),
-        ]
-    )
 
 
 class IAnnotationScheme(ABC):
@@ -115,7 +92,7 @@ class DiscreteAnnotationScheme(IAnnotationScheme):
     @property
     def label_dtype(self) -> dtype:
         """Get the numpy data type of discrete labels."""
-        return LabelType.DISCRETE.value
+        return LabelDType.DISCRETE.value
 
     @property
     def scheme_type(self) -> SchemeType:
@@ -154,7 +131,7 @@ class ContinuousAnnotationScheme(IAnnotationScheme):
     @property
     def label_dtype(self) -> dtype:
         """Get the numpy data type of continuous labels."""
-        return LabelType.CONTINUOUS.value
+        return LabelDType.CONTINUOUS.value
 
     @property
     def scheme_type(self) -> SchemeType:
@@ -183,7 +160,7 @@ class FreeAnnotationScheme(IAnnotationScheme):
     @property
     def label_dtype(self) -> dtype:
         """Get the numpy data type of free text labels."""
-        return LabelType.FREE.value
+        return LabelDType.FREE.value
 
     @property
     def scheme_type(self) -> SchemeType:
@@ -199,9 +176,10 @@ class Annotation(DynamicData):
         GARBAGE_LABEL_ID (float): Constant representing garbage label.
 
     Args:
-        data (np.ndarray): Array of annotation data.
+        data (np.ndarray, optional): Array of annotation data.
         scheme (IAnnotationScheme): The annotation scheme used for the data.
-        annotator (str, optional): Annotator identifier.
+        annotator (str, optional): Annotator identifier. Will be added to metadata.
+        duration (float, optional): Duration of the annotation in seconds.Will be added to metadata.
         **kwargs: Arbitrary keyword arguments.
     """
 
@@ -209,19 +187,19 @@ class Annotation(DynamicData):
 
     def __init__(
         self,
-        data: np.ndarray,
         scheme: IAnnotationScheme,
         annotator: str = None,
+        duration: float = None,
         **kwargs,
     ):
         """
         Initialize an Annotation instance with data, scheme, and annotator information.
         """
-        super().__init__(data=data, **kwargs)
+        super().__init__(**kwargs)
         self._annotation_scheme = scheme
 
         # Create meta data
-        anno_meta_data = AnnoMetaData(annotator=annotator)
+        anno_meta_data = AnnoMetaData(annotator=annotator, duration=duration)
         self.meta_data.expand(anno_meta_data)
 
     @property
@@ -258,9 +236,10 @@ class DiscreteAnnotation(Annotation):
         """
         Initialize a DiscreteAnnotation instance with data and scheme information.
         """
-        super().__init__(data=data, scheme=scheme, **kwargs)
+        super().__init__(scheme=scheme, **kwargs)
         self._data_values = None
         self._data_interval = None
+        self.data = data
         self.rest_label_id = self.NOVA_GARBAGE_LABEL_ID
 
     @property
@@ -286,7 +265,7 @@ class DiscreteAnnotation(Annotation):
         self._data = value
         if value is not None:
             df_tmp = pd.DataFrame(value)
-            self._data_interval = df_tmp[["from", "to"]].values.astype(int)
+            self._data_interval = df_tmp[["from", "to"]].values
             self._data_values = df_tmp[["id", "conf"]].values
 
     def sample_from_interval(self, start: int, end: int):
@@ -331,9 +310,11 @@ class FreeAnnotation(Annotation):
         """
         Initialize a FreeAnnotation instance with data and scheme information.
         """
-        super().__init__(data=data, scheme=scheme, **kwargs)
+        super().__init__(scheme=scheme, **kwargs)
         self._data_values = None
         self._data_interval = None
+        self.data = data
+
 
     @property
     def annotation_scheme(self) -> FreeAnnotationScheme:
@@ -358,7 +339,7 @@ class FreeAnnotation(Annotation):
         self._data = value
         if value is not None:
             df_tmp = pd.DataFrame(value)
-            self._data_interval = df_tmp[["from", "to"]].values.astype(int)
+            self._data_interval = df_tmp[["from", "to"]].values
             self._data_values = df_tmp[["name", "conf"]].values
 
     def sample_from_interval(self, start: int, end: int):
@@ -401,7 +382,8 @@ class ContinuousAnnotation(Annotation):
         """
         Initialize a DiscreteAnnotation instance with data and scheme information.
         """
-        super().__init__(data=data, scheme=scheme, **kwargs)
+        super().__init__(scheme=scheme, **kwargs)
+        self.data = data
 
     @property
     def annotation_scheme(self) -> ContinuousAnnotationScheme:

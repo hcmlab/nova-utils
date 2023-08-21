@@ -59,7 +59,7 @@ class Data:
         meta_data (MetaData): Metadata associated with the data.
 
     Args:
-        data (np.ndarray): The data to be stored.
+        data (np.ndarray, optional): The data to be stored.
         dataset (str, optional): Name of the dataset the data belongs to.
         role (str, optional): ID of a subject in the dataset the data belongs to.
         session (str, optional): Session identifier for the data.
@@ -67,7 +67,7 @@ class Data:
 
     def __init__(
         self,
-        data: np.ndarray,
+        data: np.ndarray = None,
         dataset: str = None,
         role: str = None,
         session: str = None,
@@ -92,6 +92,7 @@ class Data:
     def data(self, value):
         """
         Set the underlying data array. Can be overwritten by subclasses to apply custom data processing.
+        If the data setter is handled by the subclass th data array does not need be passed on to the parent classes.
 
         Args:
             value (np.ndarray): The new data array.

@@ -14,11 +14,11 @@ from typing import Union
 from decord import cpu
 from struct import *
 from nova_utils.data.data import Data
-from nova_utils.data.ssi_data_types import FileTypes, NPDataTypes, string_to_enum
+from nova_utils.data.types.ssi_data_types import FileTypes, NPDataTypes, string_to_enum
 from pathlib import Path
-from nova_utils.data.data_handler.ihandler import IHandler
+from nova_utils.data.handler.ihandler import IHandler
 from nova_utils.data.annotation import (
-    LabelType,
+    LabelDType,
     SchemeType,
     Annotation,
     DiscreteAnnotation,
@@ -37,6 +37,8 @@ from nova_utils.data.stream import (
 )
 import mmap
 import ffmpegio
+from nova_utils.utils.type_definitions import LabelDType, SSILabelDType
+from nova_utils.utils.anno_utils import convert_label_to_ssi_dtype, convert_ssi_to_label_dtype
 
 # METADATA
 class FileMetaData:
@@ -78,6 +80,7 @@ class FileSSIStreamMetaData:
 
 
 # ANNOTATIONS
+
 class _AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
 
@@ -93,13 +96,15 @@ class _AnnotationFileHandler(IHandler):
         Returns:
             np.ndarray: The loaded discrete annotation data as a NumPy array.
         """
-        dt = LabelType.DISCRETE.value
+
         if ftype == FileTypes.ASCII.name:
-            return np.loadtxt(path, dtype=dt, delimiter=";")
+            data =  np.loadtxt(path, dtype=SSILabelDType.DISCRETE.value, delimiter=";")
         elif ftype == FileTypes.BINARY.name:
-            return np.fromfile(path, dtype=dt)
+            data = np.fromfile(path, dtype=SSILabelDType.DISCRETE.value)
         else:
             raise ValueError("FileType {} not supported".format(ftype))
+
+        return data
 
     @staticmethod
     def _load_data_continuous(path, ftype):
@@ -113,14 +118,14 @@ class _AnnotationFileHandler(IHandler):
         Returns:
             np.ndarray: The loaded continuous annotation data as a NumPy array.
         """
-        dt = LabelType.CONTINUOUS.value
         if ftype == FileTypes.ASCII.name:
-            return np.loadtxt(path, dtype=dt, delimiter=";")
+            data = np.loadtxt(path, dtype=SSILabelDType.CONTINUOUS.value, delimiter=";")
         elif ftype == FileTypes.BINARY.name:
-            return np.fromfile(path, dtype=dt)
+            data = np.fromfile(path, dtype=SSILabelDType.CONTINUOUS.value)
         else:
             raise ValueError("FileType {} not supported".format(ftype))
 
+        return data
     @staticmethod
     def _load_data_free(path, ftype, size):
         """
@@ -167,7 +172,7 @@ class _AnnotationFileHandler(IHandler):
         else:
             raise ValueError("FileType {} not supported".format(ftype))
 
-        return np.array(data, LabelType.FREE.value)
+        return np.asarray(data, dtype=SSILabelDType.FREE.value)
 
     @staticmethod
     def _str_format_from_dtype(dtype: np.dtype):
@@ -233,6 +238,9 @@ class _AnnotationFileHandler(IHandler):
             for item in scheme:
                 scheme_classes[item.get("id")] = item.get("name")
             anno_data = self._load_data_discrete(data_path, ftype)
+
+            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
+
             anno_scheme = DiscreteAnnotationScheme(
                 name=scheme_name, classes=scheme_classes
             )
@@ -249,6 +257,7 @@ class _AnnotationFileHandler(IHandler):
             min_val = float(scheme.get("min"))
             max_val = float(scheme.get("max"))
             anno_data = self._load_data_continuous(data_path, ftype)
+            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.CONTINUOUS)
             anno_scheme = ContinuousAnnotationScheme(
                 name=scheme_name, sample_rate=sr, min_val=min_val, max_val=max_val
             )
@@ -262,6 +271,7 @@ class _AnnotationFileHandler(IHandler):
         # free scheme
         elif scheme_type == SchemeType.FREE.name:
             anno_data = self._load_data_free(data_path, ftype, size)
+            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
             anno_scheme = FreeAnnotationScheme(name=scheme_name)
             annotation = FreeAnnotation(
                 scheme=anno_scheme,
@@ -344,10 +354,12 @@ class _AnnotationFileHandler(IHandler):
         Et.indent(root, space="    ", level=0)
         root.write(fp)
 
+        anno_data = convert_label_to_ssi_dtype(data.data, scheme_type)
+
         # save data
         if ftype == FileTypes.ASCII:
-            fmt = self._str_format_from_dtype(data.annotation_scheme.label_dtype)
-            np.savetxt(data_path, data.data, fmt=fmt, delimiter=";")
+            fmt = self._str_format_from_dtype(anno_data.dtype)
+            np.savetxt(data_path, anno_data, fmt=fmt, delimiter=";")
         if ftype == FileTypes.BINARY:
             data.data.tofile(data_path, sep="")
 

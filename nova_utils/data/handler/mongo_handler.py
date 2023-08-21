@@ -9,12 +9,12 @@ import warnings
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult, UpdateResult
-from nova_utils.data.data_handler.file_handler import FileHandler
+from nova_utils.data.handler.file_handler import FileHandler
 from bson.objectid import ObjectId
 from pathlib import Path
-from nova_utils.data.data_handler.ihandler import IHandler
+from nova_utils.data.handler.ihandler import IHandler
 from nova_utils.data.annotation import (
-    LabelType,
+    LabelDType,
     SchemeType,
     Annotation,
     DiscreteAnnotation,
@@ -24,7 +24,9 @@ from nova_utils.data.annotation import (
     FreeAnnotation,
     FreeAnnotationScheme,
 )
+from nova_utils.utils.anno_utils import convert_ssi_to_label_dtype, convert_label_to_ssi_dtype
 from nova_utils.data.stream import Stream, SSIStream, Video, Audio, StreamMetaData
+from nova_utils.utils.type_definitions import LabelDType, SSILabelDType, SchemeType
 
 ANNOTATOR_COLLECTION = "Annotators"
 SCHEME_COLLECTION = "Schemes"
@@ -426,13 +428,18 @@ class AnnotationHandler(IHandler, MongoHandler):
         if scheme_type == SchemeType.DISCRETE.name:
             scheme_classes = {l["id"]: l["name"] for l in scheme_doc["labels"]}
 
+
             anno_data = np.array(
                 [
                     (x["from"], x["to"], x["id"], x["conf"])
                     for x in anno_data_doc["labels"]
                 ],
-                dtype=LabelType.DISCRETE.value,
+                dtype=SSILabelDType.DISCRETE.value,
             )
+
+            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
+
+            anno_duration = anno_data[-1]['to']
             anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes)
             annotation = DiscreteAnnotation(
                 # role=role,
@@ -442,6 +449,8 @@ class AnnotationHandler(IHandler, MongoHandler):
                 # dataset=dataset,
                 data=anno_data,
                 scheme=anno_scheme,
+                annotator=annotator,
+                duration=anno_duration
             )
 
         # continuous scheme
@@ -451,19 +460,19 @@ class AnnotationHandler(IHandler, MongoHandler):
             max_val = scheme_doc["max"]
             anno_data = np.array(
                 [(x["score"], x["conf"]) for x in anno_data_doc["labels"]],
-                dtype=LabelType.CONTINUOUS.value,
+                dtype=SSILabelDType.CONTINUOUS.value,
             )
+            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.CONTINUOUS)
+
+            anno_duration = len(anno_data_doc['labels']) / sr
             anno_scheme = ContinuousAnnotationScheme(
                 name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val
             )
             annotation = ContinuousAnnotation(
-                # role=role,
-                # annotator=annotator,
-                # annotation_scheme=anno_scheme,
-                # session=session,
-                # dataset=dataset,
                 data=anno_data,
                 scheme=anno_scheme,
+                annotator=annotator,
+                duration=anno_duration
             )
 
             # free scheme
@@ -475,8 +484,12 @@ class AnnotationHandler(IHandler, MongoHandler):
                     (x["from"], x["to"], x["name"], x["conf"])
                     for x in anno_data_doc["labels"]
                 ],
-                dtype=LabelType.FREE.value,
+                dtype=SSILabelDType.FREE.value,
             )
+
+            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
+
+            anno_duration = anno_data[-1]['to']
             anno_scheme = FreeAnnotationScheme(name=scheme)
             annotation = FreeAnnotation(
                 # role=role,
@@ -486,6 +499,8 @@ class AnnotationHandler(IHandler, MongoHandler):
                 # dataset=dataset,
                 data=anno_data,
                 scheme=anno_scheme,
+                annotator=annotator,
+                duration=anno_duration
             )
         else:
             raise TypeError(f"Unknown scheme type {scheme_type}")
@@ -542,11 +557,15 @@ class AnnotationHandler(IHandler, MongoHandler):
         role = role
         scheme = annotation.annotation_scheme.name
 
+        anno_data = convert_label_to_ssi_dtype(annotation.data, annotation.annotation_scheme.scheme_type)
+
         # TODO check for none values
         anno_data = [
             dict(zip(annotation.annotation_scheme.label_dtype.names, ad.item()))
-            for ad in annotation.data
+            for ad in anno_data
         ]
+
+
 
         # load annotation to check if an annotation for the provided criteria already exists in the database
         anno_doc = self._load_annotation(
@@ -770,8 +789,8 @@ if __name__ == "__main__":
     from time import perf_counter
     from dotenv import load_dotenv
 
-    test_annotations = False
-    test_streams = True
+    test_annotations = True
+    test_streams = False
 
     load_dotenv("../../../.env")
     IP = os.getenv("NOVA_IP", "")
@@ -821,17 +840,17 @@ if __name__ == "__main__":
         # save
         fs = "Saving {} took {}ms"
         t_start = perf_counter()
-        # amh.save(discrete_anno, annotator="testuser", overwrite=True)
+        amh.save(dataset='test',annotation=discrete_anno, session='04_Oesterreich_test', annotator="testuser", role='testrole', overwrite=True)
         t_stop = perf_counter()
         print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
 
         t_start = perf_counter()
-        # amh.save(continuous_anno, annotator="testuser", overwrite=True)
+        #amh.save(continuous_anno, annotator="testuser", overwrite=True)
         t_stop = perf_counter()
         print(fs.format("Continuous annotation", int((t_stop - t_start) * 1000)))
 
         t_start = perf_counter()
-        # amh.save(free_anno, annotator="testuser", overwrite=True)
+        #amh.save(free_anno, annotator="testuser", overwrite=True)
         t_stop = perf_counter()
         print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))
 
