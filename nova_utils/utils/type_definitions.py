@@ -21,6 +21,15 @@ class LabelDType(Enum):
         ]
     )
 
+class SchemeType(Enum):
+    """Predefined annotation schemes"""
+
+    DISCRETE = 0
+    CONTINUOUS = 1
+    FREE = 2
+
+## SSI Typedefs
+
 class SSILabelDType(Enum):
     """Predefined label types for different annotation schemes as used in SSI."""
     DISCRETE = np.dtype(
@@ -41,9 +50,25 @@ class SSILabelDType(Enum):
         ]
     )
 
-class SchemeType(Enum):
-    """Predefined annotation schemes"""
+class SSIFileTypes(Enum):
+    UNDEF = 0
+    BINARY = 1
+    ASCII = 2
+    BIN_LZ4 = 3
 
-    DISCRETE = 0
-    CONTINUOUS = 1
-    FREE = 2
+class SSINPDataTypes(Enum):
+    UNDEF = 0
+    #CHAR = 1
+    #UCHAR = 2
+    SHORT = np.int16
+    USHORT = np.uint16
+    INT = np.int32
+    UINT = np.uint32
+    LONG = np.int64
+    ULONG = np.uint64
+    FLOAT = np.float32
+    DOUBLE = np.float64
+    LDOUBLE = np.float64
+    #STRUCT = 12
+    #IMAGE = 13
+    BOOL = np.bool_
