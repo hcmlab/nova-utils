@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from numpy import dtype
 from enum import Enum
 from nova_utils.data.data import DynamicData
-from nova_utils.utils.anno_utils import get_overlap, get_anno_majority, is_garbage
+from nova_utils.utils.anno_utils import get_overlap, get_anno_majority, label_is_garbage
 import pandas as pd
 from nova_utils.utils.type_definitions import LabelDType, SchemeType
 
@@ -287,7 +287,7 @@ class DiscreteAnnotation(Annotation):
 
         majority_idx = get_anno_majority(self._data_interval, overlap_idxs, start, end)
         label = self._data_values[majority_idx, 0]
-        if is_garbage(label, self.NOVA_GARBAGE_LABEL_ID):
+        if label_is_garbage(label, self.NOVA_GARBAGE_LABEL_ID):
             return self.GARBAGE_LABEL_ID
         return label
 
@@ -436,7 +436,7 @@ class ContinuousAnnotation(Annotation):
         # conf = sum(frame_conf) / max(len(frame_conf), 1)
         label = sum(frame_data) / max(len(frame_data), 1)
 
-        if is_garbage(label, self.NOVA_GARBAGE_LABEL_VALUE):
+        if label_is_garbage(label, self.NOVA_GARBAGE_LABEL_VALUE):
             return self.NOVA_GARBAGE_LABEL_VALUE
         else:
             return label

@@ -3,19 +3,19 @@ Module for handling MongoDB data operations related to annotations and streams.
 Author: Dominik Schiller
 Date: 18.8.2023
 """
+import sys
 
 import numpy as np
 import warnings
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult, UpdateResult
+
 from nova_utils.data.handler.file_handler import FileHandler
 from bson.objectid import ObjectId
 from pathlib import Path
 from nova_utils.data.handler.ihandler import IHandler
 from nova_utils.data.annotation import (
-    LabelDType,
-    SchemeType,
     Annotation,
     DiscreteAnnotation,
     DiscreteAnnotationScheme,
@@ -26,7 +26,8 @@ from nova_utils.data.annotation import (
 )
 from nova_utils.utils.anno_utils import convert_ssi_to_label_dtype, convert_label_to_ssi_dtype
 from nova_utils.data.stream import Stream, SSIStream, Video, Audio, StreamMetaData
-from nova_utils.utils.type_definitions import LabelDType, SSILabelDType, SchemeType
+from nova_utils.utils.type_definitions import SSILabelDType, SchemeType
+from nova_utils.data.session import Session
 
 ANNOTATOR_COLLECTION = "Annotators"
 SCHEME_COLLECTION = "Schemes"
@@ -179,6 +180,59 @@ class MongoHandler:
         Returns the MongoDB client instance.
         """
         return self._client
+
+
+
+class SessionHandler(MongoHandler):
+    """
+       Handler for loading session data from a MongoDB database.
+
+       This class provides methods to load session information from a MongoDB
+       collection and returns a Session object.
+
+       Args:
+            (Inherited args from MongoHandler)
+
+       Methods:
+           load(dataset: str, session: str) -> Session:
+               Load session data from the specified dataset and session name.
+
+       Attributes:
+           (Inherited attributes from MongoHandler)
+
+       """
+    def load(self, dataset: str, session: str) -> Session:
+        """
+       Load session data from the specified dataset and session name.
+
+       Args:
+           dataset (str): The dataset name as specified in the mongo database
+           session (str): The session name as specified in the mongo database
+
+       Returns:
+           Session: A Session object containing loaded session information.
+           If the session does not exist, an empty Session object is returned.
+       """
+        result = self.client[dataset][SESSION_COLLECTION].find_one({"name": session})
+        if not result:
+            return Session()
+
+        # get duration of session in milliseconds
+        dur_ms = result.get('duration')
+        if dur_ms == 0:
+            dur_ms = None
+        else:
+            dur_ms *= 1000
+
+        return Session(
+            dataset=dataset,
+            name=result['name'],
+            location=result['location'],
+            language=result['language'],
+            date=result['date'],
+            duration=dur_ms,
+            is_valid=result['isValid']
+        )
 
 
 class AnnotationHandler(IHandler, MongoHandler):

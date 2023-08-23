@@ -401,7 +401,7 @@ class _SSIStreamFileHandler(IHandler):
 
         chunks = np.array(chunks, dtype=SSIStream.CHUNK_DTYPE)
         num_samples = int(sum(chunks["num"]))
-        duration = num_samples * float(sr)
+        duration = int(num_samples / float(sr) * 1000)
 
         ssistream_meta_data = {
             "duration": duration,
@@ -628,7 +628,7 @@ class _VideoFileHandler(IHandler):
         _sample_rate = metadata.get("avg_frame_rate")
 
         sample_shape = (1, _height, _width, 3)
-        duration = float(metadata.get("duration"))
+        duration = int(float(metadata.get("duration")) * 1000)
         sample_rate = eval(_sample_rate) if _sample_rate is not None else None
         num_samples = int(metadata.get("nb_frames"))
         dtype = np.dtype(np.uint8)
@@ -712,7 +712,7 @@ class _AudioFileHandler(IHandler):
         metadata = stream_meta_data["streams"][0]
         _channels = metadata.get("channels")
         _sample_rate = int(metadata.get("sample_rate"))
-        _duration = float(metadata.get("duration"))
+        _duration = int(float(metadata.get("duration")) * 1000)
         _num_samples = round(_duration * _sample_rate)
 
         sample_shape = (1, None, _channels)

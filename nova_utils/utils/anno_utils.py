@@ -57,11 +57,26 @@ def get_anno_majority(a, overlap_idxs: np.ndarray, start: int, end: int):
     return majority_index
 
 
-def is_garbage(local_label_id, nova_garbage_label_id):
+def label_is_garbage(label_id, garbage_label_id):
     # check for nan or compare with garbage label id
-    if local_label_id != local_label_id or local_label_id == nova_garbage_label_id:
+    if label_id != label_id or label_id == garbage_label_id:
         return True
     return False
+
+def data_contains_garbage(data: np.ndarray, garbage_label_id=np.NAN):
+    # if data array is numerical
+    if np.issubdtype(data.dtype, np.number):
+        if np.isnan(data).any():
+            return True
+        elif (data != data).any():
+            return True
+        elif garbage_label_id in data:
+            return True
+        else:
+            return False
+    else:
+        return any(np.vectorize(lambda x: isinstance(x, float) and np.isnan(x))(data))
+
 
 def convert_label_to_ssi_dtype(data: np.ndarray, annotation_scheme_type: SchemeType) -> np.ndarray:
 

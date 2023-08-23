@@ -1,30 +1,51 @@
 import sys
-import numpy as np
 import os
-import copy
 import warnings
 
 from typing import Union
 from nova_utils.data.data import Data
 from nova_utils.data.stream import Stream, StreamMetaData
-from nova_utils.data.annotation import Annotation, AnnoMetaData
-
 from pathlib import Path
-from nova_utils.data.handler.mongo_handler import AnnotationHandler, StreamHandler
+from nova_utils.data.handler.mongo_handler import AnnotationHandler, StreamHandler, SessionHandler
 from nova_utils.data.handler.file_handler import FileHandler
 from nova_utils.utils import string_utils
-
-
-class Session:
-
-    def __init__(self, data: dict, dataset: str, name: str, duration: int):
-        self.data = data
-        self.dataset = dataset
-        self.name = name
-        self.duration = duration
+from nova_utils.utils.anno_utils import data_contains_garbage
+from nova_utils.data.session import Session
 
 
 class NovaIterator:
+    """Iterator class for processing data samples from the Nova dataset.
+
+    The NovaIterator takes all information about what data should be loaded and how it should be processed. The class itself then takes care of loading all data and provides an iterator to directly apply a sliding window to the requested data.
+    Every time based argument can be passed either as string or a numerical value. If the time is passed as string, the string should end with either 's' to indicate the time is specified in seconds or 'ms' for milliseconds.
+    If the time is passed as a numerical value or as a string without indicating a specific unit it is assumed that an integer value represents milliseconds while a float represents seconds. All numbers will be represented as integer milliseconds internally.
+    The highest time resolution for processing is therefore 1ms.
+
+    Args:
+        ip (str): Database IP address.
+        port (int): Database port.
+        user (str): Database username.
+        password (str): Database password.
+        dataset (str): Name of the dataset.
+        data_dir (Path, optional): Path to the data directory. Defaults to None.
+        sessions (list[str], optional): List of session names to process. Defaults to None.
+        data (list[dict], optional): List of data descriptions. Defaults to None.
+        frame_size (Union[int, float, str], optional): Size of the data frame measured in time. Defaults to None.
+        start (Union[int, float, str], optional): Start time for processing measured in time. Defaults to None.
+        end (Union[int, float, str], optional): End time for processing measured in time. Defaults to None.
+        left_context (Union[int, float, str], optional): Left context duration measured in time. Defaults to None.
+        right_context (Union[int, float, str], optional): Right context duration measured in time. Defaults to None.
+        stride (Union[int, float, str], optional): Stride for iterating over data measured in time. If stride is not set explicitly it will be set to frame_size. Defaults to None.
+        add_rest_class (bool, optional): Whether to add a rest class for discrete annotations. Defaults to True.
+        fill_missing_data (bool, optional): Whether to fill missing data. Defaults to True.
+
+    Attributes:
+        data_dir (Path): Path to the data directory.
+        dataset (str): Name of the dataset.
+        sessions (list[str]): List of session names to process.
+        data (list[dict]): List of data descriptions.
+        ...
+    """
     def __init__(
             self,
             # Database connection
@@ -87,6 +108,7 @@ class NovaIterator:
         self.current_session = None
 
         # Data handler
+        self._db_session_handler = SessionHandler(ip, port, user, password)
         self._db_anno_handler = AnnotationHandler(ip, port, user, password)
         self._db_stream_handler = StreamHandler(ip, port, user, password, data_dir)
         self._file_handler = FileHandler()
@@ -123,85 +145,38 @@ class NovaIterator:
         else:
             raise ValueError(f'Unknown source type {src} for data.')
 
-    def _init_session(self, session):
+    def _init_session(self, session_name: str) -> Session:
 
-        # TODO calculate durations properly
-        duration = sys.maxsize
+        session = self._db_session_handler.load(self.dataset, session_name)
 
         """Opens all annotations and data readers"""
         data = {}
 
+        # setting session data
         for data_desc in self.data:
-            data_initialized = self._init_data_from_description(data_desc, self.dataset, session)
+            data_initialized = self._init_data_from_description(data_desc, self.dataset, session_name)
             data_id = self._data_description_to_string(data_desc)
             data[data_id] = data_initialized
+        session.data = data
 
-        # for a in self.annos:
-        #     annotation = self._db_anno_handler.load(self.dataset, a['scheme'], a['session'], a['annotator'], a['role'])
-        #     annotations['_'.join([a['scheme'], a['role'], a['annotator']])] = annotation
-        # for s in self.streams:
-        #     stream = self._db_stream_handler.load(self.dataset, s['session'], s['role'], s['name'])
-        #     streams['_'.join([s['role'], s['annotator']])] = stream
+        # update session duration
+        min_dur = session.duration if session.duration is not None else sys.maxsize
+        for data_initialized in data.values():
+            if isinstance(data_initialized, Stream):
+                meta_data : StreamMetaData = data_initialized.meta_data
+                if meta_data.duration is not None:
+                    dur = meta_data.duration
+                else:
+                    dur = len(data_initialized.data) / meta_data.sample_rate * 1000
+                if dur < min_dur:
+                    min_dur = dur
+        session.duration = min_dur
 
-        current_session = Session (
-            data = data,
-            dataset=self.dataset,
-            name = session,
-            duration=duration
-        )
+        if session.duration == sys.maxsize:
+            raise ValueError(f'Unable to determine duration for session {session.name}')
 
-        return current_session
+        return session
 
-    def _build_sample_dict(self, labels_for_frame, data_for_frame):
-        sample_dict = {}
-
-        garbage_detected = False
-        for label_id, label_value in labels_for_frame:
-            # if value is not list type check for nan
-            if (
-                    type(label_value) != list
-                    and type(label_value) != str
-                    and type(label_value) != np.ndarray
-            ):
-                if label_value != label_value:
-                    garbage_detected = True
-
-            sample_dict.update({label_id: label_value})
-
-        # If at least one label is a garbage label we skip this iteration
-        if garbage_detected:
-            return None
-
-        for d in data_for_frame:
-            sample_dict.update(d)
-
-        # if self.flatten_samples:
-        #
-        #     # grouping labels and data according to roles
-        #     for role in self.roles:
-        #         # filter dictionary to contain values for role
-        #         sample_dict_for_role = dict(
-        #             filter(lambda elem: role in elem[0], sample_dict.items())
-        #         )
-        #
-        #         # remove role from dictionary keys
-        #         sample_dict_for_role = dict(
-        #             map(
-        #                 lambda elem: (elem[0].replace(role + ".", ""), elem[1]),
-        #                 sample_dict_for_role.items(),
-        #             )
-        #         )
-        #
-        #         sample_dict_for_role["frame"] = (
-        #             str(sample_counter) + "_" + key + "_" + role
-        #         )
-        #         # yield key + '_' + role, sample_dict_for_role
-        #         yield sample_dict_for_role
-        #         sample_counter += 1
-        #     c_pos_ms += _stride_ms
-        #
-        # else:
-        return sample_dict
 
     def _yield_sample(self):
         """Yields examples."""
@@ -214,42 +189,25 @@ class NovaIterator:
             # Init all data objects for the session and get necessary meta information
             self.current_session = self._init_session(session)
 
-            #annotation_dur = [a.meta_data.duration for a in self._annotations]
-            #stream_dur = [s.meta_data.duration for s in self._annotations]
-
-            #session_info = self.session_info[session]
-            #dur = session_info["duration"]
-            #_frame_size_ms = self.frame_size_ms
-            #_stride_ms = self.stride_ms
-
-            # If we are loading any datastreams we check if any datastream is shorter than the duration stored in the database suggests
-            #if self.data_info:
-            #    dur = min(*[v.dur for k, v in self.data_info.items()], dur)
-
-            #if not dur:
-            #    raise ValueError("Session {} has no duration.".format(session))
-
-            #dur_ms = int(dur * 1000)
-
-            #If frame size is not specified we return the whole session as one junk
+            #If frame size is zero or less we return the whole data from the whole session in one sample
             if self.frame_size <= 0:
                _frame_size = min(self.current_session.duration, self.end - self.start)
-               _stride_ms = _frame_size
+               _stride = _frame_size
             else:
                 _frame_size = self.frame_size
+                _stride = self.stride
 
             # Starting position of the first frame in seconds
-            c_pos_ms = max(self.left_context, self.start)
+            cpos = max(self.left_context, self.start)
 
-            # TODO account for strid and framesize being None
+            # TODO account for stride and framesize being None
             # Generate samples for this session
-            while c_pos_ms + self.stride + self.right_context <= min(
+            while cpos + self.stride + self.right_context <= min(
                     self.end, self.current_session.duration
             ):
 
-                frame_start = c_pos_ms
-                frame_end = c_pos_ms + _frame_size
-
+                frame_start = cpos
+                frame_end = cpos + _frame_size
                 window_start = frame_start - self.left_context
                 window_end = frame_end + self.right_context
 
@@ -262,37 +220,23 @@ class NovaIterator:
                         + str(window_end / 1000)
                 )
 
-
-                # Get data based on frame
+                # Load data for frame
                 data_for_window = {
                     k : v.sample_from_interval(window_start, window_end) for k, v in self.current_session.data.items()
                 }
 
-                # labels_for_window = [
-                #     (k, v.get_label_for_frame(frame_start_ms, frame_end_ms))
-                #     for k, v in self.current_session.data
-                # ]
-                #
-                # # Get data based on window
-                # data_for_window = []
-                # for k, v in self.data_info.items():
-                #     sample = v.get_sample(window_start, window_end)
-                #     # TODO: Special case with empty streams is probably not working correctly. Verify
-                #     if sample.shape[0] == 0:
-                #         print(f"Sample{window_start}-{window_end} is empty")
-                #         #c_pos_ms += _stride_ms
-                #         #continue
-                #     data_for_window.append({k: sample})
+                # Performing sanity checks
+                garbage_detected = any([ data_contains_garbage(d) for k, d in data_for_window.items()  ])
 
-                sample_dict = self._build_sample_dict(data_for_window)
-                if not sample_dict:
-                    c_pos_ms += _stride_ms
-                    sample_counter += 1
+                # Incrementing counter
+                cpos += _stride
+                sample_counter += 1
+
+                if garbage_detected:
                     continue
 
-                yield sample_dict
-                c_pos_ms += _stride_ms
-                sample_counter += 1
+                yield data_for_window
+
 
     def __iter__(self):
         return self._iterable
@@ -353,9 +297,9 @@ if __name__ == '__main__':
         dataset,
         DATA_DIR,
         sessions=sessions,
-        data = [annotation, stream, file],
-        frame_size='1s',
-        end = '5s'
+        data = [annotation, file],
+        frame_size='5s',
+        end = '20s'
     )
 
     a = next(nova_iterator)
