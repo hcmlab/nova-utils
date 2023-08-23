@@ -14,7 +14,6 @@ from typing import Union
 from decord import cpu
 from struct import *
 from nova_utils.data.data import Data
-from nova_utils.data.types.ssi_data_types import FileTypes, NPDataTypes, string_to_enum
 from pathlib import Path
 from nova_utils.data.handler.ihandler import IHandler
 from nova_utils.data.annotation import (
@@ -37,8 +36,9 @@ from nova_utils.data.stream import (
 )
 import mmap
 import ffmpegio
-from nova_utils.utils.type_definitions import LabelDType, SSILabelDType
+from nova_utils.utils.type_definitions import LabelDType, SSILabelDType, SSIFileType, SSINPDataType
 from nova_utils.utils.anno_utils import convert_label_to_ssi_dtype, convert_ssi_to_label_dtype
+from nova_utils.utils.string_utils import string_to_enum
 
 # METADATA
 class FileMetaData:
@@ -97,9 +97,9 @@ class _AnnotationFileHandler(IHandler):
             np.ndarray: The loaded discrete annotation data as a NumPy array.
         """
 
-        if ftype == FileTypes.ASCII.name:
+        if ftype == SSIFileType.ASCII.name:
             data =  np.loadtxt(path, dtype=SSILabelDType.DISCRETE.value, delimiter=";")
-        elif ftype == FileTypes.BINARY.name:
+        elif ftype == SSIFileType.BINARY.name:
             data = np.fromfile(path, dtype=SSILabelDType.DISCRETE.value)
         else:
             raise ValueError("FileType {} not supported".format(ftype))
@@ -118,9 +118,9 @@ class _AnnotationFileHandler(IHandler):
         Returns:
             np.ndarray: The loaded continuous annotation data as a NumPy array.
         """
-        if ftype == FileTypes.ASCII.name:
+        if ftype == SSIFileType.ASCII.name:
             data = np.loadtxt(path, dtype=SSILabelDType.CONTINUOUS.value, delimiter=";")
-        elif ftype == FileTypes.BINARY.name:
+        elif ftype == SSIFileType.BINARY.name:
             data = np.fromfile(path, dtype=SSILabelDType.CONTINUOUS.value)
         else:
             raise ValueError("FileType {} not supported".format(ftype))
@@ -140,7 +140,7 @@ class _AnnotationFileHandler(IHandler):
             np.ndarray: The loaded free annotation data as a NumPy array.
         """
         data = []
-        if ftype == FileTypes.ASCII.name:
+        if ftype == SSIFileType.ASCII.name:
             with open(path, "r") as ascii_file:
                 ascii_file_reader = csv.reader(ascii_file, delimiter=";", quotechar='"')
                 for row in ascii_file_reader:
@@ -150,7 +150,7 @@ class _AnnotationFileHandler(IHandler):
                     c = float(row[3])
                     data.append((f, t, n, c))
 
-        elif ftype == FileTypes.BINARY.name:
+        elif ftype == SSIFileType.BINARY.name:
             with open(path, "rb") as binary_file:
                 counter = 0
                 binary_file.seek(0)
@@ -284,14 +284,14 @@ class _AnnotationFileHandler(IHandler):
 
         return annotation
 
-    def save(self, data: Annotation, fp: Path, ftype: FileTypes = FileTypes.ASCII):
+    def save(self, data: Annotation, fp: Path, ftype: SSIFileType = SSIFileType.ASCII):
         """
         Save annotation data to a file.
 
         Args:
             data (Annotation): The annotation data to be saved.
             fp (Path): The file path for saving the data.
-            ftype (FileTypes, optional): The file type (ASCII or BINARY) for saving.
+            ftype (SSIFileTypes, optional): The file type (ASCII or BINARY) for saving.
 
         Raises:
             TypeError: If filetype is not supported for saving or unknown
@@ -339,7 +339,7 @@ class _AnnotationFileHandler(IHandler):
             )
 
         elif scheme_type == SchemeType.FREE:
-            if ftype == FileTypes.BINARY:
+            if ftype == SSIFileType.BINARY:
                 raise TypeError(
                     "Binary output format is not supported for free annotation schemes"
                 )
@@ -357,10 +357,10 @@ class _AnnotationFileHandler(IHandler):
         anno_data = convert_label_to_ssi_dtype(data.data, scheme_type)
 
         # save data
-        if ftype == FileTypes.ASCII:
+        if ftype == SSIFileType.ASCII:
             fmt = self._str_format_from_dtype(anno_data.dtype)
             np.savetxt(data_path, anno_data, fmt=fmt, delimiter=";")
-        if ftype == FileTypes.BINARY:
+        if ftype == SSIFileType.BINARY:
             data.data.tofile(data_path, sep="")
 
 
@@ -408,7 +408,7 @@ class _SSIStreamFileHandler(IHandler):
             "sample_shape": (int(dim),),
             "num_samples": num_samples,
             "sample_rate": float(sr),
-            "dtype": string_to_enum(NPDataTypes, dtype).value,
+            "dtype": string_to_enum(SSINPDataType, dtype).value,
             "chunks": chunks,
             "fp": fp,
             "delim": delim,
@@ -421,8 +421,8 @@ class _SSIStreamFileHandler(IHandler):
         fp: Path,
         size: int,
         dim: int,
-        ftype=FileTypes.ASCII,
-        dtype: np.dtype = NPDataTypes.FLOAT.value,
+        ftype=SSIFileType.ASCII,
+        dtype: np.dtype = SSINPDataType.FLOAT.value,
         delim=" ",
     ):
         """
@@ -432,7 +432,7 @@ class _SSIStreamFileHandler(IHandler):
             fp (Path): The file path of the SSIStream data.
             size (int): The size of the data.
             dim (int): The dimension of the data.
-            ftype (FileTypes, optional): The file type (ASCII or BINARY) of the SSIStream data.
+            ftype (SSIFileTypes, optional): The file type (ASCII or BINARY) of the SSIStream data.
             dtype (np.dtype, optional): The data type.
             delim (str, optional): The delimiter used in the file.
 
@@ -442,9 +442,9 @@ class _SSIStreamFileHandler(IHandler):
         Raises:
             ValueError: If the provided filetype is not supported
         """
-        if ftype == FileTypes.ASCII:
+        if ftype == SSIFileType.ASCII:
             return np.loadtxt(fp, dtype=dtype, delimiter=delim)
-        elif ftype == FileTypes.BINARY:
+        elif ftype == SSIFileType.BINARY:
             return np.fromfile(fp, dtype=dtype).reshape(size, dim)
         else:
             raise ValueError("FileType {} not supported".format(self))
@@ -453,7 +453,7 @@ class _SSIStreamFileHandler(IHandler):
         self,
         data: SSIStream,
         fp: Path,
-        ftype: FileTypes = FileTypes.BINARY,
+        ftype: SSIFileType = SSIFileType.BINARY,
         delim: str = " ",
     ):
         """
@@ -462,7 +462,7 @@ class _SSIStreamFileHandler(IHandler):
         Args:
             data (SSIStream): The SSIStream data to be saved.
             fp (Path): The file path for saving the data.
-            ftype (FileTypes, optional): The file type (ASCII or BINARY) for saving.
+            ftype (SSIFileTypes, optional): The file type (ASCII or BINARY) for saving.
             delim (str, optional): The delimiter to be used in the file.
         """
         # save header
@@ -476,7 +476,7 @@ class _SSIStreamFileHandler(IHandler):
         sr = meta_data.sample_rate
         dim = meta_data.sample_shape[0]
         byte = np.dtype(meta_data.dtype).itemsize
-        dtype = NPDataTypes(meta_data.dtype).name
+        dtype = SSINPDataType(meta_data.dtype).name
         Et.SubElement(
             root,
             "info",
@@ -512,9 +512,9 @@ class _SSIStreamFileHandler(IHandler):
         root.write(fp)
 
         # save data
-        if ftype == FileTypes.ASCII:
+        if ftype == SSIFileType.ASCII:
             np.savetxt(data_path, data.data, delimiter=delim)
-        if ftype == FileTypes.BINARY:
+        if ftype == SSIFileType.BINARY:
             data.data.tofile(data_path)
 
     def load(self, fp, **kwargs) -> Data:
@@ -545,7 +545,7 @@ class _SSIStreamFileHandler(IHandler):
             dtype=dtype,
             dim=sample_shape[0],
             delim=delim,
-            ftype=FileTypes[ftype],
+            ftype=SSIFileType[ftype],
         )
 
         ssi_stream = SSIStream(
@@ -856,12 +856,12 @@ if __name__ == "__main__":
         fh.save(
             discrete_anno_binary,
             base_dir / "new_discrete_binary.annotation",
-            ftype=FileTypes.BINARY,
+            ftype=SSIFileType.BINARY,
         )
         fh.save(
             continuous_anno_binary,
             base_dir / "new_continuous_binary.annotation",
-            ftype=FileTypes.BINARY,
+            ftype=SSIFileType.BINARY,
         )
 
         # verify
@@ -895,8 +895,8 @@ if __name__ == "__main__":
         ssistream_ascii.data = new_data
 
         # ssistream write
-        fh.save(ssistream_ascii, base_dir / "new_ascii.stream", FileTypes.ASCII)
-        fh.save(ssistream_binary, base_dir / "new_binary.stream", FileTypes.BINARY)
+        fh.save(ssistream_ascii, base_dir / "new_ascii.stream", SSIFileType.ASCII)
+        fh.save(ssistream_binary, base_dir / "new_binary.stream", SSIFileType.BINARY)
 
         # audio
         audio = fh.load(base_dir / "test_audio.wav")

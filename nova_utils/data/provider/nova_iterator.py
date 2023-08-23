@@ -261,7 +261,7 @@ class NovaIterator:
 if __name__ == '__main__':
     from dotenv import load_dotenv
 
-    load_dotenv("../../.env")
+    load_dotenv("../../../.env")
     IP = os.getenv("NOVA_IP", "")
     PORT = int(os.getenv("NOVA_PORT", 0))
     USER = os.getenv("NOVA_USER", "")

@@ -5,7 +5,7 @@ Date: 18.8.2023
 
 import numpy as np
 from nova_utils.data.data import DynamicData
-from nova_utils.data.types.ssi_data_types import NPDataTypes
+from nova_utils.utils.type_definitions import SSINPDataType
 from nova_utils.utils.stream_utils import time_to_sample_interval
 
 
@@ -59,10 +59,10 @@ class SSIStreamMetaData:
 
     CHUNK_DTYPE = np.dtype(
         [
-            ("from", NPDataTypes.FLOAT.value),
-            ("to", NPDataTypes.FLOAT.value),
-            ("byte", NPDataTypes.INT.value),
-            ("num", NPDataTypes.INT.value),
+            ("from", SSINPDataType.FLOAT.value),
+            ("to", SSINPDataType.FLOAT.value),
+            ("byte", SSINPDataType.INT.value),
+            ("num", SSINPDataType.INT.value),
         ]
     )
 
@@ -155,10 +155,10 @@ class SSIStream(Stream):
 
     CHUNK_DTYPE = np.dtype(
         [
-            ("from", NPDataTypes.FLOAT.value),
-            ("to", NPDataTypes.FLOAT.value),
-            ("byte", NPDataTypes.INT.value),
-            ("num", NPDataTypes.INT.value),
+            ("from", SSINPDataType.FLOAT.value),
+            ("to", SSINPDataType.FLOAT.value),
+            ("byte", SSINPDataType.INT.value),
+            ("num", SSINPDataType.INT.value),
         ]
     )
 

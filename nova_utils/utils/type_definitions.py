@@ -50,13 +50,13 @@ class SSILabelDType(Enum):
         ]
     )
 
-class SSIFileTypes(Enum):
+class SSIFileType(Enum):
     UNDEF = 0
     BINARY = 1
     ASCII = 2
     BIN_LZ4 = 3
 
-class SSINPDataTypes(Enum):
+class SSINPDataType(Enum):
     UNDEF = 0
     #CHAR = 1
     #UCHAR = 2

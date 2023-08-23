@@ -48,3 +48,9 @@ def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
             raise ValueError("Invalid input format for frame: {}".format(frame))
     else:
         raise ValueError("Invalid input format for frame: {}".format(frame))
+
+def string_to_enum(enum, string):
+    for e in enum:
+        if e.name == string:
+            return e
+    raise ValueError('{} not part of enumeration  {}'.format(string, enum))
