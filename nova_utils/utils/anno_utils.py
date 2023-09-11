@@ -1,5 +1,5 @@
 """Utility module for all annotation data
-Author: Dominik Schiller
+Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 21.8.2023
 """
 
