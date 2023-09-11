@@ -1,5 +1,5 @@
 """Basic Parent class for all data types and metadata
-Author: Dominik Schiller
+Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 18.8.2023
 """
 from abc import ABC, abstractmethod

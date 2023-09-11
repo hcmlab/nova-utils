@@ -1,5 +1,5 @@
 """Definition of all Annotation classes and Metadata
-Author: Dominik Schiller
+Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 18.8.2023
 """
 import numpy as np
@@ -89,11 +89,13 @@ class DiscreteAnnotationScheme(IAnnotationScheme):
         super().__init__(*args, **kwargs)
         self.classes = classes
 
+    @classmethod
     @property
     def label_dtype(self) -> dtype:
         """Get the numpy data type of discrete labels."""
         return LabelDType.DISCRETE.value
 
+    @classmethod
     @property
     def scheme_type(self) -> SchemeType:
         """Get the type of the annotation scheme (Discrete)."""
@@ -128,11 +130,13 @@ class ContinuousAnnotationScheme(IAnnotationScheme):
         self.min_val = min_val
         self.max_val = max_val
 
+    @classmethod
     @property
     def label_dtype(self) -> dtype:
         """Get the numpy data type of continuous labels."""
         return LabelDType.CONTINUOUS.value
 
+    @classmethod
     @property
     def scheme_type(self) -> SchemeType:
         """Get the type of the annotation scheme (Continuous)."""
@@ -157,11 +161,13 @@ class FreeAnnotationScheme(IAnnotationScheme):
         """
         super().__init__(*args, **kwargs)
 
+    @classmethod
     @property
     def label_dtype(self) -> dtype:
         """Get the numpy data type of free text labels."""
         return LabelDType.FREE.value
 
+    @classmethod
     @property
     def scheme_type(self) -> SchemeType:
         """Get the type of the annotation scheme (Free)."""
@@ -232,7 +238,7 @@ class DiscreteAnnotation(Annotation):
     NOVA_REST_CLASS_NAME = "REST"
     NOVA_GARBAGE_LABEL_ID = -1
 
-    def __init__(self, data: np.ndarray, scheme: DiscreteAnnotationScheme, **kwargs):
+    def __init__(self, scheme: DiscreteAnnotationScheme, data: np.ndarray = None, **kwargs):
         """
         Initialize a DiscreteAnnotation instance with data and scheme information.
         """
@@ -306,7 +312,7 @@ class FreeAnnotation(Annotation):
 
     NOVA_GARBAGE_LABEL_VALUE = np.NAN
 
-    def __init__(self, data: np.ndarray, scheme: FreeAnnotationScheme, **kwargs):
+    def __init__(self, scheme: FreeAnnotationScheme, data: np.ndarray = None, **kwargs):
         """
         Initialize a FreeAnnotation instance with data and scheme information.
         """
@@ -351,12 +357,12 @@ class FreeAnnotation(Annotation):
             end (int): End of the interval in milliseconds.
 
         Returns:
-            list: List of sampled annotation labels.
+            np.ndarray: Numpy array of sampled annotation labels. If no annotations are falling in the specified interval an empty numpy array will be returned.
         """
         annos_for_sample = get_overlap(self._data_interval, start, end)
 
         if not annos_for_sample.any():
-            return [""]
+            return np.asarray([])
 
         return self._data_values[annos_for_sample, 0]
 
@@ -378,7 +384,7 @@ class ContinuousAnnotation(Annotation):
     NOVA_GARBAGE_LABEL_VALUE = np.NAN
     MISSING_DATA_LABEL_VALUE = sys.float_info.min
 
-    def __init__(self, data: np.ndarray, scheme: ContinuousAnnotationScheme, **kwargs):
+    def __init__(self, scheme: ContinuousAnnotationScheme, data: np.ndarray = None, **kwargs):
         """
         Initialize a DiscreteAnnotation instance with data and scheme information.
         """

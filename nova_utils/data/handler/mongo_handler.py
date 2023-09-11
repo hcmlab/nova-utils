@@ -1,6 +1,6 @@
 """
 Module for handling MongoDB data operations related to annotations and streams.
-Author: Dominik Schiller
+Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 18.8.2023
 """
 import sys
@@ -24,7 +24,10 @@ from nova_utils.data.annotation import (
     FreeAnnotation,
     FreeAnnotationScheme,
 )
-from nova_utils.utils.anno_utils import convert_ssi_to_label_dtype, convert_label_to_ssi_dtype
+from nova_utils.utils.anno_utils import (
+    convert_ssi_to_label_dtype,
+    convert_label_to_ssi_dtype,
+)
 from nova_utils.data.stream import Stream, SSIStream, Video, Audio, StreamMetaData
 from nova_utils.utils.type_definitions import SSILabelDType, SchemeType
 from nova_utils.data.session import Session
@@ -130,49 +133,45 @@ class MongoHandler:
     Base class for handling MongoDB connections.
 
      Args:
-        ip (str, optional): IP address of the MongoDB server.
-        port (int, optional): Port number of the MongoDB server.
-        user (str, optional): Username for authentication.
-        password (str, optional): Password for authentication.
-        data_dir (Path, optional): Path to the data directory for stream files
+        db_host (str, optional): IP address of the MongoDB server.
+        db_port (int, optional): Port number of the MongoDB server.
+        db_user (str, optional): Username for authentication.
+        db_password (str, optional): Password for authentication.
 
     Attributes:
         data_dir (Path, optional): Path to the data directory for stream files
-        client (MongoClient): The MongoDB client connected to the database. Readonly
     """
 
     def __init__(
         self,
-        ip: str = None,
-        port: int = None,
-        user: str = None,
-        password: str = None,
-        data_dir: Path = None,
+        db_host: str = None,
+        db_port: int = None,
+        db_user: str = None,
+        db_password: str = None,
     ):
         self._client = None
         self._ip = None
         self._port = None
         self._user = None
-        self.data_dir = data_dir
-        if ip and port and user and password:
-            self.connect(ip, port, user, password)
+        if db_host and db_port and db_user and db_password:
+            self.connect(db_host, db_port, db_user, db_password)
 
     def connect(
-        self, ip: str = None, port: int = None, user: str = None, password: str = None
+        self, db_host: str = None, db_port: int = None, db_user: str = None, db_password: str = None
     ):
         """
         Connects to the MongoDB server.
 
         Args:
-            ip (str): IP address of the MongoDB server.
-            port (int): Port number of the MongoDB server.
-            user (str): Username for authentication.
-            password (str): Password for authentication.
+            db_host (str): IP address of the MongoDB server.
+            db_port (int): Port number of the MongoDB server.
+            db_user (str): Username for authentication.
+            db_password (str): Password for authentication.
         """
-        self._client = MongoClient(host=ip, port=port, username=user, password=password)
-        self._ip = ip
-        self._port = port
-        self._user = user
+        self._client = MongoClient(host=db_host, port=db_port, username=db_user, password=db_password)
+        self._ip = db_host
+        self._port = db_port
+        self._user = db_user
 
     @property
     def client(self) -> MongoClient:
@@ -182,43 +181,43 @@ class MongoHandler:
         return self._client
 
 
-
 class SessionHandler(MongoHandler):
     """
-       Handler for loading session data from a MongoDB database.
+    Handler for loading session data from a MongoDB database.
 
-       This class provides methods to load session information from a MongoDB
-       collection and returns a Session object.
+    This class provides methods to load session information from a MongoDB
+    collection and returns a Session object.
 
-       Args:
-            (Inherited args from MongoHandler)
+    Args:
+         (Inherited args from MongoHandler)
 
-       Methods:
-           load(dataset: str, session: str) -> Session:
-               Load session data from the specified dataset and session name.
+    Methods:
+        load(dataset: str, session: str) -> Session:
+            Load session data from the specified dataset and session name.
 
-       Attributes:
-           (Inherited attributes from MongoHandler)
+    Attributes:
+        (Inherited attributes from MongoHandler)
 
-       """
+    """
+
     def load(self, dataset: str, session: str) -> Session:
         """
-       Load session data from the specified dataset and session name.
+        Load session data from the specified dataset and session name.
 
-       Args:
-           dataset (str): The dataset name as specified in the mongo database
-           session (str): The session name as specified in the mongo database
+        Args:
+            dataset (str): The dataset name as specified in the mongo database
+            session (str): The session name as specified in the mongo database
 
-       Returns:
-           Session: A Session object containing loaded session information.
-           If the session does not exist, an empty Session object is returned.
-       """
+        Returns:
+            Session: A Session object containing loaded session information.
+            If the session does not exist, an empty Session object is returned.
+        """
         result = self.client[dataset][SESSION_COLLECTION].find_one({"name": session})
         if not result:
             return Session()
 
         # get duration of session in milliseconds
-        dur_ms = result.get('duration')
+        dur_ms = result.get("duration")
         if dur_ms == 0:
             dur_ms = None
         else:
@@ -226,12 +225,12 @@ class SessionHandler(MongoHandler):
 
         return Session(
             dataset=dataset,
-            name=result['name'],
-            location=result['location'],
-            language=result['language'],
-            date=result['date'],
+            name=result["name"],
+            location=result["location"],
+            language=result["language"],
+            date=result["date"],
             duration=dur_ms,
-            is_valid=result['isValid']
+            is_valid=result["isValid"],
         )
 
 
@@ -469,7 +468,7 @@ class AnnotationHandler(IHandler, MongoHandler):
 
         if not anno_doc:
             raise FileNotFoundError(
-                f"Annotation not found \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}"
+                f"Annotation not found dataset: {dataset} session: {session} annotator: {annotator} role: {role} scheme: {scheme}"
             )
 
         (anno_data_doc,) = anno_doc["data"]
@@ -482,7 +481,6 @@ class AnnotationHandler(IHandler, MongoHandler):
         if scheme_type == SchemeType.DISCRETE.name:
             scheme_classes = {l["id"]: l["name"] for l in scheme_doc["labels"]}
 
-
             anno_data = np.array(
                 [
                     (x["from"], x["to"], x["id"], x["conf"])
@@ -493,7 +491,7 @@ class AnnotationHandler(IHandler, MongoHandler):
 
             anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
 
-            anno_duration = anno_data[-1]['to']
+            anno_duration = anno_data[-1]["to"]
             anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes)
             annotation = DiscreteAnnotation(
                 # role=role,
@@ -504,7 +502,7 @@ class AnnotationHandler(IHandler, MongoHandler):
                 data=anno_data,
                 scheme=anno_scheme,
                 annotator=annotator,
-                duration=anno_duration
+                duration=anno_duration,
             )
 
         # continuous scheme
@@ -518,7 +516,7 @@ class AnnotationHandler(IHandler, MongoHandler):
             )
             anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.CONTINUOUS)
 
-            anno_duration = len(anno_data_doc['labels']) / sr
+            anno_duration = len(anno_data_doc["labels"]) / sr
             anno_scheme = ContinuousAnnotationScheme(
                 name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val
             )
@@ -526,7 +524,7 @@ class AnnotationHandler(IHandler, MongoHandler):
                 data=anno_data,
                 scheme=anno_scheme,
                 annotator=annotator,
-                duration=anno_duration
+                duration=anno_duration,
             )
 
             # free scheme
@@ -543,7 +541,7 @@ class AnnotationHandler(IHandler, MongoHandler):
 
             anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
 
-            anno_duration = anno_data[-1]['to']
+            anno_duration = anno_data[-1]["to"]
             anno_scheme = FreeAnnotationScheme(name=scheme)
             annotation = FreeAnnotation(
                 # role=role,
@@ -554,7 +552,7 @@ class AnnotationHandler(IHandler, MongoHandler):
                 data=anno_data,
                 scheme=anno_scheme,
                 annotator=annotator,
-                duration=anno_duration
+                duration=anno_duration,
             )
         else:
             raise TypeError(f"Unknown scheme type {scheme_type}")
@@ -577,10 +575,10 @@ class AnnotationHandler(IHandler, MongoHandler):
     def save(
         self,
         annotation: Annotation,
-        dataset: str,
-        session: str,
-        annotator: str,
-        role: str,
+        dataset: str = None,
+        session: str = None,
+        annotator: str = None,
+        role: str = None,
         is_finished: bool = False,
         is_locked: bool = False,
         overwrite: bool = False,
@@ -590,10 +588,10 @@ class AnnotationHandler(IHandler, MongoHandler):
 
         Args:
             annotation (Annotation): The Annotation object to be saved.
-            dataset (str): Name of the dataset.
-            session (str): Name of the session.
-            annotator (str): Name of the annotator.
-            role (str): Name of the role.
+            dataset (str, optional): Name of the dataset. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
+            session (str, optional): Name of the session. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
+            annotator (str, optional): Name of the annotator. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
+            role (str, optional): Name of the role. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
             is_finished (bool, optional): Indicates if the annotation is finished. Defaults to False.
             is_locked (bool, optional): Indicates if the annotation is locked. Defaults to False.
             overwrite (bool, optional): If True, overwrite an existing annotation. Defaults to False.
@@ -605,21 +603,21 @@ class AnnotationHandler(IHandler, MongoHandler):
             FileExistError: If annotation exists and is locked or annotation exists and overwrite is set to false
         """
         # overwrite default values
-        dataset = dataset
-        session = session
-        annotator = annotator
-        role = role
+        dataset = dataset if not dataset is None else annotation.meta_data.dataset
+        session = session if not session is None else annotation.meta_data.session
+        annotator = annotator if not annotator is None else annotation.meta_data.annotator
+        role = role if not role is None else annotation.meta_data.role
         scheme = annotation.annotation_scheme.name
 
-        anno_data = convert_label_to_ssi_dtype(annotation.data, annotation.annotation_scheme.scheme_type)
+        anno_data = convert_label_to_ssi_dtype(
+            annotation.data, annotation.annotation_scheme.scheme_type
+        )
 
         # TODO check for none values
         anno_data = [
             dict(zip(annotation.annotation_scheme.label_dtype.names, ad.item()))
             for ad in anno_data
         ]
-
-
 
         # load annotation to check if an annotation for the provided criteria already exists in the database
         anno_doc = self._load_annotation(
@@ -688,6 +686,24 @@ class StreamHandler(IHandler, MongoHandler):
     """
     Class for handling download and upload of stream data from MongoDB.
     """
+
+    def __init__(self, *args, data_dir: Path = None, **kwargs):
+        """
+        Base class for handling MongoDB connections.
+
+         Args:
+            ip (str, optional): IP address of the MongoDB server.
+            port (int, optional): Port number of the MongoDB server.
+            user (str, optional): Username for authentication.
+            password (str, optional): Password for authentication.
+            data_dir (Path, optional): Path to the data directory for stream files
+
+        Attributes:
+            data_dir (Path, optional): Path to the data directory for stream files
+            client (MongoClient): The MongoDB client connected to the database. Readonly
+        """
+        super().__init__(*args, **kwargs)
+        self.data_dir = data_dir
 
     def _load_stream(
         self,
@@ -784,7 +800,7 @@ class StreamHandler(IHandler, MongoHandler):
             session (str): Name of the session.
             role (str): Name of the role.
             name (str): Name of the stream.
-            data_type (str): Type of the stream data.
+            data_type (str): Media type of the stream data as specified in NOVA-DB.
             file_ext (str, optional): File extension. Defaults to None.
             dim_labels (list, optional): Dimension labels. Defaults to None.
             is_valid (bool, optional): Indicates if the stream data is valid. Defaults to True.
@@ -854,7 +870,7 @@ if __name__ == "__main__":
     DATA_DIR = os.getenv("NOVA_DATA_DIR", None)
 
     if test_annotations:
-        amh = AnnotationHandler(ip=IP, port=PORT, user=USER, password=PASSWORD)
+        amh = AnnotationHandler(db_host=IP, db_port=PORT, db_user=USER, db_password=PASSWORD)
 
         # load
         fs = "Loading {} took {}ms"
@@ -894,17 +910,24 @@ if __name__ == "__main__":
         # save
         fs = "Saving {} took {}ms"
         t_start = perf_counter()
-        amh.save(dataset='test',annotation=discrete_anno, session='04_Oesterreich_test', annotator="testuser", role='testrole', overwrite=True)
+        amh.save(
+            dataset="test",
+            annotation=discrete_anno,
+            session="04_Oesterreich_test",
+            annotator="testuser",
+            role="testrole",
+            overwrite=True,
+        )
         t_stop = perf_counter()
         print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
 
         t_start = perf_counter()
-        #amh.save(continuous_anno, annotator="testuser", overwrite=True)
+        # amh.save(continuous_anno, annotator="testuser", overwrite=True)
         t_stop = perf_counter()
         print(fs.format("Continuous annotation", int((t_stop - t_start) * 1000)))
 
         t_start = perf_counter()
-        #amh.save(free_anno, annotator="testuser", overwrite=True)
+        # amh.save(free_anno, annotator="testuser", overwrite=True)
         t_stop = perf_counter()
         print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))
 

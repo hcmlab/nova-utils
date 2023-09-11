@@ -1,5 +1,5 @@
 """Data Storage Class for session specific data
-Author: Dominik Schiller
+Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 22.8.2023
 """
 import datetime

@@ -1,6 +1,6 @@
 """
 Module for handling File data operations related to annotations and streams.
-Author: Dominik Schiller
+Author: Dominik Schiller <dominik.schiller@uni-a.de> <dominik.schiller@uni-a.de>
 Date: 18.8.2023
 """
 

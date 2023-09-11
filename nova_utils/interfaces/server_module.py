@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
-
-from nova_utils.deprecated_ssi_utils.ssi_anno_utils import Anno
-
+from nova_utils.data.annotation import Annotation
 
 class Processor(ABC):
     """
@@ -14,8 +12,7 @@ class Processor(ABC):
     # Flag to indicate whether the processed input belongs to one role or to multiple roles
     SINGLE_ROLE_INPUT = True
 
-    def __init__(self, logger, request_form=None):
-        self.logger = logger
+    def __init__(self, request_form=None):
         self.request_form = request_form
         self.model = None
         self.data = None
@@ -24,7 +21,7 @@ class Processor(ABC):
 
         if self.request_form is not None:
             # Set Options
-            logger.info("Setting options...")
+            print("Setting options...")
             if request_form.get("optStr"):
                 for k, v in dict(
                         option.split("=") for option in request_form["optStr"].split(";")
@@ -35,8 +32,8 @@ class Processor(ABC):
                         self.options[k] = True if v == "True" else False
                     else:
                         self.options[k] = v
-                    logger.info(k + "=" + v)
-            logger.info("...done.")
+                    print(k + "=" + v)
+            print("...done.")
 
     @abstractmethod
     def preprocess_sample(self, sample: dict ):
@@ -79,8 +76,8 @@ class Trainer(Processor):
 
     """Includes all the necessary files to run this script"""
 
-    def __init__(self, logger, request_form=None):
-        super().__init__(logger, request_form)
+    def __init__(self, request_form=None):
+        super().__init__(request_form)
 
     @abstractmethod
     def train(self):
@@ -103,11 +100,11 @@ class Predictor(Processor):
     Base class of a data predictor. Implement this interface if you want to write annotations to a database
     """
 
-    def __init__(self, logger, request_form=None):
-        super().__init__(logger, request_form)
+    def __init__(self, request_form=None):
+        super().__init__(request_form)
 
     @abstractmethod
-    def to_anno(self, data) -> list[Anno]:
+    def to_anno(self, data) -> list[Annotation]:
         """Converts the output of process_data to the correct annotation format to upload them to the database.
         !THE OUTPUT FORMAT OF THIS FUNCTION IS NOT YET FULLY DEFINED AND WILL CHANGE IN FUTURE RELEASES!
 
@@ -131,8 +128,8 @@ class Extractor(Processor):
         """Whether this extraction module can be followed by other extractors. If set to True 'to_ds_iterable()' must be implemented"""
         return False
 
-    def __init__(self, logger, request_form=None):
-        super().__init__(logger, request_form)
+    def __init__(self, request_form=None):
+        super().__init__(request_form)
 
     @abstractmethod
     def to_stream(self, data: object) -> dict:

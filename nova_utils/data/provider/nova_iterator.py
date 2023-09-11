@@ -22,10 +22,10 @@ class NovaIterator:
     The highest time resolution for processing is therefore 1ms.
 
     Args:
-        ip (str): Database IP address.
-        port (int): Database port.
-        user (str): Database username.
-        password (str): Database password.
+        db_host (str): Database IP address.
+        db_port (int): Database port.
+        db_user (str): Database username.
+        db_password (str): Database password.
         dataset (str): Name of the dataset.
         data_dir (Path, optional): Path to the data directory. Defaults to None.
         sessions (list[str], optional): List of session names to process. Defaults to None.
@@ -37,7 +37,7 @@ class NovaIterator:
         right_context (Union[int, float, str], optional): Right context duration measured in time. Defaults to None.
         stride (Union[int, float, str], optional): Stride for iterating over data measured in time. If stride is not set explicitly it will be set to frame_size. Defaults to None.
         add_rest_class (bool, optional): Whether to add a rest class for discrete annotations. Defaults to True.
-        fill_missing_data (bool, optional): Whether to fill missing data. Defaults to True.
+        fill_missing_data (bool, optional): Whether to fill missing data. Defaults to True. THIS OPTION IS CURRENTLY NOT DOING ANYTHING
 
     Attributes:
         data_dir (Path): Path to the data directory.
@@ -49,10 +49,10 @@ class NovaIterator:
     def __init__(
             self,
             # Database connection
-            ip: str,
-            port: int,
-            user: str,
-            password: str,
+            db_host: str,
+            db_port: int,
+            db_user: str,
+            db_password: str,
             dataset: str,
             data_dir: Path = None,
 
@@ -71,7 +71,6 @@ class NovaIterator:
             # Iterator properties
             add_rest_class: bool = True,
             fill_missing_data = True
-
         ):
 
 
@@ -108,9 +107,9 @@ class NovaIterator:
         self.current_session = None
 
         # Data handler
-        self._db_session_handler = SessionHandler(ip, port, user, password)
-        self._db_anno_handler = AnnotationHandler(ip, port, user, password)
-        self._db_stream_handler = StreamHandler(ip, port, user, password, data_dir)
+        self._db_session_handler = SessionHandler(db_host, db_port, db_user, db_password)
+        self._db_anno_handler = AnnotationHandler(db_host, db_port, db_user, db_password)
+        self._db_stream_handler = StreamHandler(db_host, db_port, db_user, db_password, data_dir=data_dir)
         self._file_handler = FileHandler()
 
         self._iterable = self._yield_sample()

@@ -1,5 +1,5 @@
 """Interface class for all data handlers
-Author: Dominik Schiller
+Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 18.8.2023
 """
 
