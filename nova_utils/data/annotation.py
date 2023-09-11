@@ -455,9 +455,9 @@ if __name__ == "__main__":
     )
     discrete_data = np.array(
         [
-            (0.5, 1.0, 0, 0.8),
-            (1.5, 2.0, 2, 0.6),
-            (2.5, 3.0, 1, 0.9),
+            (500, 1000, 0, 0.8),
+            (1500, 2000, 2, 0.6),
+            (2500, 3000, 1, 0.9),
         ],
         dtype=discrete_scheme.label_dtype,
     )
@@ -492,10 +492,10 @@ if __name__ == "__main__":
     free_scheme = FreeAnnotationScheme(name="free_scheme")
     free_data = np.array(
         [
-            (1.25, 2.75, "hello", 0.75),
-            (3.14, 5.67, "world", 0.82),
-            (0.25, 0.75, "yehaaaaw", 0.62),
-            (7.89, 9.10, "!!!", 0.91),
+            (1250, 2750, "hello", 0.75),
+            (3140, 5670, "world", 0.82),
+            (250, 750, "yehaaaaw", 0.62),
+            (7890, 9100, "!!!", 0.91),
         ],
         dtype=free_scheme.label_dtype,
     )
