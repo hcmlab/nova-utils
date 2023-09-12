@@ -10,7 +10,7 @@ import datetime
 import sys
 import pkg_resources
 import pathlib
-from version import __version__
+from nova_utils.version import __version__
 
 # Parse arguments
 if "--nightly" in sys.argv:

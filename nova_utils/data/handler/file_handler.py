@@ -17,7 +17,6 @@ from nova_utils.data.data import Data
 from pathlib import Path
 from nova_utils.data.handler.ihandler import IHandler
 from nova_utils.data.annotation import (
-    LabelDType,
     SchemeType,
     Annotation,
     DiscreteAnnotation,
