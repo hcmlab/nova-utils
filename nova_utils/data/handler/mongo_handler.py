@@ -633,15 +633,15 @@ class AnnotationHandler(IHandler, MongoHandler):
         if anno_doc:
             if anno_doc["isLocked"]:
                 raise FileExistsError(
-                    f"Can't overwrite locked annotation \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}"
+                    f"Can't overwrite locked annotation dataset: {dataset} session: {session} annotator: {annotator} role: {role} scheme: {scheme}"
                 )
             elif not overwrite:
                 raise FileExistsError(
-                    f"Can't overwrite annotation \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}. Because overwrite is disabled."
+                    f"Can't overwrite annotation dataset: {dataset} session: {session} annotator: {annotator} role: {role} scheme: {scheme}. Because overwrite is disabled."
                 )
             else:
                 warnings.warn(
-                    f"Overwriting existing annotation \ndataset: {dataset} \nsession: {session} \nannotator: {annotator} \nrole: {role} \nscheme: {scheme}"
+                    f"Overwriting existing annotation dataset: {dataset} session: {session} annotator: {annotator} role: {role} scheme: {scheme}"
                 )
 
                 success = self._update_annotation(
