@@ -95,7 +95,7 @@ class NovaIterator:
 
         # Frame size 0 or None indicates that the whole session should be returned as one sample
         if self.frame_size == 0:
-            warnings.warn("Frame size should be bigger than zero. Returning whole session as sample.", stacklevel=2)
+            warnings.warn("Frame size should be bigger than zero. Returning whole session as sample.")
 
         # If the end time has not been set we initialize it with sys.maxsize
         if self.end is None or self.end == 0:
