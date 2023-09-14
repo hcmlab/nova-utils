@@ -99,7 +99,16 @@
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.LabelDType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.type_definitions.</span></span><span class="sig-name descname"><span class="pre">LabelDType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/type_definitions.html#LabelDType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.type_definitions.LabelDType" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>Predefined label types for different annotation schemes.</p>
+<p>Enum representing predefined label types for different annotation schemes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>DISCRETE</strong> (<em>np.dtype</em>) – Discrete label type with fields ‘from’, ‘to’, ‘id’, and ‘conf’.</p></li>
+<li><p><strong>CONTINUOUS</strong> (<em>np.dtype</em>) – Continuous label type with fields ‘score’ and ‘conf’.</p></li>
+<li><p><strong>FREE</strong> (<em>np.dtype</em>) – Free-form label type with fields ‘from’, ‘to’, ‘name’, and ‘conf’.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.LabelDType.CONTINUOUS">
 <span class="sig-name descname"><span class="pre">CONTINUOUS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">dtype([('score',</span> <span class="pre">'&lt;f4'),</span> <span class="pre">('conf',</span> <span class="pre">'&lt;f4')])</span></em><a class="headerlink" href="#nova_utils.utils.type_definitions.LabelDType.CONTINUOUS" title="Permalink to this definition"></a></dt>
@@ -121,7 +130,17 @@
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.SSIFileType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.type_definitions.</span></span><span class="sig-name descname"><span class="pre">SSIFileType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/type_definitions.html#SSIFileType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.type_definitions.SSIFileType" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>An enumeration.</p>
+<p>Enum representing different file types as used by SSI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>UNDEF</strong> (<em>int</em>) – Undefined file type with value 0.</p></li>
+<li><p><strong>BINARY</strong> (<em>int</em>) – Binary file type with value 1.</p></li>
+<li><p><strong>ASCII</strong> (<em>int</em>) – ASCII file type with value 2.</p></li>
+<li><p><strong>BIN_LZ4</strong> (<em>int</em>) – Binary LZ4-compressed file type with value 3.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.SSIFileType.ASCII">
 <span class="sig-name descname"><span class="pre">ASCII</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#nova_utils.utils.type_definitions.SSIFileType.ASCII" title="Permalink to this definition"></a></dt>
@@ -148,7 +167,16 @@
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.SSILabelDType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.type_definitions.</span></span><span class="sig-name descname"><span class="pre">SSILabelDType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/type_definitions.html#SSILabelDType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.type_definitions.SSILabelDType" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>Predefined label types for different annotation schemes as used in SSI.</p>
+<p>“Enum representing predefined label types for different annotation schemes as used in SSI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>DISCRETE</strong> (<em>np.dtype</em>) – Discrete label type with fields ‘from’, ‘to’, ‘id’, and ‘conf’.</p></li>
+<li><p><strong>CONTINUOUS</strong> (<em>np.dtype</em>) – Continuous label type with fields ‘score’ and ‘conf’.</p></li>
+<li><p><strong>FREE</strong> (<em>np.dtype</em>) – Free-form label type with fields ‘from’, ‘to’, ‘name’, and ‘conf’.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.SSILabelDType.CONTINUOUS">
 <span class="sig-name descname"><span class="pre">CONTINUOUS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">dtype([('score',</span> <span class="pre">'&lt;f4'),</span> <span class="pre">('conf',</span> <span class="pre">'&lt;f4')])</span></em><a class="headerlink" href="#nova_utils.utils.type_definitions.SSILabelDType.CONTINUOUS" title="Permalink to this definition"></a></dt>
@@ -170,7 +198,24 @@
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.SSINPDataType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.type_definitions.</span></span><span class="sig-name descname"><span class="pre">SSINPDataType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/type_definitions.html#SSINPDataType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.type_definitions.SSINPDataType" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>An enumeration.</p>
+<p>Enum representing different data types  as used by SSI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>UNDEF</strong> (<em>int</em>) – Undefined data type with value 0.</p></li>
+<li><p><strong>SHORT</strong> (<em>type</em>) – Short integer data type.</p></li>
+<li><p><strong>USHORT</strong> (<em>type</em>) – Unsigned short integer data type.</p></li>
+<li><p><strong>INT</strong> (<em>type</em>) – Integer data type.</p></li>
+<li><p><strong>UINT</strong> (<em>type</em>) – Unsigned integer data type.</p></li>
+<li><p><strong>LONG</strong> (<em>type</em>) – Long integer data type.</p></li>
+<li><p><strong>ULONG</strong> (<em>type</em>) – Unsigned long integer data type.</p></li>
+<li><p><strong>FLOAT</strong> (<em>type</em>) – Floating-point data type.</p></li>
+<li><p><strong>DOUBLE</strong> (<em>type</em>) – Double-precision floating-point data type.</p></li>
+<li><p><strong>LDOUBLE</strong> (<em>type</em>) – Long double-precision floating-point data type.</p></li>
+<li><p><strong>BOOL</strong> (<em>type</em>) – Boolean data type.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.SSINPDataType.BOOL">
 <span class="sig-name descname"><span class="pre">BOOL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;class</span> <span class="pre">'numpy.bool_'&gt;</span></em><a class="headerlink" href="#nova_utils.utils.type_definitions.SSINPDataType.BOOL" title="Permalink to this definition"></a></dt>
@@ -232,7 +277,16 @@
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.SchemeType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.type_definitions.</span></span><span class="sig-name descname"><span class="pre">SchemeType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/type_definitions.html#SchemeType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.type_definitions.SchemeType" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>Predefined annotation schemes</p>
+<p>Enum representing predefined annotation schemes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>DISCRETE</strong> (<em>int</em>) – Discrete annotation scheme with value 0.</p></li>
+<li><p><strong>CONTINUOUS</strong> (<em>int</em>) – Continuous annotation scheme with value 1.</p></li>
+<li><p><strong>FREE</strong> (<em>int</em>) – Free-form annotation scheme with value 2.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="nova_utils.utils.type_definitions.SchemeType.CONTINUOUS">
 <span class="sig-name descname"><span class="pre">CONTINUOUS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#nova_utils.utils.type_definitions.SchemeType.CONTINUOUS" title="Permalink to this definition"></a></dt>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.utils.ssi_data_types &mdash; NOVA-Utils 1.1.0 documentation</title>
+  <title>nova_utils.utils.ssi_data_types &mdash; NOVA-Utils 1.1.1 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -72,19 +72,67 @@
            <div itemprop="articleBody">
              
   <h1>Source code for nova_utils.utils.ssi_data_types</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span></span><span class="sd">&quot;&quot;&quot;SSI data type definitions</span>
+
+<span class="sd">Author:</span>
+<span class="sd">    Dominik Schiller &lt;dominik.schiller@uni-a.de&gt;</span>
+<span class="sd">Date:</span>
+<span class="sd">    14.9.2023</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+
 <div class="viewcode-block" id="FileTypes"><a class="viewcode-back" href="../../../api/nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.FileTypes">[docs]</a><span class="k">class</span> <span class="nc">FileTypes</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-        <span class="n">UNDEF</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">BINARY</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="n">ASCII</span> <span class="o">=</span> <span class="mi">2</span>
-        <span class="n">BIN_LZ4</span> <span class="o">=</span> <span class="mi">3</span></div>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enum representing different file types.</span>
+
+<span class="sd">    This enum defines constants for various file types, including UNDEF, BINARY, ASCII, and BIN_LZ4.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        UNDEF (int): Undefined file type.</span>
+<span class="sd">        BINARY (int): Binary file type.</span>
+<span class="sd">        ASCII (int): ASCII file type.</span>
+<span class="sd">        BIN_LZ4 (int): Binary LZ4 compressed file type.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">UNDEF</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">BINARY</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">ASCII</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">BIN_LZ4</span> <span class="o">=</span> <span class="mi">3</span></div>
+
 
 <div class="viewcode-block" id="NPDataTypes"><a class="viewcode-back" href="../../../api/nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes">[docs]</a><span class="k">class</span> <span class="nc">NPDataTypes</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enum representing different NumPy data types.</span>
+
+<span class="sd">    This enum defines constants for various NumPy data types, including UNDEF, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, and BOOL.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        UNDEF (int): Undefined data type.</span>
+<span class="sd">        SHORT (numpy.int16): 16-bit integer data type.</span>
+<span class="sd">        USHORT (numpy.uint16): Unsigned 16-bit integer data type.</span>
+<span class="sd">        INT (numpy.int32): 32-bit integer data type.</span>
+<span class="sd">        UINT (numpy.uint32): Unsigned 32-bit integer data type.</span>
+<span class="sd">        LONG (numpy.int64): 64-bit integer data type.</span>
+<span class="sd">        ULONG (numpy.uint64): Unsigned 64-bit integer data type.</span>
+<span class="sd">        FLOAT (numpy.float32): 32-bit floating-point data type.</span>
+<span class="sd">        DOUBLE (numpy.float64): 64-bit floating-point data type.</span>
+<span class="sd">        BOOL (numpy.bool_): Boolean data type.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">UNDEF</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="c1">#CHAR = 1</span>
-    <span class="c1">#UCHAR = 2</span>
+    <span class="c1"># CHAR = 1</span>
+    <span class="c1"># UCHAR = 2</span>
     <span class="n">SHORT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span>
     <span class="n">USHORT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span>
     <span class="n">INT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span>
@@ -94,16 +142,34 @@
     <span class="n">FLOAT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
     <span class="n">DOUBLE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
     <span class="n">LDOUBLE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
-    <span class="c1">#STRUCT = 12</span>
-    <span class="c1">#IMAGE = 13</span>
+    <span class="c1"># STRUCT = 12</span>
+    <span class="c1"># IMAGE = 13</span>
     <span class="n">BOOL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span></div>
 
-<span class="sd">&#39;&#39;&#39;Helper&#39;&#39;&#39;</span>
+
+<span class="sd">&quot;&quot;&quot;Helper&quot;&quot;&quot;</span>
+
+
 <div class="viewcode-block" id="string_to_enum"><a class="viewcode-back" href="../../../api/nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.string_to_enum">[docs]</a><span class="k">def</span> <span class="nf">string_to_enum</span><span class="p">(</span><span class="n">enum</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a string to an enum value.</span>
+
+<span class="sd">    This function takes an enum and a string and returns the corresponding enum value. If the string does not match any enum value, a ValueError is raised.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        enum (Enum): The enum to search in.</span>
+<span class="sd">        string (str): The string to convert to an enum value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Enum: The enum value corresponding to the input string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the input string does not match any enum value in the specified enum.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">enum</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">string</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">e</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> not part of enumeration  </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">enum</span><span class="p">))</span></div>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not part of enumeration  </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">enum</span><span class="p">))</span></div>
 </pre></div>
 
            </div>

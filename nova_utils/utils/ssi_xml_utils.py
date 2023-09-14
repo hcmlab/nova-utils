@@ -1,29 +1,92 @@
+"""Utility module to load and save xml files written by SSI
+
+Author:
+    Dominik Schiller <dominik.schiller@uni-a.de>
+Date:
+    14.9.2023
+
+"""
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
 class Trainer:
+    """
+    Class for representing and working with Trainer configuration.
+
+    This class is used to create, load, and write Trainer configurations in XML format.
+
+    Attributes:
+        model_script_path (str): Path to the model script file.
+        model_option_path (str): Path to the model option file.
+        model_option_string (str): Model option string.
+        model_weights_path (str): Path to the model weights file.
+        model_stream (int): Model stream identifier.
+        model_create (str): Model creation type.
+        model_multi_role_input (bool): Indicates if the model accepts multi-role input.
+        users (list): List of user configurations.
+        classes (list): List of class configurations.
+        streams (list): List of stream configurations.
+        register (list): List of utilized dlls.
+        info_trained (bool): Indicates if the Trainer has been trained.
+        meta_right_ctx (int): Right context size for the Trainer.
+        meta_left_ctx (int): Left context size for the Trainer.
+        meta_balance (str): Balance type for the Trainer.
+        meta_backend (str): Backend type for the Trainer.
+        ssi_v (str): SSI version.
+        xml_version (str): XML version.
+
+    Methods:
+        load_from_file(fp): Load Trainer configuration from an XML file.
+        write_to_file(fp): Write Trainer configuration to an XML file.
+
+    """
+
     def __init__(
-            self,
-            model_script_path: str = "",
-            model_option_path: str = "",
-            model_option_string: str = "",
-            model_weights_path: str = "",
-            model_stream: int = 0,
-            model_create: str = "PythonModel",
-            model_multirole_input = False,
-            users: list = None,
-            classes: list = None,
-            streams: list = None,
-            register: list = None,
-            info_trained: bool = False,
-            meta_right_ctx: int = 0,
-            meta_left_ctx: int = 0,
-            meta_balance: str = "none",
-            meta_backend: str = "nova-server",
-            ssi_v="5",
-            xml_version="1.0",
+        self,
+        model_script_path: str = "",
+        model_option_path: str = "",
+        model_option_string: str = "",
+        model_weights_path: str = "",
+        model_stream: int = 0,
+        model_create: str = "PythonModel",
+        model_multirole_input=False,
+        users: list = None,
+        classes: list = None,
+        streams: list = None,
+        register: list = None,
+        info_trained: bool = False,
+        meta_right_ctx: int = 0,
+        meta_left_ctx: int = 0,
+        meta_balance: str = "none",
+        meta_backend: str = "nova-server",
+        ssi_v="5",
+        xml_version="1.0",
     ):
+        """
+        Initialize a Trainer object with the specified parameters.
+
+        Args:
+            model_script_path (str): Path to the model script file.
+            model_option_path (str): Path to the model option file.
+            model_option_string (str): Model option string.
+            model_weights_path (str): Path to the model weights file.
+            model_stream (int): Model stream identifier.
+            model_create (str): Model creation type.
+            model_multirole_input (bool): Indicates if the model accepts multi-role input.
+            users (list): List of user configurations.
+            classes (list): List of class configurations.
+            streams (list): List of stream configurations.
+            register (list): List of register configurations.
+            info_trained (bool): Indicates if the Trainer has been trained.
+            meta_right_ctx (int): Right context size for the Trainer.
+            meta_left_ctx (int): Left context size for the Trainer.
+            meta_balance (str): Balance type for the Trainer.
+            meta_backend (str): Backend type for the Trainer.
+            ssi_v (str): SSI version.
+            xml_version (str): XML version.
+
+        """
 
         self.model_multi_role_input = None
         self.model_script_path = model_script_path
@@ -46,6 +109,13 @@ class Trainer:
         self.model_multi_role_input = model_multirole_input
 
     def load_from_file(self, fp):
+        """
+        Load Trainer configuration from an XML file.
+
+        Args:
+            fp (str or Path): The file path to the XML file.
+
+        """
         root = ET.parse(Path(fp))
         info = root.find("info")
         meta = root.find("meta")
@@ -81,9 +151,18 @@ class Trainer:
             self.model_script_path = model.get("script", default="")
             self.model_weights_path = model.get("path", default="")
             self.model_optstr = model.get("optstr", default="")
-            self.model_multi_role_input = bool(model.get("multi_role_input", default=False))
+            self.model_multi_role_input = bool(
+                model.get("multi_role_input", default=False)
+            )
 
     def write_to_file(self, fp):
+        """
+        Write Trainer configuration to an XML file.
+
+        Args:
+            fp (str or Path): The file path to save the XML file.
+
+        """
         root = ET.Element("trainer")
         ET.SubElement(root, "info", trained=str(self.info_trained))
         ET.SubElement(
@@ -126,17 +205,76 @@ class Trainer:
 
 
 class ChainLink:
+    """
+    Class for representing single steps of a SSI chain configuration.
 
-    def __init__(self, create: str, script: str, optsstr: str, syspath: str, tag: str = "feature", multi_role_input: str = 'False', **kwargs):
+    This class is used to create and work with ChainLinks.
+
+    Attributes:
+        create (str): ChainLink type.
+        script (str): ChainLink script.
+        optsstr (str): ChainLink options string.
+        syspath (str): ChainLink system path.
+        tag (str): ChainLink tag.
+        multi_role_input (bool): Indicates if the ChainLink accepts multi-role input.
+
+    Methods:
+        None
+
+    """
+
+    def __init__(
+        self,
+        create: str,
+        script: str,
+        optsstr: str,
+        syspath: str,
+        tag: str = "feature",
+        multi_role_input: str = "False",
+        **kwargs,
+    ):
+        """
+        Initialize a ChainLink object with the specified parameters.
+
+        Args:
+            create (str): ChainLink type.
+            script (str): ChainLink script.
+            optsstr (str): ChainLink options string.
+            syspath (str): ChainLink system path.
+            tag (str): ChainLink tag.
+            multi_role_input (str): Indicates if the ChainLink accepts multi-role input.
+
+        """
         self.create = create
         self.script = script
         self.optsstr = optsstr
         self.syspath = syspath
         self.tag = tag
-        self.multi_role_input = True if multi_role_input == 'True' else False
+        self.multi_role_input = True if multi_role_input == "True" else False
 
 
 class Chain:
+    """
+    Class for representing and working with Chain configuration.
+
+    This class is used to create, load, and write Chain configurations in XML format.
+
+    Attributes:
+        meta_frame_step (str): Meta frame step value.
+        meta_left_context (str): Meta left context value.
+        meta_right_context (str): Meta right context value.
+        meta_backend (str): Backend type for the Chain.
+        meta_description (str): Description for the Chain.
+        meta_category (str): Category for the Chain.
+        register (list): List of register configurations.
+        links (list): List of ChainLink configurations.
+
+    Methods:
+        load_from_file(fp): Load Chain configuration from an XML file.
+        write_to_file(fp): Write Chain configuration to an XML file.
+
+    """
+
     def __init__(
         self,
         meta_frame_step: str = "",
@@ -148,6 +286,20 @@ class Chain:
         register: list = None,
         links: list = None,
     ):
+        """
+        Initialize a Chain object with the specified parameters.
+
+        Args:
+            meta_frame_step (str): Meta frame step value.
+            meta_left_context (str): Meta left context value.
+            meta_right_context (str): Meta right context value.
+            meta_backend (str): Backend type for the Chain.
+            meta_description (str): Description for the Chain.
+            meta_category (str): Category for the Chain.
+            register (list): List of register configurations.
+            links (list): List of ChainLink configurations.
+
+        """
         self.meta_frame_step = meta_frame_step
         self.meta_left_ctx = meta_left_context
         self.meta_right_ctx = meta_right_context
@@ -158,6 +310,12 @@ class Chain:
         self.links = links if links else []
 
     def load_from_file(self, fp):
+        """
+        Load Chain configuration from an XML file.
+
+        Args:
+            fp (str or Path): The file path to the XML file.
+        """
         tree = ET.parse(Path(fp))
         root = tree.getroot()
         meta = tree.find("meta")
@@ -185,6 +343,13 @@ class Chain:
             self.links.append(new_link)
 
     def write_to_file(self, fp):
+        """
+        Write Chain configuration to an XML file.
+
+        Args:
+            fp (str or Path): The file path to save the XML file.
+
+        """
         root = ET.Element("chain")
         ET.SubElement(
             root,
@@ -195,7 +360,6 @@ class Chain:
             backend=str(self.meta_backend),
             description=str(self.meta_description),
             category=str(self.meta_category),
-
         )
         register = ET.SubElement(root, "register")
         for r in self.register:
@@ -204,7 +368,15 @@ class Chain:
         cl: ChainLink
         for cl in self.links:
             link = ET.SubElement(root, cl.tag)
-            ET.SubElement(link, "item", create=cl.create, script=cl.script, syspath=cl.syspath, optsstr=cl.optsstr, multi_role_input=str(cl.multi_role_input))
+            ET.SubElement(
+                link,
+                "item",
+                create=cl.create,
+                script=cl.script,
+                syspath=cl.syspath,
+                optsstr=cl.optsstr,
+                multi_role_input=str(cl.multi_role_input),
+            )
 
         tree = ET.ElementTree(root)
         ET.indent(tree, space="    ", level=0)
@@ -215,7 +387,9 @@ class Chain:
 
 
 if __name__ == "__main__":
-    chain_in_fp = Path("/Users/dominikschiller/Work/github/nova-server/local/cml/chains/test/uc1/uc1.chain")
+    chain_in_fp = Path(
+        "/Users/dominikschiller/Work/github/nova-server/local/cml/chains/test/uc1/uc1.chain"
+    )
     chain_out_fp = Path("test_chain.chain")
 
     chain = Chain()

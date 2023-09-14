@@ -1,8 +1,32 @@
+"""Utility module to parse and process strings
+Author:
+    Dominik Schiller <dominik.schiller@uni-a.de>
+Date:
+    14.9.2023
+
+"""
 from typing import Union
+from enum import Enum
 
 
 def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
+    """
+    Parse a time string or value to milliseconds.
 
+    This function takes a frame as input, which can be specified as a string in milliseconds (e.g., "100ms"),
+    as a string in seconds (e.g., "2s"), as a float in seconds, as an integer in milliseconds, or as None.
+    It converts the frame to an integer value in milliseconds.
+
+    Args:
+        frame (Union[str, int, float, None]): The frame value to parse.
+
+    Returns:
+        int: The frame value in milliseconds. 0 if frame is None.
+
+    Raises:
+        ValueError: If the input format for frame is invalid.
+
+    """
     if frame is None:
         return 0
 
@@ -49,7 +73,24 @@ def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
     else:
         raise ValueError("Invalid input format for frame: {}".format(frame))
 
-def string_to_enum(enum, string):
+def string_to_enum(enum: Enum, string: str):
+    """
+    Convert a string to an enum value.
+
+    This function takes an enum and a string and returns the corresponding enum value. If the string does not match any enum value,
+    a ValueError is raised.
+
+    Args:
+        enum (Enum): The enum to search in.
+        string (str): The string to convert to an enum value.
+
+    Returns:
+        Enum: The enum value corresponding to the input string.
+
+    Raises:
+        ValueError: If the input string does not match any enum value in the specified enum.
+
+    """
     for e in enum:
         if e.name == string:
             return e

@@ -8,10 +8,34 @@ Date:
 """
 
 import json
-from nova_utils.utils.ssi_xml_utils import Chain,ChainLink, Trainer
+from nova_utils.utils.ssi_xml_utils import Chain, ChainLink, Trainer
+
 
 class ChainLinkEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for ChainLink objects.
+
+    This encoder is used to serialize ChainLink objects to JSON format.
+
+    Attributes:
+        None
+
+    Methods:
+        default(obj): Encodes a ChainLink object to JSON.
+
+    """
+
     def default(self, obj):
+        """
+        Encodes a ChainLink object to JSON.
+
+        Args:
+            obj (ChainLink): The ChainLink object to encode.
+
+        Returns:
+            dict: A dictionary representation of the ChainLink object.
+
+        """
         if isinstance(obj, ChainLink):
             return {
                 "create": obj.create,
@@ -23,8 +47,32 @@ class ChainLinkEncoder(json.JSONEncoder):
             }
         return super().default(obj)
 
+
 class ChainEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for Chain objects.
+
+    This encoder is used to serialize Chain objects to JSON format.
+
+    Attributes:
+        None
+
+    Methods:
+        default(obj): Encodes a Chain object to JSON.
+
+    """
+
     def default(self, obj):
+        """
+        Encodes a Chain object to JSON.
+
+        Args:
+            obj (Chain): The Chain object to encode.
+
+        Returns:
+            dict: A dictionary representation of the Chain object.
+
+        """
         if isinstance(obj, Chain):
             return {
                 "meta_frame_step": obj.meta_frame_step,
@@ -38,8 +86,32 @@ class ChainEncoder(json.JSONEncoder):
             }
         return super().default(obj)
 
+
 class TrainerEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for Trainer objects.
+
+    This encoder is used to serialize Trainer objects to JSON format.
+
+    Attributes:
+        None
+
+    Methods:
+        default(obj): Encodes a Trainer object to JSON.
+
+    """
+
     def default(self, obj):
+        """
+        Encodes a Trainer object to JSON.
+
+        Args:
+            obj (Trainer): The Trainer object to encode.
+
+        Returns:
+            dict: A dictionary representation of the Trainer object.
+
+        """
         if isinstance(obj, Trainer):
             return {
                 "model_script_path": obj.model_script_path,

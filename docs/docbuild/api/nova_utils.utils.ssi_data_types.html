@@ -94,11 +94,34 @@
              
   <section id="module-nova_utils.utils.ssi_data_types">
 <span id="nova-utils-utils-ssi-data-types-module"></span><h1>nova_utils.utils.ssi_data_types module<a class="headerlink" href="#module-nova_utils.utils.ssi_data_types" title="Permalink to this heading"></a></h1>
+<p>SSI data type definitions</p>
+<dl class="simple">
+<dt>Author:</dt><dd><p>Dominik Schiller &lt;<a class="reference external" href="mailto:dominik&#46;schiller&#37;&#52;&#48;uni-a&#46;de">dominik<span>&#46;</span>schiller<span>&#64;</span>uni-a<span>&#46;</span>de</a>&gt;</p>
+</dd>
+<dt>Date:</dt><dd><p>14.9.2023</p>
+</dd>
+</dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.utils.ssi_data_types.FileTypes">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.ssi_data_types.</span></span><span class="sig-name descname"><span class="pre">FileTypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/ssi_data_types.html#FileTypes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.ssi_data_types.FileTypes" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>An enumeration.</p>
+<p>Enum representing different file types.</p>
+<p>This enum defines constants for various file types, including UNDEF, BINARY, ASCII, and BIN_LZ4.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>UNDEF</strong> (<em>int</em>) – Undefined file type.</p></li>
+<li><p><strong>BINARY</strong> (<em>int</em>) – Binary file type.</p></li>
+<li><p><strong>ASCII</strong> (<em>int</em>) – ASCII file type.</p></li>
+<li><p><strong>BIN_LZ4</strong> (<em>int</em>) – Binary LZ4 compressed file type.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="nova_utils.utils.ssi_data_types.FileTypes.None">
+<span class="sig-name descname"><span class="pre">None</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nova_utils.utils.ssi_data_types.FileTypes.None" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="nova_utils.utils.ssi_data_types.FileTypes.ASCII">
 <span class="sig-name descname"><span class="pre">ASCII</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#nova_utils.utils.ssi_data_types.FileTypes.ASCII" title="Permalink to this definition"></a></dt>
@@ -125,7 +148,29 @@
 <dt class="sig sig-object py" id="nova_utils.utils.ssi_data_types.NPDataTypes">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.ssi_data_types.</span></span><span class="sig-name descname"><span class="pre">NPDataTypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/ssi_data_types.html#NPDataTypes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.ssi_data_types.NPDataTypes" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>An enumeration.</p>
+<p>Enum representing different NumPy data types.</p>
+<p>This enum defines constants for various NumPy data types, including UNDEF, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, and BOOL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>UNDEF</strong> (<em>int</em>) – Undefined data type.</p></li>
+<li><p><strong>SHORT</strong> (<em>numpy.int16</em>) – 16-bit integer data type.</p></li>
+<li><p><strong>USHORT</strong> (<em>numpy.uint16</em>) – Unsigned 16-bit integer data type.</p></li>
+<li><p><strong>INT</strong> (<em>numpy.int32</em>) – 32-bit integer data type.</p></li>
+<li><p><strong>UINT</strong> (<em>numpy.uint32</em>) – Unsigned 32-bit integer data type.</p></li>
+<li><p><strong>LONG</strong> (<em>numpy.int64</em>) – 64-bit integer data type.</p></li>
+<li><p><strong>ULONG</strong> (<em>numpy.uint64</em>) – Unsigned 64-bit integer data type.</p></li>
+<li><p><strong>FLOAT</strong> (<em>numpy.float32</em>) – 32-bit floating-point data type.</p></li>
+<li><p><strong>DOUBLE</strong> (<em>numpy.float64</em>) – 64-bit floating-point data type.</p></li>
+<li><p><strong>BOOL</strong> (<a href="#id1"><span class="problematic" id="id2">numpy.bool_</span></a>) – Boolean data type.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="nova_utils.utils.ssi_data_types.NPDataTypes.None">
+<span class="sig-name descname"><span class="pre">None</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nova_utils.utils.ssi_data_types.NPDataTypes.None" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="nova_utils.utils.ssi_data_types.NPDataTypes.BOOL">
 <span class="sig-name descname"><span class="pre">BOOL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;class</span> <span class="pre">'numpy.bool_'&gt;</span></em><a class="headerlink" href="#nova_utils.utils.ssi_data_types.NPDataTypes.BOOL" title="Permalink to this definition"></a></dt>
@@ -186,7 +231,26 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="nova_utils.utils.ssi_data_types.string_to_enum">
 <span class="sig-prename descclassname"><span class="pre">nova_utils.utils.ssi_data_types.</span></span><span class="sig-name descname"><span class="pre">string_to_enum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/ssi_data_types.html#string_to_enum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.ssi_data_types.string_to_enum" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Convert a string to an enum value.</p>
+<p>This function takes an enum and a string and returns the corresponding enum value. If the string does not match any enum value, a ValueError is raised.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>enum</strong> (<em>Enum</em>) – The enum to search in.</p></li>
+<li><p><strong>string</strong> (<em>str</em>) – The string to convert to an enum value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The enum value corresponding to the input string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Enum</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the input string does not match any enum value in the specified enum.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 
