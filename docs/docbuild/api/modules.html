@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nova_utils &mdash; NOVA-Utils 1.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NOVA-Utils
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nova_utils.scripts.html">nova_utils.scripts package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nova_utils.data.html">nova_utils.data package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nova_utils.interfaces.html">nova_utils.interfaces package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nova_utils.utils.html">nova_utils.utils package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NOVA-Utils</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">nova_utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="nova-utils">
+<h1>nova_utils<a class="headerlink" href="#nova-utils" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nova_utils.html">nova_utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nova_utils.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nova_utils.data.html">nova_utils.data package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="nova_utils.data.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.data.handler.html">nova_utils.data.handler package</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.handler.html#submodules">Submodules</a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.handler.file_handler.html">nova_utils.data.handler.file_handler module</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.file_handler.html#nova_utils.data.handler.file_handler.FileHandler"><code class="docutils literal notranslate"><span class="pre">FileHandler</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.file_handler.html#nova_utils.data.handler.file_handler.FileMetaData"><code class="docutils literal notranslate"><span class="pre">FileMetaData</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.file_handler.html#nova_utils.data.handler.file_handler.FileSSIStreamMetaData"><code class="docutils literal notranslate"><span class="pre">FileSSIStreamMetaData</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.handler.ihandler.html">nova_utils.data.handler.ihandler module</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.ihandler.html#nova_utils.data.handler.ihandler.IHandler"><code class="docutils literal notranslate"><span class="pre">IHandler</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.handler.mongo_handler.html">nova_utils.data.handler.mongo_handler module</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.AnnotationHandler"><code class="docutils literal notranslate"><span class="pre">AnnotationHandler</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.MongoAnnotationMetaData"><code class="docutils literal notranslate"><span class="pre">MongoAnnotationMetaData</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.MongoHandler"><code class="docutils literal notranslate"><span class="pre">MongoHandler</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.MongoMetaData"><code class="docutils literal notranslate"><span class="pre">MongoMetaData</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.MongoStreamMetaData"><code class="docutils literal notranslate"><span class="pre">MongoStreamMetaData</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.SessionHandler"><code class="docutils literal notranslate"><span class="pre">SessionHandler</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.StreamHandler"><code class="docutils literal notranslate"><span class="pre">StreamHandler</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.data.provider.html">nova_utils.data.provider package</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.provider.html#submodules">Submodules</a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.provider.nova_iterator.html">nova_utils.data.provider.nova_iterator module</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="nova_utils.data.provider.nova_iterator.html#nova_utils.data.provider.nova_iterator.NovaIterator"><code class="docutils literal notranslate"><span class="pre">NovaIterator</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="nova_utils.data.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.data.annotation.html">nova_utils.data.annotation module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.AnnoMetaData"><code class="docutils literal notranslate"><span class="pre">AnnoMetaData</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.Annotation"><code class="docutils literal notranslate"><span class="pre">Annotation</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.Annotation.GARBAGE_LABEL_ID"><code class="docutils literal notranslate"><span class="pre">Annotation.GARBAGE_LABEL_ID</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.Annotation.annotation_scheme"><code class="docutils literal notranslate"><span class="pre">Annotation.annotation_scheme</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.ContinuousAnnotation"><code class="docutils literal notranslate"><span class="pre">ContinuousAnnotation</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.ContinuousAnnotation.MISSING_DATA_LABEL_VALUE"><code class="docutils literal notranslate"><span class="pre">ContinuousAnnotation.MISSING_DATA_LABEL_VALUE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.ContinuousAnnotation.NOVA_GARBAGE_LABEL_VALUE"><code class="docutils literal notranslate"><span class="pre">ContinuousAnnotation.NOVA_GARBAGE_LABEL_VALUE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.ContinuousAnnotation.annotation_scheme"><code class="docutils literal notranslate"><span class="pre">ContinuousAnnotation.annotation_scheme</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.ContinuousAnnotation.data"><code class="docutils literal notranslate"><span class="pre">ContinuousAnnotation.data</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.ContinuousAnnotation.sample_from_interval"><code class="docutils literal notranslate"><span class="pre">ContinuousAnnotation.sample_from_interval()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.ContinuousAnnotationScheme"><code class="docutils literal notranslate"><span class="pre">ContinuousAnnotationScheme</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.ContinuousAnnotationScheme.label_dtype"><code class="docutils literal notranslate"><span class="pre">ContinuousAnnotationScheme.label_dtype</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.ContinuousAnnotationScheme.scheme_type"><code class="docutils literal notranslate"><span class="pre">ContinuousAnnotationScheme.scheme_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.DiscreteAnnotation"><code class="docutils literal notranslate"><span class="pre">DiscreteAnnotation</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.DiscreteAnnotation.NOVA_GARBAGE_LABEL_ID"><code class="docutils literal notranslate"><span class="pre">DiscreteAnnotation.NOVA_GARBAGE_LABEL_ID</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.DiscreteAnnotation.NOVA_REST_CLASS_NAME"><code class="docutils literal notranslate"><span class="pre">DiscreteAnnotation.NOVA_REST_CLASS_NAME</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.DiscreteAnnotation.annotation_scheme"><code class="docutils literal notranslate"><span class="pre">DiscreteAnnotation.annotation_scheme</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.DiscreteAnnotation.data"><code class="docutils literal notranslate"><span class="pre">DiscreteAnnotation.data</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.DiscreteAnnotation.sample_from_interval"><code class="docutils literal notranslate"><span class="pre">DiscreteAnnotation.sample_from_interval()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.DiscreteAnnotationScheme"><code class="docutils literal notranslate"><span class="pre">DiscreteAnnotationScheme</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.DiscreteAnnotationScheme.label_dtype"><code class="docutils literal notranslate"><span class="pre">DiscreteAnnotationScheme.label_dtype</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.DiscreteAnnotationScheme.scheme_type"><code class="docutils literal notranslate"><span class="pre">DiscreteAnnotationScheme.scheme_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.FreeAnnotation"><code class="docutils literal notranslate"><span class="pre">FreeAnnotation</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.FreeAnnotation.NOVA_GARBAGE_LABEL_VALUE"><code class="docutils literal notranslate"><span class="pre">FreeAnnotation.NOVA_GARBAGE_LABEL_VALUE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.FreeAnnotation.annotation_scheme"><code class="docutils literal notranslate"><span class="pre">FreeAnnotation.annotation_scheme</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.FreeAnnotation.data"><code class="docutils literal notranslate"><span class="pre">FreeAnnotation.data</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.FreeAnnotation.sample_from_interval"><code class="docutils literal notranslate"><span class="pre">FreeAnnotation.sample_from_interval()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.FreeAnnotationScheme"><code class="docutils literal notranslate"><span class="pre">FreeAnnotationScheme</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.FreeAnnotationScheme.label_dtype"><code class="docutils literal notranslate"><span class="pre">FreeAnnotationScheme.label_dtype</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.FreeAnnotationScheme.scheme_type"><code class="docutils literal notranslate"><span class="pre">FreeAnnotationScheme.scheme_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.IAnnotationScheme"><code class="docutils literal notranslate"><span class="pre">IAnnotationScheme</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.IAnnotationScheme.label_dtype"><code class="docutils literal notranslate"><span class="pre">IAnnotationScheme.label_dtype</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.IAnnotationScheme.scheme_type"><code class="docutils literal notranslate"><span class="pre">IAnnotationScheme.scheme_type</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.data.data.html">nova_utils.data.data module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.Data"><code class="docutils literal notranslate"><span class="pre">Data</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.Data.data"><code class="docutils literal notranslate"><span class="pre">Data.data</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.DynamicData"><code class="docutils literal notranslate"><span class="pre">DynamicData</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.DynamicData.sample_from_interval"><code class="docutils literal notranslate"><span class="pre">DynamicData.sample_from_interval()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.MetaData"><code class="docutils literal notranslate"><span class="pre">MetaData</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.MetaData.expand"><code class="docutils literal notranslate"><span class="pre">MetaData.expand()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.StaticData"><code class="docutils literal notranslate"><span class="pre">StaticData</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.data.session.html">nova_utils.data.session module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.session.html#nova_utils.data.session.Session"><code class="docutils literal notranslate"><span class="pre">Session</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.data.stream.html">nova_utils.data.stream module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.stream.html#nova_utils.data.stream.Audio"><code class="docutils literal notranslate"><span class="pre">Audio</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.stream.html#nova_utils.data.stream.SSIStream"><code class="docutils literal notranslate"><span class="pre">SSIStream</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.stream.html#nova_utils.data.stream.SSIStream.CHUNK_DTYPE"><code class="docutils literal notranslate"><span class="pre">SSIStream.CHUNK_DTYPE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.stream.html#nova_utils.data.stream.SSIStreamMetaData"><code class="docutils literal notranslate"><span class="pre">SSIStreamMetaData</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.stream.html#nova_utils.data.stream.SSIStreamMetaData.CHUNK_DTYPE"><code class="docutils literal notranslate"><span class="pre">SSIStreamMetaData.CHUNK_DTYPE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.stream.html#nova_utils.data.stream.Stream"><code class="docutils literal notranslate"><span class="pre">Stream</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.data.stream.html#nova_utils.data.stream.Stream.sample_from_interval"><code class="docutils literal notranslate"><span class="pre">Stream.sample_from_interval()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.stream.html#nova_utils.data.stream.StreamMetaData"><code class="docutils literal notranslate"><span class="pre">StreamMetaData</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.data.stream.html#nova_utils.data.stream.Video"><code class="docutils literal notranslate"><span class="pre">Video</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="nova_utils.interfaces.html">nova_utils.interfaces package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="nova_utils.interfaces.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.interfaces.server_module.html">nova_utils.interfaces.server_module module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Extractor"><code class="docutils literal notranslate"><span class="pre">Extractor</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Extractor.chainable"><code class="docutils literal notranslate"><span class="pre">Extractor.chainable</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Extractor.to_stream"><code class="docutils literal notranslate"><span class="pre">Extractor.to_stream()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Predictor"><code class="docutils literal notranslate"><span class="pre">Predictor</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Predictor.to_anno"><code class="docutils literal notranslate"><span class="pre">Predictor.to_anno()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Processor"><code class="docutils literal notranslate"><span class="pre">Processor</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Processor.DEPENDENCIES"><code class="docutils literal notranslate"><span class="pre">Processor.DEPENDENCIES</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Processor.SINGLE_ROLE_INPUT"><code class="docutils literal notranslate"><span class="pre">Processor.SINGLE_ROLE_INPUT</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Processor.postprocess_sample"><code class="docutils literal notranslate"><span class="pre">Processor.postprocess_sample()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Processor.preprocess_sample"><code class="docutils literal notranslate"><span class="pre">Processor.preprocess_sample()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Processor.process_data"><code class="docutils literal notranslate"><span class="pre">Processor.process_data()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Processor.process_sample"><code class="docutils literal notranslate"><span class="pre">Processor.process_sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Trainer"><code class="docutils literal notranslate"><span class="pre">Trainer</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Trainer.load"><code class="docutils literal notranslate"><span class="pre">Trainer.load()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Trainer.save"><code class="docutils literal notranslate"><span class="pre">Trainer.save()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.interfaces.server_module.html#nova_utils.interfaces.server_module.Trainer.train"><code class="docutils literal notranslate"><span class="pre">Trainer.train()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="nova_utils.scripts.html">nova_utils.scripts package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="nova_utils.scripts.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.scripts.extract.html">nova_utils.scripts.extract module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.scripts.parsers.html">nova_utils.scripts.parsers module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.scripts.predict.html">nova_utils.scripts.predict module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.scripts.train.html">nova_utils.scripts.train module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="nova_utils.storage.html">nova_utils.storage package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="nova_utils.storage.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.storage.cache.html">nova_utils.storage.cache module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.storage.cache.html#nova_utils.storage.cache.retreive_and_unzip"><code class="docutils literal notranslate"><span class="pre">retreive_and_unzip()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.storage.cache.html#nova_utils.storage.cache.retreive_from_url"><code class="docutils literal notranslate"><span class="pre">retreive_from_url()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="nova_utils.utils.html">nova_utils.utils package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="nova_utils.utils.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.utils.anno_utils.html">nova_utils.utils.anno_utils module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.convert_label_to_ssi_dtype"><code class="docutils literal notranslate"><span class="pre">convert_label_to_ssi_dtype()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.convert_ssi_to_label_dtype"><code class="docutils literal notranslate"><span class="pre">convert_ssi_to_label_dtype()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.data_contains_garbage"><code class="docutils literal notranslate"><span class="pre">data_contains_garbage()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.get_anno_majority"><code class="docutils literal notranslate"><span class="pre">get_anno_majority()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.get_overlap"><code class="docutils literal notranslate"><span class="pre">get_overlap()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.label_is_garbage"><code class="docutils literal notranslate"><span class="pre">label_is_garbage()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html">nova_utils.utils.ssi_data_types module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.FileTypes"><code class="docutils literal notranslate"><span class="pre">FileTypes</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.FileTypes.ASCII"><code class="docutils literal notranslate"><span class="pre">FileTypes.ASCII</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.FileTypes.BINARY"><code class="docutils literal notranslate"><span class="pre">FileTypes.BINARY</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.FileTypes.BIN_LZ4"><code class="docutils literal notranslate"><span class="pre">FileTypes.BIN_LZ4</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.FileTypes.UNDEF"><code class="docutils literal notranslate"><span class="pre">FileTypes.UNDEF</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes"><code class="docutils literal notranslate"><span class="pre">NPDataTypes</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.BOOL"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.BOOL</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.DOUBLE"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.DOUBLE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.FLOAT"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.FLOAT</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.INT"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.INT</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.LDOUBLE"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.LDOUBLE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.LONG"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.LONG</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.SHORT"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.SHORT</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.UINT"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.UINT</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.ULONG"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.ULONG</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.UNDEF"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.UNDEF</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.NPDataTypes.USHORT"><code class="docutils literal notranslate"><span class="pre">NPDataTypes.USHORT</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.string_to_enum"><code class="docutils literal notranslate"><span class="pre">string_to_enum()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html">nova_utils.utils.ssi_xml_utils module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.Chain"><code class="docutils literal notranslate"><span class="pre">Chain</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.Chain.load_from_file"><code class="docutils literal notranslate"><span class="pre">Chain.load_from_file()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.Chain.write_to_file"><code class="docutils literal notranslate"><span class="pre">Chain.write_to_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.ChainLink"><code class="docutils literal notranslate"><span class="pre">ChainLink</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.Trainer"><code class="docutils literal notranslate"><span class="pre">Trainer</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.Trainer.load_from_file"><code class="docutils literal notranslate"><span class="pre">Trainer.load_from_file()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.Trainer.write_to_file"><code class="docutils literal notranslate"><span class="pre">Trainer.write_to_file()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.utils.stream_utils.html">nova_utils.utils.stream_utils module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.stream_utils.html#nova_utils.utils.stream_utils.milli_seconds_to_sample_nr"><code class="docutils literal notranslate"><span class="pre">milli_seconds_to_sample_nr()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.stream_utils.html#nova_utils.utils.stream_utils.sample_nr_to_milli_seconds"><code class="docutils literal notranslate"><span class="pre">sample_nr_to_milli_seconds()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.stream_utils.html#nova_utils.utils.stream_utils.sample_nr_to_seconds"><code class="docutils literal notranslate"><span class="pre">sample_nr_to_seconds()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.stream_utils.html#nova_utils.utils.stream_utils.seconds_to_sample_nr"><code class="docutils literal notranslate"><span class="pre">seconds_to_sample_nr()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.stream_utils.html#nova_utils.utils.stream_utils.time_to_sample_interval"><code class="docutils literal notranslate"><span class="pre">time_to_sample_interval()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.utils.string_utils.html">nova_utils.utils.string_utils module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.string_utils.html#nova_utils.utils.string_utils.parse_time_string_to_ms"><code class="docutils literal notranslate"><span class="pre">parse_time_string_to_ms()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.string_utils.html#nova_utils.utils.string_utils.string_to_enum"><code class="docutils literal notranslate"><span class="pre">string_to_enum()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="nova_utils.utils.type_definitions.html">nova_utils.utils.type_definitions module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.LabelDType"><code class="docutils literal notranslate"><span class="pre">LabelDType</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.LabelDType.CONTINUOUS"><code class="docutils literal notranslate"><span class="pre">LabelDType.CONTINUOUS</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.LabelDType.DISCRETE"><code class="docutils literal notranslate"><span class="pre">LabelDType.DISCRETE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.LabelDType.FREE"><code class="docutils literal notranslate"><span class="pre">LabelDType.FREE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSIFileType"><code class="docutils literal notranslate"><span class="pre">SSIFileType</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSIFileType.ASCII"><code class="docutils literal notranslate"><span class="pre">SSIFileType.ASCII</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSIFileType.BINARY"><code class="docutils literal notranslate"><span class="pre">SSIFileType.BINARY</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSIFileType.BIN_LZ4"><code class="docutils literal notranslate"><span class="pre">SSIFileType.BIN_LZ4</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSIFileType.UNDEF"><code class="docutils literal notranslate"><span class="pre">SSIFileType.UNDEF</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSILabelDType"><code class="docutils literal notranslate"><span class="pre">SSILabelDType</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSILabelDType.CONTINUOUS"><code class="docutils literal notranslate"><span class="pre">SSILabelDType.CONTINUOUS</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSILabelDType.DISCRETE"><code class="docutils literal notranslate"><span class="pre">SSILabelDType.DISCRETE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSILabelDType.FREE"><code class="docutils literal notranslate"><span class="pre">SSILabelDType.FREE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType"><code class="docutils literal notranslate"><span class="pre">SSINPDataType</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.BOOL"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.BOOL</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.DOUBLE"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.DOUBLE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.FLOAT"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.FLOAT</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.INT"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.INT</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.LDOUBLE"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.LDOUBLE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.LONG"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.LONG</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.SHORT"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.SHORT</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.UINT"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.UINT</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.ULONG"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.ULONG</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.UNDEF"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.UNDEF</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SSINPDataType.USHORT"><code class="docutils literal notranslate"><span class="pre">SSINPDataType.USHORT</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SchemeType"><code class="docutils literal notranslate"><span class="pre">SchemeType</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SchemeType.CONTINUOUS"><code class="docutils literal notranslate"><span class="pre">SchemeType.CONTINUOUS</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SchemeType.DISCRETE"><code class="docutils literal notranslate"><span class="pre">SchemeType.DISCRETE</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SchemeType.FREE"><code class="docutils literal notranslate"><span class="pre">SchemeType.FREE</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Dominik Schiller.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
