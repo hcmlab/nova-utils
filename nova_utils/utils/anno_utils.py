@@ -27,6 +27,7 @@ def get_overlap(a: np.ndarray, start: int, end: int):
 
     Returns:
         Numpy array with boolean values. The array is true where the interval specified in a overlaps [start, end]
+
     """
     annos_for_sample = (
         # annotation is bigger than frame
@@ -74,6 +75,7 @@ def label_is_garbage(label_id, garbage_label_id):
 
     Returns:
         bool: True if the label is garbage, False otherwise.
+
     """
     # check for nan or compare with garbage label id
     if label_id != label_id or label_id == garbage_label_id:
@@ -91,6 +93,7 @@ def data_contains_garbage(data: np.ndarray, garbage_label_id: object = np.NAN):
 
     Returns:
         bool: True if the data contains garbage values, False otherwise.
+
     """
     # if data array is numerical
     if np.issubdtype(data.dtype, np.number):
@@ -118,6 +121,7 @@ def convert_label_to_ssi_dtype(
 
     Returns:
         np.ndarray: The converted label data with the appropriate SSILabelDType.
+
     """
     # Convert from milliseconds to seconds
     if annotation_scheme_type == SchemeType.DISCRETE:
@@ -151,6 +155,7 @@ def convert_ssi_to_label_dtype(
 
     Returns:
         np.ndarray: The converted LabelDType data.
+
     """
     tmp_anno_data = data
 

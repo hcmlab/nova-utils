@@ -20,9 +20,6 @@ class ChainLinkEncoder(json.JSONEncoder):
     Attributes:
         None
 
-    Methods:
-        default(obj): Encodes a ChainLink object to JSON.
-
     """
 
     def default(self, obj):
@@ -56,9 +53,6 @@ class ChainEncoder(json.JSONEncoder):
 
     Attributes:
         None
-
-    Methods:
-        default(obj): Encodes a Chain object to JSON.
 
     """
 
@@ -95,10 +89,6 @@ class TrainerEncoder(json.JSONEncoder):
 
     Attributes:
         None
-
-    Methods:
-        default(obj): Encodes a Trainer object to JSON.
-
     """
 
     def default(self, obj):

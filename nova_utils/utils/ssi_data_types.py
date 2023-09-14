@@ -23,9 +23,6 @@ class FileTypes(Enum):
         ASCII (int): ASCII file type.
         BIN_LZ4 (int): Binary LZ4 compressed file type.
 
-    Methods:
-        None
-
     """
 
     UNDEF = 0
@@ -52,8 +49,6 @@ class NPDataTypes(Enum):
         DOUBLE (numpy.float64): 64-bit floating-point data type.
         BOOL (numpy.bool_): Boolean data type.
 
-    Methods:
-        None
     """
 
     UNDEF = 0
@@ -91,6 +86,7 @@ def string_to_enum(enum, string):
 
     Raises:
         ValueError: If the input string does not match any enum value in the specified enum.
+
     """
     for e in enum:
         if e.name == string:

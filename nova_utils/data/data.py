@@ -119,10 +119,6 @@ class DynamicData(ABC, Data):
     Attributes:
         (No additional attributes specified in the provided code.)
 
-    Methods:
-        sample_from_interval(start: int, end: int) -> np.ndarray:
-            Abstract method to sample data from within the specified interval.
-
     Args:
         (No additional arguments specified in the provided code.)
     """

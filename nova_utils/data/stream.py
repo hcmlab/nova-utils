@@ -92,9 +92,6 @@ class Stream(DynamicData):
         dtype (np.dtype, optional): Data type of the samples. Will be added to metadata.
         **kwargs: Additional keyword arguments for DynamicData.
 
-    Methods:
-        sample_from_interval(start: int, end: int) -> np.ndarray:
-            Implementation of abstract method to sample data from within the specified interval.
     """
 
     def __init__(
@@ -184,8 +181,6 @@ class Audio(Stream):
         sample_rate (float): Sampling rate of the audio stream.
         **kwargs: Additional keyword arguments for Stream.
 
-    Methods:
-        (No additional methods specified in the provided code.)
     """
 
     def __init__(self, data: np.ndarray, sample_rate: float, **kwargs):
@@ -203,8 +198,6 @@ class Video(Stream):
         sample_rate (float): Sampling rate of the video stream.
         **kwargs: Additional keyword arguments for Stream.
 
-    Methods:
-        (No additional methods specified in the provided code.)
     """
 
     def __init__(self, data: np.ndarray, sample_rate: float, **kwargs):

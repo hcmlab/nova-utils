@@ -36,9 +36,25 @@ class Trainer:
         ssi_v (str): SSI version.
         xml_version (str): XML version.
 
-    Methods:
-        load_from_file(fp): Load Trainer configuration from an XML file.
-        write_to_file(fp): Write Trainer configuration to an XML file.
+    Args:
+        madel_script_path (str, optional): Path to the model script file. Defaults to empty string.
+        model_option_path (str, optional): Path to the model option file. Defaults to empty string.
+        model_option_string (str, optional): Model option string. Defaults to empty string.
+        model_weights_path (str, optional): Path to the model weights file. Defaults to empty string.
+        model_stream (int, optional): Model stream identifier. Default is 0.
+        model_create (str, optional): Model creation type. Default is "PythonModel".
+        model_multirole_input (bool, optional): Indicates if the model supports multi-role input. Default is False.
+        users (list, optional): List of user information. Default is None.
+        classes (list, optional): List of class information. Default is None.
+        streams (list, optional): List of stream information. Default is None.
+        register (list, optional): List of registered items. Default is None.
+        info_trained (bool, optional): Indicates if the model is trained. Default is False.
+        meta_right_ctx (int, optional): Right context value for metadata. Default is 0.
+        meta_left_ctx (int, optional): Left context value for metadata. Default is 0.
+        meta_balance (str, optional): Balance type for metadata. Default is "none".
+        meta_backend (str, optional): Backend type for metadata. Default is "nova-server".
+        ssi_v (str, optional): SSI version. Default is "5".
+        xml_version (str, optional): XML version. Default is "1.0".
 
     """
 
@@ -64,27 +80,7 @@ class Trainer:
         xml_version="1.0",
     ):
         """
-        Initialize a Trainer object with the specified parameters.
-
-        Args:
-            model_script_path (str): Path to the model script file.
-            model_option_path (str): Path to the model option file.
-            model_option_string (str): Model option string.
-            model_weights_path (str): Path to the model weights file.
-            model_stream (int): Model stream identifier.
-            model_create (str): Model creation type.
-            model_multirole_input (bool): Indicates if the model accepts multi-role input.
-            users (list): List of user configurations.
-            classes (list): List of class configurations.
-            streams (list): List of stream configurations.
-            register (list): List of register configurations.
-            info_trained (bool): Indicates if the Trainer has been trained.
-            meta_right_ctx (int): Right context size for the Trainer.
-            meta_left_ctx (int): Left context size for the Trainer.
-            meta_balance (str): Balance type for the Trainer.
-            meta_backend (str): Backend type for the Trainer.
-            ssi_v (str): SSI version.
-            xml_version (str): XML version.
+        Initialize a Trainer object with various parameters.
 
         """
 
@@ -218,8 +214,13 @@ class ChainLink:
         tag (str): ChainLink tag.
         multi_role_input (bool): Indicates if the ChainLink accepts multi-role input.
 
-    Methods:
-        None
+    Args:
+        create (str): ChainLink type.
+        script (str): ChainLink script.
+        optsstr (str): ChainLink options string.
+        syspath (str): ChainLink system path.
+        tag (str, optional): ChainLink tag. Defaults tu "feature"
+        multi_role_input (str, optional): Indicates if the ChainLink accepts multi-role input. Defaults to False.
 
     """
 
@@ -235,14 +236,6 @@ class ChainLink:
     ):
         """
         Initialize a ChainLink object with the specified parameters.
-
-        Args:
-            create (str): ChainLink type.
-            script (str): ChainLink script.
-            optsstr (str): ChainLink options string.
-            syspath (str): ChainLink system path.
-            tag (str): ChainLink tag.
-            multi_role_input (str): Indicates if the ChainLink accepts multi-role input.
 
         """
         self.create = create
@@ -269,9 +262,15 @@ class Chain:
         register (list): List of register configurations.
         links (list): List of ChainLink configurations.
 
-    Methods:
-        load_from_file(fp): Load Chain configuration from an XML file.
-        write_to_file(fp): Write Chain configuration to an XML file.
+    Argss:
+        meta_frame_step (str, optional): Meta frame step information. Defaults to empty string.
+        meta_left_context (str, optional): Left context metadata. Defaults to empty string.
+        meta_right_context (str, optional): Right context metadata. Defaults to empty string.
+        meta_backend (str, optional): Backend type for metadata. Default is "nova-server".
+        meta_description (str, optional): Description for metadata. Defaults to empty string.
+        meta_category (str, optional): Category for metadata. Defaults to empty string.
+        register (list, optional): List of registered items. Default is None.
+        links (list, optional): List of ChainLink objects. Default is None.
 
     """
 
@@ -289,16 +288,6 @@ class Chain:
         """
         Initialize a Chain object with the specified parameters.
 
-        Args:
-            meta_frame_step (str): Meta frame step value.
-            meta_left_context (str): Meta left context value.
-            meta_right_context (str): Meta right context value.
-            meta_backend (str): Backend type for the Chain.
-            meta_description (str): Description for the Chain.
-            meta_category (str): Category for the Chain.
-            register (list): List of register configurations.
-            links (list): List of ChainLink configurations.
-
         """
         self.meta_frame_step = meta_frame_step
         self.meta_left_ctx = meta_left_context
@@ -315,6 +304,7 @@ class Chain:
 
         Args:
             fp (str or Path): The file path to the XML file.
+
         """
         tree = ET.parse(Path(fp))
         root = tree.getroot()
