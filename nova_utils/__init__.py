@@ -1,5 +1,5 @@
 _MAJOR_VERSION = '1'
-_MINOR_VERSION = '0'
+_MINOR_VERSION = '1'
 _PATCH_VERSION = '0'
 
 __version__ = '.'.join([
