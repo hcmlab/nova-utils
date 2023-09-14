@@ -43,3 +43,9 @@ version = {attr = "nova_utils.__version__"}
 Documentation = "https://hcmlab.github.io/nova-utils/docbuild/"
 Repository = "https://github.com/hcmlab/nova-utils"
 
+[project.scripts]
+nu-predict = "nova_utils.scripts.predict:main"
+nu-extract = "nova_utils.scripts.extract:main"
+nu-train = "nova_utils.scripts.train:main"
+
+
