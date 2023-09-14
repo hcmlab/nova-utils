@@ -106,7 +106,7 @@
 </dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="nova_utils.utils.anno_utils.convert_label_to_ssi_dtype">
-<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">convert_label_to_ssi_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotation_scheme_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SchemeType" title="nova_utils.utils.type_definitions.SchemeType"><span class="pre">SchemeType</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#convert_label_to_ssi_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.convert_label_to_ssi_dtype" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">convert_label_to_ssi_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotation_scheme_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#convert_label_to_ssi_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.convert_label_to_ssi_dtype" title="Permalink to this definition"></a></dt>
 <dd><p>Convert label data to SSILabelDType based on the annotation scheme type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -121,12 +121,18 @@
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>data</strong> (<em>ndarray</em>) – </p></li>
+<li><p><strong>annotation_scheme_type</strong> (<a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SchemeType" title="nova_utils.utils.type_definitions.SchemeType"><em>SchemeType</em></a>) – </p></li>
+</ul>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="nova_utils.utils.anno_utils.convert_ssi_to_label_dtype">
-<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">convert_ssi_to_label_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotation_scheme_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SchemeType" title="nova_utils.utils.type_definitions.SchemeType"><span class="pre">SchemeType</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#convert_ssi_to_label_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.convert_ssi_to_label_dtype" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">convert_ssi_to_label_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotation_scheme_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#convert_ssi_to_label_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.convert_ssi_to_label_dtype" title="Permalink to this definition"></a></dt>
 <dd><p>Convert SSILabelDType data to LabelDType based on the annotation scheme type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -141,12 +147,18 @@
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>data</strong> (<em>ndarray</em>) – </p></li>
+<li><p><strong>annotation_scheme_type</strong> (<a class="reference internal" href="nova_utils.utils.type_definitions.html#nova_utils.utils.type_definitions.SchemeType" title="nova_utils.utils.type_definitions.SchemeType"><em>SchemeType</em></a>) – </p></li>
+</ul>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="nova_utils.utils.anno_utils.data_contains_garbage">
-<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">data_contains_garbage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">garbage_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">nan</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#data_contains_garbage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.data_contains_garbage" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">data_contains_garbage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">garbage_label_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#data_contains_garbage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.data_contains_garbage" title="Permalink to this definition"></a></dt>
 <dd><p>Check if a data array contains garbage values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -161,12 +173,18 @@
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>data</strong> (<em>ndarray</em>) – </p></li>
+<li><p><strong>garbage_label_id</strong> (<em>object</em>) – </p></li>
+</ul>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="nova_utils.utils.anno_utils.get_anno_majority">
-<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">get_anno_majority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap_idxs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#get_anno_majority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.get_anno_majority" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">get_anno_majority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap_idxs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#get_anno_majority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.get_anno_majority" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the index of the annotation with the largest overlap with the current frame</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -177,13 +195,21 @@
 <li><p><strong>end</strong> (<em>int</em>) – end of the interval to check</p></li>
 </ul>
 </dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>a</strong> (<em>ndarray</em>) – </p></li>
+<li><p><strong>overlap_idxs</strong> (<em>ndarray</em>) – </p></li>
+<li><p><strong>start</strong> (<em>int</em>) – </p></li>
+<li><p><strong>end</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
 </dl>
 <p>Returns:</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="nova_utils.utils.anno_utils.get_overlap">
-<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">get_overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#get_overlap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.get_overlap" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">get_overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#get_overlap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.get_overlap" title="Permalink to this definition"></a></dt>
 <dd><p>Calculating all overlapping intervals between the given array of time intervals and the interval [start, end]</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -195,6 +221,13 @@
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Numpy array with boolean values. The array is true where the interval specified in a overlaps [start, end]</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>ndarray</em>) – </p></li>
+<li><p><strong>start</strong> (<em>int</em>) – </p></li>
+<li><p><strong>end</strong> (<em>int</em>) – </p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

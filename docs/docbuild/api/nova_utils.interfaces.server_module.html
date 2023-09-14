@@ -102,7 +102,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Extractor.to_stream">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Extractor.to_stream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Extractor.to_stream" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Extractor.to_stream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Extractor.to_stream" title="Permalink to this definition"></a></dt>
 <dd><p>Converts the return value from process_data() to data stream chunk that can be processed by nova-server.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -113,6 +113,9 @@
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>data</strong> (<em>object</em>) – </p>
 </dd>
 </dl>
 <p>Each tuple has the form ( type (nova_types.DataTypes), sample_rate (double), data_chunk (numpy.ndarray) ). The shape of the data chunk should in the form of (n_frames, n_features)
@@ -135,7 +138,7 @@ An arbitrary number of streams maybe returned.</p>
 <p>Base class of a data predictor. Implement this interface if you want to write annotations to a database</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Predictor.to_anno">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_anno</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.Annotation" title="nova_utils.data.annotation.Annotation"><span class="pre">nova_utils.data.annotation.Annotation</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Predictor.to_anno"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Predictor.to_anno" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_anno</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Predictor.to_anno"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Predictor.to_anno" title="Permalink to this definition"></a></dt>
 <dd><p>Converts the output of process_data to the correct annotation format to upload them to the database.
 !THE OUTPUT FORMAT OF THIS FUNCTION IS NOT YET FULLY DEFINED AND WILL CHANGE IN FUTURE RELEASES!</p>
 <dl class="field-list simple">
@@ -176,19 +179,27 @@ An arbitrary number of streams maybe returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Processor.preprocess_sample">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">preprocess_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Processor.preprocess_sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Processor.preprocess_sample" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">preprocess_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Processor.preprocess_sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Processor.preprocess_sample" title="Permalink to this definition"></a></dt>
 <dd><p>Preprocess data to convert between nova-server dataset iterator item to the raw model input as required in process_sample.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>sample</strong> (<em>dict</em>)</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sample</strong> (<em>dict</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Processor.process_data">
-<span class="sig-name descname"><span class="pre">process_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_iter</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Processor.process_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Processor.process_data" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">process_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Processor.process_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Processor.process_data" title="Permalink to this definition"></a></dt>
 <dd><p>Returning a dictionary that contains the original keys from the dataset iterator and processed samples as value. Can be overwritten to customize the processing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -212,8 +223,13 @@ An arbitrary number of streams maybe returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Trainer.save">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Trainer.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Trainer.save" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Trainer.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Trainer.save" title="Permalink to this definition"></a></dt>
 <dd><p>Stores the weights of the given model at the given path. Returns the path of the weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">

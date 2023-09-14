@@ -98,12 +98,17 @@
 </dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.data.handler.file_handler.FileHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.handler.file_handler.</span></span><span class="sig-name descname"><span class="pre">FileHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.FileTypes.None" title="nova_utils.utils.ssi_data_types.FileTypes.None"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileHandler" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.handler.file_handler.</span></span><span class="sig-name descname"><span class="pre">FileHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileHandler" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="nova_utils.data.handler.ihandler.html#nova_utils.data.handler.ihandler.IHandler" title="nova_utils.data.handler.ihandler.IHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">IHandler</span></code></a></p>
 <p>Class for handling different types of data files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_type</strong> (<em>int</em>) – </p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.data.handler.file_handler.FileHandler.load">
-<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.Data" title="nova_utils.data.data.Data"><span class="pre">Data</span></a></span></span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileHandler.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileHandler.load" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileHandler.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileHandler.load" title="Permalink to this definition"></a></dt>
 <dd><p>Load data from a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -113,14 +118,17 @@
 <dd class="field-even"><p>The loaded data.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.Data" title="nova_utils.data.data.Data">Data</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="data.html#data.data.Data" title="data.data.Data">Data</a></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>fp</strong> (<em>Path</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.data.handler.file_handler.FileHandler.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileHandler.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileHandler.save" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileHandler.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileHandler.save" title="Permalink to this definition"></a></dt>
 <dd><p>Save data to a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -135,6 +143,12 @@
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>FileExistsError</strong> – If the file already exists and overwrite is not allowed.</p>
 </dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>any</em>) – </p></li>
+<li><p><strong>fp</strong> (<em>Path</em>) – </p></li>
+</ul>
+</dd>
 </dl>
 </dd></dl>
 
@@ -142,19 +156,22 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.data.handler.file_handler.FileMetaData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.handler.file_handler.</span></span><span class="sig-name descname"><span class="pre">FileMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileMetaData" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.handler.file_handler.</span></span><span class="sig-name descname"><span class="pre">FileMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileMetaData" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Metadata for a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>file_path</strong> (<em>Path</em>) – The filepath from which the data has been loaded</p>
 </dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>file_path</strong> (<em>Path</em>) – </p>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.data.handler.file_handler.FileSSIStreamMetaData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.handler.file_handler.</span></span><span class="sig-name descname"><span class="pre">FileSSIStreamMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileSSIStreamMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileSSIStreamMetaData" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.handler.file_handler.</span></span><span class="sig-name descname"><span class="pre">FileSSIStreamMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileSSIStreamMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileSSIStreamMetaData" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Metadata for a file.</p>
 <dl class="field-list simple">
@@ -162,6 +179,12 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ftype</strong> (<em>str</em>) – The file type.</p></li>
 <li><p><strong>delim</strong> (<em>str</em>) – The delimiter used to separate entries in the file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ftype</strong> (<em>str</em>) – </p></li>
+<li><p><strong>delim</strong> (<em>str</em>) – </p></li>
 </ul>
 </dd>
 </dl>

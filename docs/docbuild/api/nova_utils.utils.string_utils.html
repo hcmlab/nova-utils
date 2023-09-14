@@ -104,7 +104,7 @@ Author:</p>
 </dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="nova_utils.utils.string_utils.parse_time_string_to_ms">
-<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">parse_time_string_to_ms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="nova_utils.utils.ssi_data_types.html#nova_utils.utils.ssi_data_types.FileTypes.None" title="nova_utils.utils.ssi_data_types.FileTypes.None"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/nova_utils/utils/string_utils.html#parse_time_string_to_ms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.string_utils.parse_time_string_to_ms" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">parse_time_string_to_ms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/string_utils.html#parse_time_string_to_ms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.string_utils.parse_time_string_to_ms" title="Permalink to this definition"></a></dt>
 <dd><p>Parse a time string or value to milliseconds.</p>
 <p>This function takes a frame as input, which can be specified as a string in milliseconds (e.g., “100ms”),
 as a string in seconds (e.g., “2s”), as a float in seconds, as an integer in milliseconds, or as None.
@@ -122,12 +122,15 @@ It converts the frame to an integer value in milliseconds.</p>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If the input format for frame is invalid.</p>
 </dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>frame</strong> (<em>str</em><em> | </em><em>int</em><em> | </em><em>float</em><em> | </em><em>None</em>) – </p>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="nova_utils.utils.string_utils.string_to_enum">
-<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">string_to_enum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Enum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/string_utils.html#string_to_enum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.string_utils.string_to_enum" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">string_to_enum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/string_utils.html#string_to_enum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.string_utils.string_to_enum" title="Permalink to this definition"></a></dt>
 <dd><p>Convert a string to an enum value.</p>
 <p>This function takes an enum and a string and returns the corresponding enum value. If the string does not match any enum value,
 a ValueError is raised.</p>
@@ -146,6 +149,12 @@ a ValueError is raised.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If the input string does not match any enum value in the specified enum.</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>enum</strong> (<em>Enum</em>) – </p></li>
+<li><p><strong>string</strong> (<em>str</em>) – </p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
