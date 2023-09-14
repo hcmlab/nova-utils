@@ -13,6 +13,7 @@ Submodules
    :maxdepth: 8
 
    nova_utils.utils.anno_utils
+   nova_utils.utils.json_utils
    nova_utils.utils.ssi_data_types
    nova_utils.utils.ssi_xml_utils
    nova_utils.utils.stream_utils
