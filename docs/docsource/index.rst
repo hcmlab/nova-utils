@@ -7,10 +7,10 @@ Welcome to NOVA-Utils's documentation!
 ======================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 8
    :caption: Contents:
 
-
+   api/nova_utils.scripts
    api/nova_utils.data
    api/nova_utils.interfaces
    api/nova_utils.utils

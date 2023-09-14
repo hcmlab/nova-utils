@@ -1,3 +1,12 @@
+""" Module to create a data iterator for streams and annotations
+
+Author:
+    Dominik Schiller <dominik.schiller@uni-a.de>
+Date:
+    18.8.2023
+
+"""
+
 import sys
 import os
 import warnings

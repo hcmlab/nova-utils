@@ -2,6 +2,6 @@ nova_utils
 ==========
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 8
 
    nova_utils

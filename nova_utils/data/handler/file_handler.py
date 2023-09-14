@@ -1,7 +1,10 @@
-"""
-Module for handling File data operations related to annotations and streams.
-Author: Dominik Schiller <dominik.schiller@uni-a.de> <dominik.schiller@uni-a.de>
-Date: 18.8.2023
+""" Module for handling File data operations related to annotations and streams.
+
+Author:
+    Dominik Schiller <dominik.schiller@uni-a.de>
+Date:
+    18.8.2023
+
 """
 
 import xml.etree.ElementTree as Et

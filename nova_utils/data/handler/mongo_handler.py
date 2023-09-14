@@ -1,7 +1,9 @@
-"""
-Module for handling MongoDB data operations related to annotations and streams.
-Author: Dominik Schiller <dominik.schiller@uni-a.de>
-Date: 18.8.2023
+""" Module for handling MongoDB data operations related to annotations and streams.
+
+Author:
+    Dominik Schiller <dominik.schiller@uni-a.de>
+Date:
+    18.8.2023
 """
 import sys
 

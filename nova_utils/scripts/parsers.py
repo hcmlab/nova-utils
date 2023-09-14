@@ -1,3 +1,14 @@
+"""parsers.py - Common parsers for execution scripts
+
+Author:
+    Dominik Schiller <dominik.schiller@uni-a.de>
+Date:
+    06.09.2023
+
+This module defines argparse parsers for configuring the connection to the NOVA-DB and creating a NovaIterator.
+
+"""
+
 import argparse
 import json
 
