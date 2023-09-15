@@ -115,7 +115,21 @@ The highest time resolution for processing is therefore 1ms.</p>
 <li><p><strong>dataset</strong> (<em>str</em>) – Name of the dataset.</p></li>
 <li><p><strong>data_dir</strong> (<em>Path</em><em>, </em><em>optional</em>) – Path to the data directory. Defaults to None.</p></li>
 <li><p><strong>sessions</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of session names to process. Defaults to None.</p></li>
-<li><p><strong>data</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em><em>, </em><em>optional</em>) – List of data descriptions. Defaults to None.</p></li>
+<li><p><strong>data</strong> (<em>list</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – <p>List of data descriptions. Defaults to None. The dictionary should have the following fields:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;src&quot;</span></code></dt><dd><p>The source and datatype to load the data from separated by ‘:’ . Source can be either ‘db’ for database or ‘file’ to load from disc.
+The dataytpye is eiter ‘stream’ or ‘anno’. E.g. ‘db:anno’ .</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;scheme&quot;</span></code></dt><dd><p>The scheme name of the annotations to load. Only necessary when loading annotations from the database.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;annotator&quot;</span></code></dt><dd><p>The annotator of the annotations to load. Only necessary when loading annotations from the database.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;role&quot;</span></code></dt><dd><p>The role to which the data belongs. Only necessary when accessing data from the database.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;fp&quot;</span></code></dt><dd><p>The filepath from which to load the data from. Only necessary when loading files from disk.</p>
+</dd>
+</dl>
+</p></li>
 <li><p><strong>frame_size</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Size of the data frame measured in time. Defaults to None.</p></li>
 <li><p><strong>start</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Start time for processing measured in time. Defaults to None.</p></li>
 <li><p><strong>end</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – End time for processing measured in time. Defaults to None.</p></li>
@@ -132,10 +146,85 @@ The highest time resolution for processing is therefore 1ms.</p>
 <li><p><strong>dataset</strong> (<em>str</em>) – Name of the dataset.</p></li>
 <li><p><strong>sessions</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of session names to process.</p></li>
 <li><p><strong>data</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em>) – List of data descriptions.</p></li>
-<li><p><strong>...</strong> – </p></li>
+<li><p><strong>frame_size</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – Size of the data frame measured in time.</p></li>
+<li><p><strong>start</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – Start time for processing measured in time.</p></li>
+<li><p><strong>end</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – End time for processing measured in time.</p></li>
+<li><p><strong>left_context</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – Left context duration measured in time.</p></li>
+<li><p><strong>right_context</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – Right context duration measured in time.</p></li>
+<li><p><strong>stride</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – Stride for iterating over data measured in time.</p></li>
+<li><p><strong>add_rest_class</strong> (<em>bool</em>) – Whether to add a rest class for discrete annotations.</p></li>
+<li><p><strong>fill_missing_data</strong> (<em>bool</em>) – Whether to fill missing data.</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
+
+<span class="c1"># Load environment variables</span>
+<span class="n">IP</span> <span class="o">=</span> <span class="mf">127.0.0.1</span>
+<span class="n">PORT</span> <span class="o">=</span> <span class="mi">1337</span>
+<span class="n">USER</span> <span class="o">=</span> <span class="n">my_user</span>
+<span class="n">PASSWORD</span> <span class="o">=</span> <span class="n">my_password</span>
+<span class="n">DATA_DIR</span> <span class="o">=</span> <span class="o">/</span><span class="n">data</span>
+
+<span class="c1"># Define dataset and sessions</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;test_dataset&quot;</span>
+<span class="n">sessions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;test_session&quot;</span><span class="p">]</span>
+
+<span class="c1"># Define data descriptions</span>
+<span class="n">annotation</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;db:anno&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;scheme&quot;</span><span class="p">:</span> <span class="s2">&quot;transcript&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;annotator&quot;</span><span class="p">:</span> <span class="s2">&quot;test_annotator&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;test_role&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">stream</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;db:stream&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;test_role&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;extracted_features&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">file</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;file:stream&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fp&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/my/video/test_video.mp4&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># Create a NovaIterator instance</span>
+<span class="n">nova_iterator</span> <span class="o">=</span> <span class="n">NovaIterator</span><span class="p">(</span>
+    <span class="n">IP</span><span class="p">,</span>
+    <span class="n">PORT</span><span class="p">,</span>
+    <span class="n">USER</span><span class="p">,</span>
+    <span class="n">PASSWORD</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">,</span>
+    <span class="n">DATA_DIR</span><span class="p">,</span>
+    <span class="n">sessions</span><span class="o">=</span><span class="n">sessions</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">annotation</span><span class="p">,</span> <span class="n">file</span><span class="p">],</span>
+    <span class="n">frame_size</span><span class="o">=</span><span class="s2">&quot;5s&quot;</span><span class="p">,</span>
+    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;20s&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Example: Get the next data sample and set a breakpoint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">nova_iterator</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="nova_utils.data.provider.nova_iterator.NovaIterator.init_session">
+<span class="sig-name descname"><span class="pre">init_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/provider/nova_iterator.html#NovaIterator.init_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.provider.nova_iterator.NovaIterator.init_session" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize a session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>session_name</strong> (<em>str</em>) – Name of the session to initialize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Initialized session object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="data.html#data.session.Session" title="data.session.Session">Session</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>

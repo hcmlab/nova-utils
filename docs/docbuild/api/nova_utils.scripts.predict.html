@@ -48,7 +48,10 @@
 <li class="toctree-l2 current"><a class="reference internal" href="nova_utils.scripts.html#submodules">Submodules</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="nova_utils.scripts.extract.html">nova_utils.scripts.extract module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="nova_utils.scripts.parsers.html">nova_utils.scripts.parsers module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">nova_utils.scripts.predict module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">nova_utils.scripts.predict module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="nova_utils.scripts.train.html">nova_utils.scripts.train module</a></li>
 </ul>
 </li>
@@ -94,127 +97,88 @@
 </dd>
 </dl>
 <p>This script performs predictions for annotations in the NOVA database using a provided nova-server module for inference and saves the results to the NOVA-DB.</p>
+<p><p>Use a provided nova-server module for inference and save results to NOVA-DB</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">nu</span><span class="o">-</span><span class="n">predict</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">db_host</span> <span class="n">DB_HOST</span> <span class="o">--</span><span class="n">db_port</span> <span class="n">DB_PORT</span> <span class="o">--</span><span class="n">db_user</span> <span class="n">DB_USER</span>
+                  <span class="o">--</span><span class="n">db_password</span> <span class="n">DB_PASSWORD</span> <span class="o">--</span><span class="n">dataset</span> <span class="n">DATASET</span> <span class="o">--</span><span class="n">data_dir</span>
+                  <span class="n">DATA_DIR</span> <span class="o">--</span><span class="n">sessions</span> <span class="n">SESSIONS</span> <span class="o">--</span><span class="n">data</span> <span class="n">DATA</span>
+                  <span class="p">[</span><span class="o">--</span><span class="n">frame_size</span> <span class="n">FRAME_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">start</span> <span class="n">START</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">end</span> <span class="n">END</span><span class="p">]</span>
+                  <span class="p">[</span><span class="o">--</span><span class="n">left_context</span> <span class="n">LEFT_CONTEXT</span><span class="p">]</span>
+                  <span class="p">[</span><span class="o">--</span><span class="n">right_context</span> <span class="n">RIGHT_CONTEXT</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">stride</span> <span class="n">STRIDE</span><span class="p">]</span>
+                  <span class="p">[</span><span class="o">--</span><span class="n">add_rest_class</span> <span class="n">ADD_REST_CLASS</span><span class="p">]</span>
+                  <span class="p">[</span><span class="o">--</span><span class="n">fill_missing_data</span> <span class="n">FILL_MISSING_DATA</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cml_dir</span> <span class="n">CML_DIR</span><span class="p">]</span>
+                  <span class="p">[</span><span class="o">--</span><span class="n">opt_str</span> <span class="n">OPT_STR</span><span class="p">]</span> <span class="o">--</span><span class="n">trainer_file_path</span> <span class="n">TRAINER_FILE_PATH</span>
+</pre></div>
+</div>
+<section id="named-arguments">
+<h2>Named Arguments<a class="headerlink" href="#named-arguments" title="Permalink to this heading"></a></h2>
+<dl class="option-list">
+<dt><kbd>--db_host</kbd></dt>
+<dd><p>The ip-address of the NOVA-DB server</p>
+</dd>
+<dt><kbd>--db_port</kbd></dt>
+<dd><p>The ip-address of the NOVA-DB server</p>
+</dd>
+<dt><kbd>--db_user</kbd></dt>
+<dd><p>The user to authenticate at the NOVA-DB server</p>
+</dd>
+<dt><kbd>--db_password</kbd></dt>
+<dd><p>The password for the NOVA-DB server user</p>
+</dd>
+<dt><kbd>--dataset</kbd></dt>
+<dd><p>Name of the dataset. Must match entries in NOVA-DB</p>
+</dd>
+<dt><kbd>--data_dir</kbd></dt>
+<dd><p>Path to the NOVA data directory using Windows UNC-Style</p>
+</dd>
+<dt><kbd>--sessions</kbd></dt>
+<dd><p>Json formatted List of sessions to apply the iterator to</p>
+</dd>
+<dt><kbd>--data</kbd></dt>
+<dd><p>Json formatted String containing dictionaries that describe the data to load</p>
+</dd>
+<dt><kbd>--frame_size</kbd></dt>
+<dd><p>Size of the data frame measured in time. Defaults to None</p>
+</dd>
+<dt><kbd>--start</kbd></dt>
+<dd><p>Start time for processing measured in time. Defaults to None</p>
+</dd>
+<dt><kbd>--end</kbd></dt>
+<dd><p>End time for processing measured in time. Defaults to None</p>
+</dd>
+<dt><kbd>--left_context</kbd></dt>
+<dd><p>Left context duration measured in time. Defaults to None</p>
+</dd>
+<dt><kbd>--right_context</kbd></dt>
+<dd><p>Stride for iterating over data measured in time. If stride is not set explicitly it will be set to frame_size. Defaults to None</p>
+</dd>
+<dt><kbd>--stride</kbd></dt>
+<dd><p>Stride for iterating over data measured in time. If stride is not set explicitly it will be set to frame_size. Defaults to None</p>
+</dd>
+<dt><kbd>--add_rest_class</kbd></dt>
+<dd><p>Whether to add a rest class for discrete annotations. Defaults to True</p>
+</dd>
+<dt><kbd>--fill_missing_data</kbd></dt>
+<dd><p>Whether to fill missing data. Defaults to True</p>
+</dd>
+<dt><kbd>--cml_dir</kbd></dt>
+<dd><p>CML-Base directory for the NOVA-Server module</p>
+</dd>
+<dt><kbd>--opt_str</kbd></dt>
+<dd><p>Json formatted String containing dictionaries with key value pairs, setting the options for a NOVA-Server module</p>
+</dd>
+<dt><kbd>--trainer_file_path</kbd></dt>
+<dd><p>Path to the trainer file using Windows UNC-Style</p>
+</dd>
+</dl>
+</section>
 <dl class="field-list simple">
-<dt class="field-odd">param –db_host<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The IP address of the NOVA-DB server.</p>
-</dd>
-<dt class="field-even">type –db_host<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, required</p>
-</dd>
-<dt class="field-odd">param –db_port<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The port number of the NOVA-DB server.</p>
-</dd>
-<dt class="field-even">type –db_port<span class="colon">:</span></dt>
-<dd class="field-even"><p>int, required</p>
-</dd>
-<dt class="field-odd">param –db_user<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The user to authenticate at the NOVA-DB server.</p>
-</dd>
-<dt class="field-even">type –db_user<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, required</p>
-</dd>
-<dt class="field-odd">param –db_password<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The password for the NOVA-DB server user.</p>
-</dd>
-<dt class="field-even">type –db_password<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, required</p>
-</dd>
-<dt class="field-odd">param –dataset<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Name of the dataset. Must match entries in NOVA-DB.</p>
-</dd>
-<dt class="field-even">type –dataset<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, required</p>
-</dd>
-<dt class="field-odd">param –data_dir<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Path to the NOVA data directory using Windows UNC-Style.</p>
-</dd>
-<dt class="field-even">type –data_dir<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, required</p>
-</dd>
-<dt class="field-odd">param –sessions<span class="colon">:</span></dt>
-<dd class="field-odd"><p>JSON formatted list of sessions to apply the iterator to.</p>
-</dd>
-<dt class="field-even">type –sessions<span class="colon">:</span></dt>
-<dd class="field-even"><p>json.loads, required</p>
-</dd>
-<dt class="field-odd">param –data<span class="colon">:</span></dt>
-<dd class="field-odd"><p>JSON formatted string containing dictionaries that describe the data to load.</p>
-</dd>
-<dt class="field-even">type –data<span class="colon">:</span></dt>
-<dd class="field-even"><p>json.loads, required</p>
-</dd>
-<dt class="field-odd">param –frame_size<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Size of the data frame measured in time. Defaults to None.</p>
-</dd>
-<dt class="field-even">type –frame_size<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –start<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Start time for processing measured in time. Defaults to None.</p>
-</dd>
-<dt class="field-even">type –start<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –end<span class="colon">:</span></dt>
-<dd class="field-odd"><p>End time for processing measured in time. Defaults to None.</p>
-</dd>
-<dt class="field-even">type –end<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –left_context<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Left context duration measured in time. Defaults to None.</p>
-</dd>
-<dt class="field-even">type –left_context<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –right_context<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Stride for iterating over data measured in time. If stride is not set explicitly, it will be set to frame_size. Defaults to None.</p>
-</dd>
-<dt class="field-even">type –right_context<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –stride<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Stride for iterating over data measured in time. If stride is not set explicitly, it will be set to frame_size. Defaults to None.</p>
-</dd>
-<dt class="field-even">type –stride<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –add_rest_class<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Whether to add a rest class for discrete annotations. Defaults to True.</p>
-</dd>
-<dt class="field-even">type –add_rest_class<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –fill_missing_data<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Whether to fill missing data. Defaults to True.</p>
-</dd>
-<dt class="field-even">type –fill_missing_data<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –cml_dir<span class="colon">:</span></dt>
-<dd class="field-odd"><p>CML-Base directory for the NOVA-Server module.</p>
-</dd>
-<dt class="field-even">type –cml_dir<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –opt_str<span class="colon">:</span></dt>
-<dd class="field-odd"><p>JSON formatted string containing dictionaries with key-value pairs, setting the options for a NOVA-Server module.</p>
-</dd>
-<dt class="field-even">type –opt_str<span class="colon">:</span></dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-<dt class="field-odd">param –trainer_file_path<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Path to the trainer file using Windows UNC-Style. (required)</p>
-</dd>
-<dt class="field-even">type –trainer_file_path<span class="colon">:</span></dt>
-<dd class="field-even"><p>str</p>
-</dd>
 <dt class="field-odd">returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">python</span> <span class="n">predict_annotations</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">dataset</span> <span class="s2">&quot;test&quot;</span> <span class="o">--</span><span class="n">db_host</span> <span class="s2">&quot;127.0.0.1&quot;</span> <span class="o">--</span><span class="n">db_port</span> <span class="s2">&quot;37317&quot;</span> <span class="o">--</span><span class="n">db_user</span> <span class="s2">&quot;my_user&quot;</span> <span class="o">--</span><span class="n">db_password</span> <span class="s2">&quot;my_password&quot;</span> <span class="o">--</span><span class="n">trainer_file_path</span> <span class="s2">&quot;test</span><span class="se">\t</span><span class="s2">est_predict.trainer&quot;</span> <span class="o">--</span><span class="n">sessions</span> <span class="s2">&quot;[&quot;</span><span class="n">test_session_1</span><span class="s2">&quot;, &quot;</span><span class="n">test_session_2</span><span class="s2">&quot;]&quot;</span> <span class="o">--</span><span class="n">data</span> <span class="s2">&quot;[{&quot;</span><span class="n">src</span><span class="s2">&quot;: &quot;</span><span class="n">db</span><span class="p">:</span><span class="n">anno</span><span class="s2">&quot;, &quot;</span><span class="n">scheme</span><span class="s2">&quot;: &quot;</span><span class="n">transcript</span><span class="s2">&quot;, &quot;</span><span class="n">annotator</span><span class="s2">&quot;: &quot;</span><span class="n">test</span><span class="s2">&quot;, &quot;</span><span class="n">role</span><span class="s2">&quot;: &quot;</span><span class="n">testrole</span><span class="s2">&quot;}]&quot;</span> <span class="o">--</span><span class="n">frame_size</span> <span class="s2">&quot;0&quot;</span> <span class="o">--</span><span class="n">left_context</span> <span class="s2">&quot;0&quot;</span> <span class="o">--</span><span class="n">right_context</span> <span class="s2">&quot;0&quot;</span> <span class="o">--</span><span class="n">job_i_d</span> <span class="s2">&quot;test_job&quot;</span> <span class="o">--</span><span class="n">opt_str</span> <span class="s2">&quot;num_speakers=2;speaker_ids=testrole,testrole2&quot;</span> <span class="o">--</span><span class="n">cml_dir</span> <span class="s2">&quot;./cml&quot;</span> <span class="o">--</span><span class="n">data_dir</span> <span class="s2">&quot;./data&quot;</span> <span class="o">--</span><span class="n">log_dir</span> <span class="s2">&quot;./log&quot;</span> <span class="o">--</span><span class="n">cache_dir</span> <span class="s2">&quot;./cache&quot;</span> <span class="o">--</span><span class="n">tmp_dir</span> <span class="s2">&quot;./tmp&quot;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nu</span><span class="o">-</span><span class="n">predict</span> <span class="o">--</span><span class="n">dataset</span> <span class="s2">&quot;test&quot;</span> <span class="o">--</span><span class="n">db_host</span> <span class="s2">&quot;127.0.0.1&quot;</span> <span class="o">--</span><span class="n">db_port</span> <span class="s2">&quot;37317&quot;</span> <span class="o">--</span><span class="n">db_user</span> <span class="s2">&quot;my_user&quot;</span> <span class="o">--</span><span class="n">db_password</span> <span class="s2">&quot;my_password&quot;</span> <span class="o">--</span><span class="n">trainer_file_path</span> <span class="s2">&quot;test</span><span class="se">\t</span><span class="s2">est_predict.trainer&quot;</span> <span class="o">--</span><span class="n">sessions</span> <span class="s2">&quot;[&quot;</span><span class="n">test_session_1</span><span class="s2">&quot;, &quot;</span><span class="n">test_session_2</span><span class="s2">&quot;]&quot;</span> <span class="o">--</span><span class="n">data</span> <span class="s2">&quot;[{&quot;</span><span class="n">src</span><span class="s2">&quot;: &quot;</span><span class="n">db</span><span class="p">:</span><span class="n">anno</span><span class="s2">&quot;, &quot;</span><span class="n">scheme</span><span class="s2">&quot;: &quot;</span><span class="n">transcript</span><span class="s2">&quot;, &quot;</span><span class="n">annotator</span><span class="s2">&quot;: &quot;</span><span class="n">test</span><span class="s2">&quot;, &quot;</span><span class="n">role</span><span class="s2">&quot;: &quot;</span><span class="n">testrole</span><span class="s2">&quot;}]&quot;</span> <span class="o">--</span><span class="n">frame_size</span> <span class="s2">&quot;0&quot;</span> <span class="o">--</span><span class="n">left_context</span> <span class="s2">&quot;0&quot;</span> <span class="o">--</span><span class="n">right_context</span> <span class="s2">&quot;0&quot;</span> <span class="o">--</span><span class="n">job_i_d</span> <span class="s2">&quot;test_job&quot;</span> <span class="o">--</span><span class="n">opt_str</span> <span class="s2">&quot;num_speakers=2;speaker_ids=testrole,testrole2&quot;</span> <span class="o">--</span><span class="n">cml_dir</span> <span class="s2">&quot;./cml&quot;</span> <span class="o">--</span><span class="n">data_dir</span> <span class="s2">&quot;./data&quot;</span> <span class="o">--</span><span class="n">log_dir</span> <span class="s2">&quot;./log&quot;</span> <span class="o">--</span><span class="n">cache_dir</span> <span class="s2">&quot;./cache&quot;</span> <span class="o">--</span><span class="n">tmp_dir</span> <span class="s2">&quot;./tmp&quot;</span>
 </pre></div>
 </div>
 </section>

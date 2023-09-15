@@ -26,7 +26,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
-    'myst_parser'
+    'myst_parser',
+    'sphinxarg.ext'
 ]
 source_suffix = ['.rst', '.md']
 autodoc_typehints = "description"

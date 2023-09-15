@@ -6,7 +6,7 @@ Date:
     18.8.2023
 
 """
-
+import numpy as np
 import sys
 import os
 import warnings
@@ -15,7 +15,11 @@ from typing import Union
 from nova_utils.data.data import Data
 from nova_utils.data.stream import Stream, StreamMetaData
 from pathlib import Path
-from nova_utils.data.handler.mongo_handler import AnnotationHandler, StreamHandler, SessionHandler
+from nova_utils.data.handler.mongo_handler import (
+    AnnotationHandler,
+    StreamHandler,
+    SessionHandler,
+)
 from nova_utils.data.handler.file_handler import FileHandler
 from nova_utils.utils import string_utils
 from nova_utils.utils.anno_utils import data_contains_garbage
@@ -38,7 +42,20 @@ class NovaIterator:
         dataset (str): Name of the dataset.
         data_dir (Path, optional): Path to the data directory. Defaults to None.
         sessions (list[str], optional): List of session names to process. Defaults to None.
-        data (list[dict], optional): List of data descriptions. Defaults to None.
+        data (list[dict[str, str]], optional): List of data descriptions. Defaults to None. The dictionary should have the following fields:
+
+            ``"src"``
+                The source and datatype to load the data from separated by ':' . Source can be either 'db' for database or 'file' to load from disc.
+                The dataytpye is eiter 'stream' or 'anno'. E.g. 'db:anno' .
+            ``"scheme"``
+                The scheme name of the annotations to load. Only necessary when loading annotations from the database.
+            ``"annotator"``
+                The annotator of the annotations to load. Only necessary when loading annotations from the database.
+            ``"role"``
+                The role to which the data belongs. Only necessary when accessing data from the database.
+            ``"fp"``
+                The filepath from which to load the data from. Only necessary when loading files from disk.
+
         frame_size (Union[int, float, str], optional): Size of the data frame measured in time. Defaults to None.
         start (Union[int, float, str], optional): Start time for processing measured in time. Defaults to None.
         end (Union[int, float, str], optional): End time for processing measured in time. Defaults to None.
@@ -53,41 +70,95 @@ class NovaIterator:
         dataset (str): Name of the dataset.
         sessions (list[str]): List of session names to process.
         data (list[dict]): List of data descriptions.
-        ...
+        frame_size (int, float, str): Size of the data frame measured in time.
+        start (int, float, str): Start time for processing measured in time.
+        end (int, float, str): End time for processing measured in time.
+        left_context (int, float, str): Left context duration measured in time.
+        right_context (int, float, str): Right context duration measured in time.
+        stride (int, float, str): Stride for iterating over data measured in time.
+        add_rest_class (bool): Whether to add a rest class for discrete annotations.
+        fill_missing_data (bool): Whether to fill missing data.
+
+    Example:
+        .. code-block:: python
+
+            from dotenv import load_dotenv
+
+            # Load environment variables
+            IP = 127.0.0.1
+            PORT = 1337
+            USER = my_user
+            PASSWORD = my_password
+            DATA_DIR = /data
+
+            # Define dataset and sessions
+            dataset = "test_dataset"
+            sessions = ["test_session"]
+
+            # Define data descriptions
+            annotation = {
+                "src": "db:anno",
+                "scheme": "transcript",
+                "annotator": "test_annotator",
+                "role": "test_role",
+            }
+
+            stream = {
+                "src": "db:stream",
+                "role": "test_role",
+                "name": "extracted_features",
+            }
+
+            file = {
+                "src": "file:stream",
+                "fp": "/path/to/my/video/test_video.mp4",
+            }
+
+            # Create a NovaIterator instance
+            nova_iterator = NovaIterator(
+                IP,
+                PORT,
+                USER,
+                PASSWORD,
+                dataset,
+                DATA_DIR,
+                sessions=sessions,
+                data=[annotation, file],
+                frame_size="5s",
+                end="20s",
+            )
+
+            # Example: Get the next data sample and set a breakpoint
+            a = next(nova_iterator)
     """
+
     def __init__(
-            self,
-            # Database connection
-            db_host: str,
-            db_port: int,
-            db_user: str,
-            db_password: str,
-            dataset: str,
-            data_dir: Path = None,
-
-            # Data
-            sessions: list[str] = None,
-            data: list[dict] = None,
-
-            # Iterator Window
-            frame_size: Union[int , float , str] = None,
-            start: Union[int , float , str] = None,
-            end: Union[int , float , str] = None,
-            left_context: Union[int , float , str] = None,
-            right_context: Union[int , float , str] = None,
-            stride: Union[int , float , str] = None,
-
-            # Iterator properties
-            add_rest_class: bool = True,
-            fill_missing_data = True
-        ):
-
-
+        self,
+        # Database connection
+        db_host: str,
+        db_port: int,
+        db_user: str,
+        db_password: str,
+        dataset: str,
+        data_dir: Path = None,
+        # Data
+        sessions: list[str] = None,
+        data: list[dict] = None,
+        # Iterator Window
+        frame_size: Union[int, float, str] = None,
+        start: Union[int, float, str] = None,
+        end: Union[int, float, str] = None,
+        left_context: Union[int, float, str] = None,
+        right_context: Union[int, float, str] = None,
+        stride: Union[int, float, str] = None,
+        # Iterator properties
+        add_rest_class: bool = True,
+        fill_missing_data=True,
+    ):
         self.data_dir = data_dir
         self.dataset = dataset
         self.sessions = sessions
         self.data = data
-
 
         # If stride has not been explicitly set it's the same as the frame size
         if stride is None:
@@ -101,60 +172,107 @@ class NovaIterator:
         self.start = string_utils.parse_time_string_to_ms(start)
         self.end = string_utils.parse_time_string_to_ms(end)
 
-
         # Frame size 0 or None indicates that the whole session should be returned as one sample
         if self.frame_size == 0:
-            warnings.warn("Frame size should be bigger than zero. Returning whole session as sample.")
+            warnings.warn(
+                "Frame size should be bigger than zero. Returning whole session as sample."
+            )
 
         # If the end time has not been set we initialize it with sys.maxsize
         if self.end is None or self.end == 0:
             self.end = sys.maxsize
-
 
         self.add_rest_class = add_rest_class
         self.fill_missing_data = fill_missing_data
         self.current_session = None
 
         # Data handler
-        self._db_session_handler = SessionHandler(db_host, db_port, db_user, db_password)
-        self._db_anno_handler = AnnotationHandler(db_host, db_port, db_user, db_password)
-        self._db_stream_handler = StreamHandler(db_host, db_port, db_user, db_password, data_dir=data_dir)
+        self._db_session_handler = SessionHandler(
+            db_host, db_port, db_user, db_password
+        )
+        self._db_anno_handler = AnnotationHandler(
+            db_host, db_port, db_user, db_password
+        )
+        self._db_stream_handler = StreamHandler(
+            db_host, db_port, db_user, db_password, data_dir=data_dir
+        )
         self._file_handler = FileHandler()
 
         self._iterable = self._yield_sample()
 
+    def _init_data_from_description(self, data_desc: dict, dataset: str, session: str) -> Data:
+        """
+        Initialize data from a data description.
 
-    def _init_data_from_description(self, data_desc: dict, dataset, session) -> Data:
-        src, type_ = data_desc['src'].split(':')
-        if src == 'db':
-            if type_ == 'anno':
-                return self._db_anno_handler.load(dataset=dataset, session=session,scheme=data_desc['scheme'],annotator=data_desc['annotator'],role=data_desc['role'])
-            elif type_ == 'stream':
-                return self._db_stream_handler.load(dataset=dataset, session=session,name=data_desc['name'], role=data_desc['role'])
+        Args:
+            data_desc (dict): Data description dictionary.
+            dataset (str): Dataset name.
+            session (str): Session name.
+
+        Returns:
+            Data: Initialized data object.
+        """
+        src, type_ = data_desc["src"].split(":")
+        if src == "db":
+            if type_ == "anno":
+                return self._db_anno_handler.load(
+                    dataset=dataset,
+                    session=session,
+                    scheme=data_desc["scheme"],
+                    annotator=data_desc["annotator"],
+                    role=data_desc["role"],
+                )
+            elif type_ == "stream":
+                return self._db_stream_handler.load(
+                    dataset=dataset,
+                    session=session,
+                    name=data_desc["name"],
+                    role=data_desc["role"],
+                )
             else:
-                raise ValueError(f'Unknown data type {type_} for data.')
-        elif src == 'file':
-            return self._file_handler.load(fp=Path(data_desc['fp']))
+                raise ValueError(f"Unknown data type {type_} for data.")
+        elif src == "file":
+            return self._file_handler.load(fp=Path(data_desc["fp"]))
         else:
-            raise ValueError(f'Unknown source type {src} for data.')
+            raise ValueError(f"Unknown source type {src} for data.")
 
-    def _data_description_to_string(self, data_desc:dict) -> str:
-        src, type_ = data_desc['src'].split(':')
-        delim = '_'
-        if src == 'db':
-            if type_ == 'anno':
-                return delim.join([data_desc['scheme'], data_desc['annotator'],data_desc['role']])
-            elif type_ == 'stream':
-                return delim.join([data_desc['name'], data_desc['role']])
+    def _data_description_to_string(self, data_desc: dict) -> str:
+        """
+        Convert data description to a string representation.
+
+        Args:
+            data_desc (dict): Data description dictionary.
+
+        Returns:
+            str: String representation of the data description.
+        """
+        src, type_ = data_desc["src"].split(":")
+        delim = "_"
+        if src == "db":
+            if type_ == "anno":
+                return delim.join(
+                    [data_desc["scheme"], data_desc["annotator"], data_desc["role"]]
+                )
+            elif type_ == "stream":
+                return delim.join([data_desc["name"], data_desc["role"]])
             else:
-                raise ValueError(f'Unknown data type {type_} for data.')
-        elif src == 'file':
-            return delim.join([data_desc['fp']])
+                raise ValueError(f"Unknown data type {type_} for data.")
+        elif src == "file":
+            return delim.join([data_desc["fp"]])
         else:
-            raise ValueError(f'Unknown source type {src} for data.')
+            raise ValueError(f"Unknown source type {src} for data.")
 
-    def _init_session(self, session_name: str) -> Session:
 
+    def init_session(self, session_name: str) -> Session:
+        """
+        Initialize a session.
+
+        Args:
+            session_name (str): Name of the session to initialize.
+
+        Returns:
+            Session: Initialized session object.
+        """
         session = self._db_session_handler.load(self.dataset, session_name)
 
         """Opens all annotations and data readers"""
@@ -162,7 +280,9 @@ class NovaIterator:
 
         # setting session data
         for data_desc in self.data:
-            data_initialized = self._init_data_from_description(data_desc, self.dataset, session_name)
+            data_initialized = self._init_data_from_description(
+                data_desc, self.dataset, session_name
+            )
             data_id = self._data_description_to_string(data_desc)
             data[data_id] = data_initialized
         session.data = data
@@ -171,7 +291,7 @@ class NovaIterator:
         min_dur = session.duration if session.duration is not None else sys.maxsize
         for data_initialized in data.values():
             if isinstance(data_initialized, Stream):
-                meta_data : StreamMetaData = data_initialized.meta_data
+                meta_data: StreamMetaData = data_initialized.meta_data
                 if meta_data.duration is not None:
                     dur = meta_data.duration
                 else:
@@ -181,26 +301,35 @@ class NovaIterator:
         session.duration = min_dur
 
         if session.duration == sys.maxsize:
-            raise ValueError(f'Unable to determine duration for session {session.name}')
+            raise ValueError(f"Unable to determine duration for session {session.name}")
 
         return session
 
+    def _yield_sample(self) -> dict[str, np.ndarray]:
+        """
+        Yield examples.
 
-    def _yield_sample(self):
-        """Yields examples."""
+        Yields:
+            dict: Sampled data for the window.
+
+        Example:
+            {
+                <scheme>_<annotator>_<role> : [[data1], [data2]... ],
+                <file_path> : [[data1], [data2]... ]
+            }
+        """
 
         # Needed to sort the samples later and assure that the order is the same as in nova.
         sample_counter = 1
 
         for session in self.sessions:
-
             # Init all data objects for the session and get necessary meta information
-            self.current_session = self._init_session(session)
+            self.current_session = self.init_session(session)
 
-            #If frame size is zero or less we return the whole data from the whole session in one sample
+            # If frame size is zero or less we return the whole data from the whole session in one sample
             if self.frame_size <= 0:
-               _frame_size = min(self.current_session.duration, self.end - self.start)
-               _stride = _frame_size
+                _frame_size = min(self.current_session.duration, self.end - self.start)
+                _stride = _frame_size
             else:
                 _frame_size = self.frame_size
                 _stride = self.stride
@@ -211,30 +340,31 @@ class NovaIterator:
             # TODO account for stride and framesize being None
             # Generate samples for this session
             while cpos + self.stride + self.right_context <= min(
-                    self.end, self.current_session.duration
+                self.end, self.current_session.duration
             ):
-
                 frame_start = cpos
                 frame_end = cpos + _frame_size
                 window_start = frame_start - self.left_context
                 window_end = frame_end + self.right_context
 
-
                 window_info = (
-                        session
-                        + "_"
-                        + str(window_start / 1000)
-                        + "_"
-                        + str(window_end / 1000)
+                    session
+                    + "_"
+                    + str(window_start / 1000)
+                    + "_"
+                    + str(window_end / 1000)
                 )
 
                 # Load data for frame
                 data_for_window = {
-                    k : v.sample_from_interval(window_start, window_end) for k, v in self.current_session.data.items()
+                    k: v.sample_from_interval(window_start, window_end)
+                    for k, v in self.current_session.data.items()
                 }
 
                 # Performing sanity checks
-                garbage_detected = any([ data_contains_garbage(d) for k, d in data_for_window.items()  ])
+                garbage_detected = any(
+                    [data_contains_garbage(d) for k, d in data_for_window.items()]
+                )
 
                 # Incrementing counter
                 cpos += _stride
@@ -244,7 +374,6 @@ class NovaIterator:
                     continue
 
                 yield data_for_window
-
 
     def __iter__(self):
         return self._iterable
@@ -266,7 +395,7 @@ class NovaIterator:
     # }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from dotenv import load_dotenv
 
     load_dotenv("../../../.env")
@@ -276,25 +405,25 @@ if __name__ == '__main__':
     PASSWORD = os.getenv("NOVA_PASSWORD", "")
     DATA_DIR = Path(os.getenv("NOVA_DATA_DIR", None))
 
-    dataset = 'test'
-    sessions = ['04_Oesterreich_test']
+    dataset = "test"
+    sessions = ["04_Oesterreich_test"]
 
     annotation = {
-        'src': 'db:anno',
-        'scheme': 'transcript',
-        'annotator': 'whisperx',
-        'role': 'testrole'
+        "src": "db:anno",
+        "scheme": "transcript",
+        "annotator": "whisperx",
+        "role": "testrole",
     }
 
     stream = {
-        'src': 'db:stream',
-        'role': 'testrole',
-        'name': 'arousal.synchrony[testrole2]'
+        "src": "db:stream",
+        "role": "testrole",
+        "name": "arousal.synchrony[testrole2]",
     }
 
     file = {
-        'src' : 'file:stream',
-        'fp': '/Users/dominikschiller/Work/github/nova-utils/test_files/new_test_video.mp4'
+        "src": "file:stream",
+        "fp": "/Users/dominikschiller/Work/github/nova-utils/test_files/new_test_video.mp4",
     }
 
     nova_iterator = NovaIterator(
@@ -305,9 +434,9 @@ if __name__ == '__main__':
         dataset,
         DATA_DIR,
         sessions=sessions,
-        data = [annotation, file],
-        frame_size='5s',
-        end = '20s'
+        data=[annotation, file],
+        frame_size="5s",
+        end="20s",
     )
 
     a = next(nova_iterator)

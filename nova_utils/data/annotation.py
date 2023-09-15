@@ -6,7 +6,6 @@ import numpy as np
 import sys
 from abc import ABC, abstractmethod
 from numpy import dtype
-from enum import Enum
 from nova_utils.data.data import DynamicData
 from nova_utils.utils.anno_utils import get_overlap, get_anno_majority, label_is_garbage
 import pandas as pd
@@ -30,11 +29,6 @@ class AnnoMetaData:
         """
         self.annotator = annotator
         self.duration = duration
-
-
-
-
-
 
 
 class IAnnotationScheme(ABC):

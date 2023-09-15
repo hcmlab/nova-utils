@@ -7,32 +7,16 @@ Date:
 
 This script performs predictions for annotations in the NOVA database using a provided nova-server module for inference and saves the results to the NOVA-DB.
 
-Args:
-    --db_host (str, required): The IP address of the NOVA-DB server.
-    --db_port (int, required): The port number of the NOVA-DB server.
-    --db_user (str, required): The user to authenticate at the NOVA-DB server.
-    --db_password (str, required): The password for the NOVA-DB server user.
-    --dataset (str, required): Name of the dataset. Must match entries in NOVA-DB.
-    --data_dir (str, required): Path to the NOVA data directory using Windows UNC-Style.
-    --sessions (json.loads, required): JSON formatted list of sessions to apply the iterator to.
-    --data (json.loads, required): JSON formatted string containing dictionaries that describe the data to load.
-    --frame_size (str, optional): Size of the data frame measured in time. Defaults to None.
-    --start (str, optional): Start time for processing measured in time. Defaults to None.
-    --end (str, optional): End time for processing measured in time. Defaults to None.
-    --left_context (str, optional): Left context duration measured in time. Defaults to None.
-    --right_context (str, optional): Stride for iterating over data measured in time. If stride is not set explicitly, it will be set to frame_size. Defaults to None.
-    --stride (str, optional): Stride for iterating over data measured in time. If stride is not set explicitly, it will be set to frame_size. Defaults to None.
-    --add_rest_class (str, optional): Whether to add a rest class for discrete annotations. Defaults to True.
-    --fill_missing_data (str, optional): Whether to fill missing data. Defaults to True.
-    --cml_dir (str, optional): CML-Base directory for the NOVA-Server module.
-    --opt_str (str, optional): JSON formatted string containing dictionaries with key-value pairs, setting the options for a NOVA-Server module.
-    --trainer_file_path (str): Path to the trainer file using Windows UNC-Style. (required)
+.. argparse::
+   :module: nova_utils.scripts.predict
+   :func: parser
+   :prog: nu-predict
 
 Returns:
     None
 
 Example:
-    >>> python predict_annotations.py --dataset "test" --db_host "127.0.0.1" --db_port "37317" --db_user "my_user" --db_password "my_password" --trainer_file_path "test\\test_predict.trainer" --sessions "[\"test_session_1\", \"test_session_2\"]" --data "[{\"src\": \"db:anno\", \"scheme\": \"transcript\", \"annotator\": \"test\", \"role\": \"testrole\"}]" --frame_size "0" --left_context "0" --right_context "0" --job_i_d "test_job" --opt_str "num_speakers=2;speaker_ids=testrole,testrole2" --cml_dir "./cml" --data_dir "./data" --log_dir "./log" --cache_dir "./cache" --tmp_dir "./tmp"
+    >>> nu-predict --dataset "test" --db_host "127.0.0.1" --db_port "37317" --db_user "my_user" --db_password "my_password" --trainer_file_path "test\\test_predict.trainer" --sessions "[\"test_session_1\", \"test_session_2\"]" --data "[{\"src\": \"db:anno\", \"scheme\": \"transcript\", \"annotator\": \"test\", \"role\": \"testrole\"}]" --frame_size "0" --left_context "0" --right_context "0" --job_i_d "test_job" --opt_str "num_speakers=2;speaker_ids=testrole,testrole2" --cml_dir "./cml" --data_dir "./data" --log_dir "./log" --cache_dir "./cache" --tmp_dir "./tmp"
 """
 
 import argparse
