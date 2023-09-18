@@ -162,7 +162,7 @@ class NovaIterator:
 
         # If stride has not been explicitly set it's the same as the frame size
         if stride is None:
-            self.stride = frame_size
+            stride = frame_size
 
         # Parse all times to milliseconds
         self.left_context = string_utils.parse_time_string_to_ms(left_context)
