@@ -14,6 +14,8 @@ class StreamMetaData:
     Metadata for a data stream, providing information about the stream properties.
 
     Attributes:
+        name (str): Name of the stream.
+        ext (str): File extension of the stream including the leading '.'
         duration (float): Duration of the stream in seconds.
         sample_shape (tuple): Shape of individual samples in the stream.
         num_samples (int): Total number of samples in the stream.
@@ -21,6 +23,8 @@ class StreamMetaData:
         dtype (np.dtype): Data type of the samples.
 
     Args:
+        name (str): Name of the stream.
+        ext (str): File extension of the stream including the leading '.'
         duration (float, optional): Duration of the stream in seconds.
         sample_shape (tuple, optional): Shape of individual samples in the stream.
         num_samples (int, optional): Number of samples in the stream.
@@ -30,6 +34,8 @@ class StreamMetaData:
 
     def __init__(
         self,
+        name: str = None,
+        ext: str = None,
         duration: float = None,
         sample_shape: tuple = None,
         num_samples: int = None,
@@ -39,6 +45,8 @@ class StreamMetaData:
         """
         Initialize a StreamMetaData instance with stream properties.
         """
+        self.name = name
+        self.ext = ext
         self.duration = duration
         self.sample_shape = sample_shape
         self.num_samples = num_samples
@@ -89,7 +97,9 @@ class Stream(DynamicData):
         duration (float, optional): Duration of the stream in seconds.Will be added to metadata.
         sample_shape (tuple, optional): Shape of individual samples in the stream. Will be added to metadata.
         num_samples (int, optional): Number of samples in the stream. Will be added to metadata.
-        dtype (np.dtype, optional): Data type of the samples. Will be added to metadata.
+        dtype (np.dtype, optional): Data type of the samples. Will be added to metadata. Defaults to np.float32 .
+        name (str, optional): Name of the stream.
+        ext (str, optional): File extension of the stream including the leading '.'. Defaults to '.stream', '.mp4' or '.wav' depending on the Streamtype.
         **kwargs: Additional keyword arguments for DynamicData.
 
     """
@@ -98,10 +108,12 @@ class Stream(DynamicData):
         self,
         data: np.ndarray,
         sample_rate: float,
+        name: str = None,
+        ext: str = None,
         duration: float = None,
         sample_shape: tuple = None,
         num_samples: int = None,
-        dtype: np.dtype = None,
+        dtype: np.dtype = SSINPDataType.FLOAT.value,
         **kwargs
     ):
         """
@@ -110,8 +122,16 @@ class Stream(DynamicData):
         super().__init__(data=data, **kwargs)
 
         # Add Metadata
+        if ext is None:
+            if isinstance(self, SSIStream):
+                ext = '.stream'
+            if isinstance(self, Video):
+                ext = '.mp4'
+            if isinstance(self, Audio):
+                ext = '.wav'
+
         stream_meta_data = StreamMetaData(
-            duration, sample_shape, num_samples, sample_rate, dtype
+            name, ext, duration, sample_shape, num_samples, sample_rate, dtype
         )
         self.meta_data.expand(stream_meta_data)
 
@@ -142,7 +162,8 @@ class SSIStream(Stream):
         CHUNK_DTYPE (np.dtype): Data type definition for SSI stream chunks.
 
     Args:
-        data (np.ndarray): The SSI stream data.
+        data (np.ndarray): The SSI stream data. Shape is (num_samples,) + (sample_shape,)
+        sample_rate (float): Sampling rate of the SSI stream.
         chunks (np.ndarray, optional): Chunks of the SSI stream.
         **kwargs: Additional keyword arguments for Stream.
 
@@ -152,20 +173,23 @@ class SSIStream(Stream):
 
     CHUNK_DTYPE = np.dtype(
         [
-            ("from", SSINPDataType.FLOAT.value),
-            ("to", SSINPDataType.FLOAT.value),
-            ("byte", SSINPDataType.INT.value),
-            ("num", SSINPDataType.INT.value),
+            ("from", SSINPDataType.FLOAT.value), # start of chunk in seconds
+            ("to", SSINPDataType.FLOAT.value), # end of chunk in seconds
+            ("byte", SSINPDataType.INT.value), # number of bytes for the chunk
+            ("num", SSINPDataType.INT.value), # number of samples for the chunk
         ]
     )
 
-    def __init__(self, data: np.ndarray, chunks: np.ndarray = None, **kwargs):
+    def __init__(self, data: np.ndarray, sample_rate: float, chunks: np.ndarray = None, **kwargs):
         """
         Initialize an SSIStream instance with SSI stream data and metadata.
         """
-        super().__init__(data=data, **kwargs)
+        super().__init__(data=data, sample_rate=sample_rate, **kwargs)
 
         # Add Metadata
+        if data is not None and chunks is None:
+            num_samples = data.shape[0]
+            chunks = np.asarray([(0, num_samples / sample_rate, 0, num_samples)], dtype=self.CHUNK_DTYPE)
         ssistream_meta = SSIStreamMetaData(chunks=chunks)
         self.meta_data.expand(ssistream_meta)
 
@@ -177,14 +201,14 @@ class Audio(Stream):
     This class extends the Stream class with attributes and functionality specific to audio streams.
 
     Args:
-        data (np.ndarray): The audio stream data.
+        data (np.ndarray): The audio stream data. Shape is (num_channels, num_samples). Dtype is float.
         sample_rate (float): Sampling rate of the audio stream.
         **kwargs: Additional keyword arguments for Stream.
 
     """
 
     def __init__(self, data: np.ndarray, sample_rate: float, **kwargs):
-        super().__init__(data, sample_rate, **kwargs)
+        super().__init__(data=data, sample_rate=sample_rate, **kwargs)
 
 
 class Video(Stream):
@@ -194,14 +218,14 @@ class Video(Stream):
     This class extends the Stream class with attributes and functionality specific to video streams.
 
     Args:
-        data (np.ndarray): The video stream data.
+        data (np.ndarray): The video stream data. Shape is (num_samples, height, width, num_channels)
         sample_rate (float): Sampling rate of the video stream.
         **kwargs: Additional keyword arguments for Stream.
 
     """
 
     def __init__(self, data: np.ndarray, sample_rate: float, **kwargs):
-        super().__init__(data, sample_rate, **kwargs)
+        super().__init__(data=data, sample_rate=sample_rate, **kwargs)
 
 
 if __name__ == "__main__":

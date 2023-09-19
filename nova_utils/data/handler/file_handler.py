@@ -32,6 +32,7 @@ from nova_utils.data.annotation import (
 from nova_utils.data.stream import (
     Video,
     Audio,
+    Stream,
     SSIStream,
     StreamMetaData,
     SSIStreamMetaData,
@@ -406,6 +407,8 @@ class _SSIStreamFileHandler(IHandler):
         duration = int(num_samples / float(sr) * 1000)
 
         ssistream_meta_data = {
+            "name": fp.stem,
+            "ext": fp.suffix,
             "duration": duration,
             "sample_shape": (int(dim),),
             "num_samples": num_samples,
@@ -476,7 +479,7 @@ class _SSIStreamFileHandler(IHandler):
         # info
         meta_data: StreamMetaData | SSIStreamMetaData = data.meta_data
         sr = meta_data.sample_rate
-        dim = meta_data.sample_shape[0]
+        dim = meta_data.sample_shape[0] if not meta_data.sample_shape is None else data.data[0].shape[0]
         byte = np.dtype(meta_data.dtype).itemsize
         dtype = SSINPDataType(meta_data.dtype).name
         Et.SubElement(
@@ -540,6 +543,8 @@ class _SSIStreamFileHandler(IHandler):
         chunks = header.get("chunks")
         delim = header["delim"]
         ftype = header["ftype"]
+        name = header['name']
+        ext = header['ext']
 
         data = self._load_data(
             fp=data_path,
@@ -558,6 +563,8 @@ class _SSIStreamFileHandler(IHandler):
             sample_rate=sample_rate,
             dtype=dtype,
             chunks=chunks,
+            name=name,
+            ext=ext
         )
         ssi_stream.meta_data.expand(FileSSIStreamMetaData(delim=delim, ftype=ftype))
         return ssi_stream
@@ -580,7 +587,7 @@ class _LazyArray(np.ndarray):
             indices = list(range(index.start, index.stop))
             return self.decord_reader.get_batch(indices).asnumpy()
         else:
-            return self.decord_reader.get_batch([index]).asnumpy()
+            return np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
 
 
 class _VideoFileHandler(IHandler):
@@ -645,6 +652,8 @@ class _VideoFileHandler(IHandler):
 
         video_ = Video(
             data=lazy_video_data,
+            name=fp.stem,
+            ext=fp.suffix,
             duration=duration,
             sample_shape=sample_shape,
             num_samples=num_samples,
@@ -662,11 +671,15 @@ class _VideoFileHandler(IHandler):
             fp (Path): The file path for saving the data.
         """
         meta_data: StreamMetaData = data.meta_data
-        sample_rate = int(meta_data.sample_rate)
+        #sample_rate = int(meta_data.sample_rate)
+        sample_rate = meta_data.sample_rate
         file_path = str(fp.resolve())
 
+        # TODO: when directly using data.data as a numpy array it is always filled with zeros.
+        #  this is an issue with the current implementation of the numpy array buffer in _LazyArray()
+        #  creating a list from a buffered array and the a numpy array again solves this problem, but is probably very slow and memory intensive.
         ffmpegio.video.write(
-            file_path, sample_rate, np.vstack(data.data), overwrite=True
+            file_path, sample_rate, np.asarray(list(data.data)), overwrite=True
         )
 
 
@@ -732,6 +745,8 @@ class _AudioFileHandler(IHandler):
         audio_ = Audio(
             data=lazy_audio_data,
             duration=duration,
+            name=fp.stem,
+            ext=fp.suffix,
             sample_shape=sample_shape,
             num_samples=num_samples,
             sample_rate=sample_rate,
@@ -751,7 +766,7 @@ class _AudioFileHandler(IHandler):
         ffmpegio.audio.write(
             str(fp.resolve()),
             int(meta_data.sample_rate),
-            np.swapaxes(np.hstack(audio.data), 0, -1),
+            np.swapaxes(np.hstack(data.data), 0, -1),
             overwrite=True,
         )
 
@@ -778,13 +793,13 @@ class FileHandler(IHandler):
         """
         if not self.data_type:
             ext = fp.suffix[1:]
-            if ext == "annotation":
+            if ext in ["annotation"]:
                 return _AnnotationFileHandler()
-            elif ext == "stream":
+            elif ext in ["stream"]:
                 return _SSIStreamFileHandler()
-            elif ext == "wav":
+            elif ext in ["wav", "mp3"]:
                 return _AudioFileHandler()
-            elif ext == "mp4":
+            elif ext in ["mp4"]:
                 return _VideoFileHandler()
             else:
                 raise ValueError(f"Unsupported file extension {fp.suffix}")
@@ -810,12 +825,12 @@ class FileHandler(IHandler):
         data.meta_data.expand(FileMetaData(fp))
         return data
 
-    def save(self, data: any, fp: Path, overwrite=True, *args, **kwargs):
+    def save(self, data: Stream, fp: Path, overwrite=True, *args, **kwargs):
         """
         Save data to a file.
 
         Args:
-            data (any): The data to be saved.
+            data (Union[Annotation, SSIStream, Video, Audio]): The data to be saved.
             fp (Path): The file path for saving the data.
             overwrite (bool, optional): Whether to overwrite the file if it exists.
             *args: Variable length argument list.
@@ -832,8 +847,8 @@ class FileHandler(IHandler):
 
 if __name__ == "__main__":
     # Test cases...
-    test_annotations = True
-    test_streams = False
+    test_annotations = False
+    test_streams = True
     base_dir = Path("../../../test_files/")
     fh = FileHandler()
 

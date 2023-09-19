@@ -705,7 +705,7 @@ class StreamHandler(IHandler, MongoHandler):
             client (MongoClient): The MongoDB client connected to the database. Readonly
         """
         super().__init__(*args, **kwargs)
-        self.data_dir = data_dir
+        self.data_dir = Path(data_dir)
 
     def _load_stream(
         self,
@@ -784,11 +784,11 @@ class StreamHandler(IHandler, MongoHandler):
     def save(
         self,
         stream: Stream,
-        dataset: str,
-        session: str,
-        role: str,
-        name: str,
-        data_type: str,
+        dataset: str = None,
+        session: str = None,
+        role: str = None ,
+        name: str = None,
+        data_type: str = None,
         file_ext: str = None,
         dim_labels: [] = None,
         is_valid: bool = True,
@@ -798,10 +798,10 @@ class StreamHandler(IHandler, MongoHandler):
 
         Args:
             stream (Stream): The Stream object to be saved.
-            dataset (str): Name of the dataset.
-            session (str): Name of the session.
-            role (str): Name of the role.
-            name (str): Name of the stream.
+            dataset (str): Name of the dataset. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.
+            session (str): Name of the session. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.
+            role (str): Name of the role. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.
+            name (str): Name of the stream. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.
             data_type (str): Media type of the stream data as specified in NOVA-DB.
             file_ext (str, optional): File extension. Defaults to None.
             dim_labels (list, optional): Dimension labels. Defaults to None.
@@ -811,20 +811,23 @@ class StreamHandler(IHandler, MongoHandler):
             FileNotFoundError: If the data directory is not set.
         """
 
+
+        # save file to disk
+        dataset = dataset if not dataset is None else stream.meta_data.dataset
+        session = session if not session is None else stream.meta_data.session
+        role = role if not role is None else stream.meta_data.role
+        name = name if not name is None else stream.meta_data.name
+        file_ext = file_ext if not file_ext is None else stream.meta_data.ext
+        dim_labels = dim_labels if not  dim_labels is None else stream.meta_data.dim_labels
+
         if not self.data_dir:
             raise FileNotFoundError("Data directory was not set. Can't access files")
 
-        # write file
-        if file_ext is None:
-            if isinstance(stream, SSIStream):
-                file_ext = "stream"
-            elif isinstance(stream, Audio):
-                file_ext = "wav"
-            elif isinstance(stream, Video):
-                file_ext = "mp4"
+        if not self.data_dir.is_dir():
+            raise NotADirectoryError(f"Specified data directory {self.data_dir} is not a directory.")
 
-        file_name = role + "." + name + "." + file_ext
-        file_path = Path(self.data_dir / dataset / session / file_name)
+        file_name = role + "." + name + file_ext
+        file_path = self.data_dir / dataset / session / file_name
 
         FileHandler().save(stream, file_path)
 

@@ -378,7 +378,7 @@ class Chain:
 
 if __name__ == "__main__":
     chain_in_fp = Path(
-        "/Users/dominikschiller/Work/github/nova-server/local/cml/chains/test/uc1/uc1.chain"
+        "/Users/dominikschiller/Work/github/nova-server-modules/chains/nova-server/utility/uc1/uc1.chain"
     )
     chain_out_fp = Path("test_chain.chain")
 

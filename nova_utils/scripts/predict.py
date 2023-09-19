@@ -44,6 +44,14 @@ parser.add_argument(
 )
 
 def _main():
+
+    # TODO refactor to set in .env file and overwrite from cmd arguments
+    # CML_DIR = "NOVA_SERVER_CML_DIR"
+    # DATA_DIR = "NOVA_SERVER_DATA_DIR"
+    # CACHE_DIR = "NOVA_SERVER_CACHE_DIR"
+    # TMP_DIR = "NOVA_SERVER_TMP_DIR"
+    # LOG_DIR = "NOVA_SERVER_LOG_DIR"
+
     args, _ = parser.parse_known_args()
     # print(args)
 
@@ -69,24 +77,8 @@ def _main():
     if not trainer.model_script_path:
         raise ValueError('Trainer has no attribute "script" in model tag.')
 
-    # Build data loaders
-    sessions = iter_args.sessions
-    iterators = []
-
-    # TODO split for role if multirole input is false
-
-    args = {**vars(db_args), **vars(iter_args)}
-
-    for session in sessions:
-        print(session)
-        args["sessions"] = [session]
-        ni = NovaIterator(**args)
-        iterators.append(ni)
-    print("Data iterators initialized")
-
-    # Load Trainer
     model_script_path = (
-        trainer_file_path.parent / PureWindowsPath(trainer.model_script_path)
+            trainer_file_path.parent / PureWindowsPath(trainer.model_script_path)
     ).resolve()
     source = SourceFileLoader(
         "ns_cl_" + model_script_path.stem, str(model_script_path)
@@ -107,6 +99,19 @@ def _main():
     #     logger.info(f"Loading weights from {model_weight_path}")
     #     predictor.load(model_weight_path)
     #     logger.info("Model loaded.")
+
+    # TODO split for role if multirole input is false
+    # Build data loaders
+    sessions = iter_args.sessions
+    iterators = []
+    args = {**vars(db_args), **vars(iter_args)}
+
+    for session in sessions:
+        print(session)
+        args["sessions"] = [session]
+        ni = NovaIterator(**args)
+        iterators.append(ni)
+    print("Data iterators initialized")
 
     # Init database handler
     db_handler = AnnotationHandler(**vars(db_args))

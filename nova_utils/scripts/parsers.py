@@ -108,10 +108,17 @@ nova_server_module_parser = argparse.ArgumentParser(
     add_help=False,
 )
 nova_server_module_parser.add_argument(
-    "--cml_dir", type=str, help="CML-Base directory for the NOVA-Server module"
+    "--cml_dir", type=str, help="CML base directory for the NOVA-Server module"
+)
+nova_server_module_parser.add_argument(
+    "--cache_dir", type=str, help="Cache directory for the NOVA-Server module"
+)
+nova_server_module_parser.add_argument(
+    "--tmp_dir", type=str, help="tmp base directory for the NOVA-Server module"
 )
 nova_server_module_parser.add_argument(
     "--opt_str",
     type=str,
     help="Json formatted String containing dictionaries with key value pairs, setting the options for a NOVA-Server module",
 )
+
