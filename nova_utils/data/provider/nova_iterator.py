@@ -44,6 +44,10 @@ class NovaIterator:
         sessions (list[str], optional): List of session names to process. Defaults to None.
         data (list[dict[str, str]], optional): List of data descriptions. Defaults to None. The dictionary should have the following fields:
 
+            ``"id"``:
+                Unique id to map the data to a given input / output.
+            ``"type"``:
+                IO type of the data. Either "input" or "output"
             ``"src"``
                 The source and datatype to load the data from separated by ':' . Source can be either 'db' for database or 'file' to load from disc.
                 The dataytpye is eiter 'stream' or 'anno'. E.g. 'db:anno' .
@@ -97,6 +101,8 @@ class NovaIterator:
 
             # Define data descriptions
             annotation = {
+                "id" : "my_transcript_1",
+                "type": "input",
                 "src": "db:anno",
                 "scheme": "transcript",
                 "annotator": "test_annotator",
@@ -104,12 +110,16 @@ class NovaIterator:
             }
 
             stream = {
+                "id" : "model_output",
+                "type" : "input",
                 "src": "db:stream",
                 "role": "test_role",
                 "name": "extracted_features",
             }
 
             file = {
+                "id": "just_a_file",
+                "type": "output",
                 "src": "file:stream",
                 "fp": "/path/to/my/video/test_video.mp4",
             }
@@ -246,6 +256,11 @@ class NovaIterator:
         Returns:
             str: String representation of the data description.
         """
+
+        id = data_desc.get("id")
+        if id is not None:
+            return id
+
         src, type_ = data_desc["src"].split(":")
         delim = "_"
         if src == "db":
@@ -280,11 +295,12 @@ class NovaIterator:
 
         # setting session data
         for data_desc in self.data:
-            data_initialized = self._init_data_from_description(
-                data_desc, self.dataset, session_name
-            )
-            data_id = self._data_description_to_string(data_desc)
-            data[data_id] = data_initialized
+            if data_desc['type'] == 'input':
+                data_initialized = self._init_data_from_description(
+                    data_desc, self.dataset, session_name
+                )
+                data_id = self._data_description_to_string(data_desc)
+                data[data_id] = data_initialized
         session.data = data
 
         # update session duration
