@@ -57,6 +57,17 @@ class ModelIO:
         self.io_id = io_id
         self.io_data = io_data
 
+    def get_default(self):
+        """
+
+        Returns: The default value for a io_data if set. Else None.
+
+        """
+        data_desc = self.io_data.split(':')
+        if len(data_desc) == 3:
+            return data_desc[2]
+        else:
+            return None
 
 class Trainer:
     """
@@ -474,6 +485,7 @@ if __name__ == "__main__":
 
     trainer = Trainer()
     trainer.load_from_file(trainer_in_fp)
+
     trainer.write_to_file(trainer_out_fp)
 
     chain_in_fp = Path(

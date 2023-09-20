@@ -37,6 +37,15 @@ class ModelIOEncoder(json.JSONEncoder):
             return {"type": obj.io_type, "id": obj.io_id, "data": obj.io_data}
         return super().default(obj)
 
+class ModelIODecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+    def object_hook(self, json_obj):
+        if json_obj.get("type") and json_obj.get("id") and json_obj.get("data"):
+            return ModelIO(json_obj["type"], json_obj["id"], json_obj["data"])
+        else:
+            raise ValueError("Invalid JSON format for ModelIO decoding.")
+
 
 class ChainLinkEncoder(json.JSONEncoder):
     """
@@ -153,3 +162,14 @@ class TrainerEncoder(json.JSONEncoder):
                 "xml_version": obj.xml_version,
             }
         return super().default(obj)
+
+if __name__ == '__main__':
+    from pathlib import Path
+
+    trainer_in_fp = Path(
+        r"/Users/dominikschiller/Work/github/nova-server-modules/test/io_test.trainer"
+    )
+    trainer = Trainer()
+    trainer.load_from_file(trainer_in_fp)
+    trainer_json = json.dumps(trainer, cls=TrainerEncoder)
+    breakpoint()

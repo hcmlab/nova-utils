@@ -47,5 +47,6 @@ Repository = "https://github.com/hcmlab/nova-utils"
 nu-predict = "nova_utils.scripts.predict:_main"
 nu-extract = "nova_utils.scripts.extract:_main"
 nu-train = "nova_utils.scripts.train:_main"
+nu-process = "nova_utils.scripts.process:_main"
 
 

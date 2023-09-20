@@ -8,7 +8,6 @@ Date:
 from typing import Union
 from enum import Enum
 
-
 def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
     """
     Parse a time string or value to milliseconds.
@@ -95,3 +94,31 @@ def string_to_enum(enum: Enum, string: str):
         if e.name == string:
             return e
     raise ValueError('{} not part of enumeration  {}'.format(string, enum))
+
+def parse_nova_option_string(option_string: str) -> dict:
+    """
+    Converts a server-module option string to dictionary.
+
+    This function takes an option string as send by nova and converts it to dictionary containing the option name as key and the according value as value.
+
+    Args:
+        option_string (str): The option string.
+
+    Returns:
+        Enum: The enum value corresponding to the input string.
+    """
+    options = {}
+
+    if option_string:
+        opts = option_string.split(';')
+        for option in opts:
+            k,v = option.split('=')
+            if v in ("True", "False"):
+                options[k] = True if v == "True" else False
+            elif v == "None":
+                options[k] = None
+            else:
+                options[k] = v
+            print(k + "=" + v)
+
+    return options
