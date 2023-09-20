@@ -45,13 +45,6 @@ parser.add_argument(
 
 def _main():
 
-    # TODO refactor to set in .env file and overwrite from cmd arguments
-    # CML_DIR = "NOVA_SERVER_CML_DIR"
-    # DATA_DIR = "NOVA_SERVER_DATA_DIR"
-    # CACHE_DIR = "NOVA_SERVER_CACHE_DIR"
-    # TMP_DIR = "NOVA_SERVER_TMP_DIR"
-    # LOG_DIR = "NOVA_SERVER_LOG_DIR"
-
     args, _ = parser.parse_known_args()
 
     # Create argument groups
