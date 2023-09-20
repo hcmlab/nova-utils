@@ -1,4 +1,4 @@
-"""Standalone script for general process
+"""Standalone script for general processing
 
 Author:
     Dominik Schiller <dominik.schiller@uni-a.de>
@@ -8,15 +8,15 @@ Date:
 This script performs generall data processing to extract either annotations to NOVA-Database or streams to disk using a provided nova-server module for inference.
 
 .. argparse::
-   :module: nova_utils.scripts.predict
+   :module: nova_utils.scripts.process
    :func: parser
-   :prog: nu-predict
+   :prog: nu-process
 
 Returns:
     None
 
 Example:
-    >>> nu-process --dataset "test" --db_host "127.0.0.1" --db_port "37317" --db_user "my_user" --db_password "my_password" --trainer_file_path "test\\test_predict.trainer" --sessions "[\"test_session_1\", \"test_session_2\"]" --data "[{\"src\": \"db:anno\", \"scheme\": \"transcript\", \"annotator\": \"test\", \"role\": \"testrole\"}]" --frame_size "0" --left_context "0" --right_context "0" --job_i_d "test_job" --opt_str "num_speakers=2;speaker_ids=testrole,testrole2" --cml_dir "./cml" --data_dir "./data" --log_dir "./log" --cache_dir "./cache" --tmp_dir "./tmp"
+    >>> nu-prcess --dataset "test" --db_host "127.0.0.1" --db_port "37317" --db_user "my_user" --db_password "my_password" --trainer_file_path "test\\test_predict.trainer" --sessions "[\"test_session_1\", \"test_session_2\"]" --data "[{\"src\": \"db:anno\", \"scheme\": \"transcript\", \"annotator\": \"test\", \"role\": \"testrole\"}]" --frame_size "0" --left_context "0" --right_context "0" --job_i_d "test_job" --opt_str "num_speakers=2;speaker_ids=testrole,testrole2" --cml_dir "./cml" --data_dir "./data" --log_dir "./log" --cache_dir "./cache" --tmp_dir "./tmp"
 """
 
 import argparse
