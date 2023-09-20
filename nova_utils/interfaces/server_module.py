@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from nova_utils.data.annotation import Annotation
-
+from nova_utils.utils.ssi_xml_utils import ModelIO
+from nova_utils.utils.string_utils import parse_nova_option_string
 class Processor(ABC):
     """
     Base class of a data processor. This interface builds the foundation for all data processing classes.
@@ -12,28 +13,13 @@ class Processor(ABC):
     # Flag to indicate whether the processed input belongs to one role or to multiple roles
     SINGLE_ROLE_INPUT = True
 
-    def __init__(self, request_form=None):
-        self.request_form = request_form
+    #TODO read trainer or chain file for default options
+    def __init__(self, model_io: list[ModelIO], opts: dict):
         self.model = None
         self.data = None
         self.output = None
-        self.options = {}
-
-        if self.request_form is not None:
-            # Set Options
-            print("Setting options...")
-            if request_form.get("optStr"):
-                for k, v in dict(
-                        option.split("=") for option in request_form["optStr"].split(";")
-                ).items():
-                    if v in ("True", "False"):
-                        self.options[k] = True if v == "True" else False
-                    elif v == "None":
-                        self.options[k] = None
-                    else:
-                        self.options[k] = v
-                    print(k + "=" + v)
-            print("...done.")
+        self.options = opts
+        self.model_io = model_io
 
     @abstractmethod
     def preprocess_sample(self, sample: dict ):
@@ -76,9 +62,6 @@ class Trainer(Processor):
 
     """Includes all the necessary files to run this script"""
 
-    def __init__(self, request_form=None):
-        super().__init__(request_form)
-
     @abstractmethod
     def train(self):
         """Trains a model with the given data."""
@@ -99,9 +82,6 @@ class Predictor(Processor):
     """
     Base class of a data predictor. Implement this interface if you want to write annotations to a database
     """
-
-    def __init__(self, request_form=None):
-        super().__init__(request_form)
 
     @abstractmethod
     def to_anno(self, data) -> list[Annotation]:
@@ -127,9 +107,6 @@ class Extractor(Processor):
     def chainable(self):
         """Whether this extraction module can be followed by other extractors. If set to True 'to_ds_iterable()' must be implemented"""
         return False
-
-    def __init__(self, request_form=None):
-        super().__init__(request_form)
 
     @abstractmethod
     def to_stream(self, data: object) -> dict:
