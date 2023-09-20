@@ -55,6 +55,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">nova_utils.utils.ssi_xml_utils module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.ssi_xml_utils.Chain"><code class="docutils literal notranslate"><span class="pre">Chain</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.ssi_xml_utils.ChainLink"><code class="docutils literal notranslate"><span class="pre">ChainLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.ssi_xml_utils.ModelIO"><code class="docutils literal notranslate"><span class="pre">ModelIO</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.ssi_xml_utils.Trainer"><code class="docutils literal notranslate"><span class="pre">Trainer</span></code></a></li>
 </ul>
 </li>
@@ -103,7 +104,7 @@
 </dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.utils.ssi_xml_utils.Chain">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.ssi_xml_utils.</span></span><span class="sig-name descname"><span class="pre">Chain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_frame_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_left_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_right_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nova-server'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_category</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">register</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/ssi_xml_utils.html#Chain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.ssi_xml_utils.Chain" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.ssi_xml_utils.</span></span><span class="sig-name descname"><span class="pre">Chain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_frame_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_left_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_right_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nova-server'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_category</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">register</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/ssi_xml_utils.html#Chain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.ssi_xml_utils.Chain" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for representing and working with Chain configuration.</p>
 <p>This class is used to create, load, and write Chain configurations in XML format.</p>
@@ -111,37 +112,28 @@
 <dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>meta_frame_step</strong> (<em>str</em>) – Meta frame step value.</p></li>
-<li><p><strong>meta_left_context</strong> (<em>str</em>) – Meta left context value.</p></li>
-<li><p><strong>meta_right_context</strong> (<em>str</em>) – Meta right context value.</p></li>
+<li><p><strong>meta_left_ctx</strong> (<em>str</em>) – Meta left context value.</p></li>
+<li><p><strong>meta_right_ctx</strong> (<em>str</em>) – Meta right context value.</p></li>
 <li><p><strong>meta_backend</strong> (<em>str</em>) – Backend type for the Chain.</p></li>
 <li><p><strong>meta_description</strong> (<em>str</em>) – Description for the Chain.</p></li>
 <li><p><strong>meta_category</strong> (<em>str</em>) – Category for the Chain.</p></li>
+<li><p><strong>meta_io</strong> (<em>list</em><em>[</em><a class="reference internal" href="#nova_utils.utils.ssi_xml_utils.ModelIO" title="nova_utils.utils.ssi_xml_utils.ModelIO"><em>ModelIO</em></a><em>]</em><em>, </em><em>optional</em>) – Description of the inputs and outputs of the model.</p></li>
 <li><p><strong>register</strong> (<em>list</em>) – List of register configurations.</p></li>
 <li><p><strong>links</strong> (<em>list</em>) – List of ChainLink configurations.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>meta_frame_step</strong> (<em>str</em>) – </p></li>
-<li><p><strong>meta_left_context</strong> (<em>str</em>) – </p></li>
-<li><p><strong>meta_right_context</strong> (<em>str</em>) – </p></li>
-<li><p><strong>meta_backend</strong> (<em>str</em>) – </p></li>
-<li><p><strong>meta_description</strong> (<em>str</em>) – </p></li>
-<li><p><strong>meta_category</strong> (<em>str</em>) – </p></li>
-<li><p><strong>register</strong> (<em>list</em>) – </p></li>
-<li><p><strong>links</strong> (<em>list</em>) – </p></li>
+<li><p><strong>meta_frame_step</strong> (<em>str</em><em>, </em><em>optional</em>) – Meta frame step information. Defaults to empty string.</p></li>
+<li><p><strong>meta_left_context</strong> (<em>str</em><em>, </em><em>optional</em>) – Left context metadata. Defaults to empty string.</p></li>
+<li><p><strong>meta_right_context</strong> (<em>str</em><em>, </em><em>optional</em>) – Right context metadata. Defaults to empty string.</p></li>
+<li><p><strong>meta_backend</strong> (<em>str</em><em>, </em><em>optional</em>) – Backend type for metadata. Default is “nova-server”.</p></li>
+<li><p><strong>meta_description</strong> (<em>str</em><em>, </em><em>optional</em>) – Description for metadata. Defaults to empty string.</p></li>
+<li><p><strong>meta_category</strong> (<em>str</em><em>, </em><em>optional</em>) – Category for metadata. Defaults to empty string.</p></li>
+<li><p><strong>meta_io</strong> (<em>list</em><em>[</em><a class="reference internal" href="#nova_utils.utils.ssi_xml_utils.ModelIO" title="nova_utils.utils.ssi_xml_utils.ModelIO"><em>ModelIO</em></a><em>]</em><em>, </em><em>optional</em>) – Description of the inputs and outputs of the model. Defaults to None.</p></li>
+<li><p><strong>register</strong> (<em>list</em><em>, </em><em>optional</em>) – List of registered items. Default is None.</p></li>
+<li><p><strong>links</strong> (<em>list</em><em>, </em><em>optional</em>) – List of ChainLink objects. Default is None.</p></li>
 </ul>
-</dd>
-</dl>
-<dl class="simple">
-<dt>Argss:</dt><dd><p>meta_frame_step (str, optional): Meta frame step information. Defaults to empty string.
-meta_left_context (str, optional): Left context metadata. Defaults to empty string.
-meta_right_context (str, optional): Right context metadata. Defaults to empty string.
-meta_backend (str, optional): Backend type for metadata. Default is “nova-server”.
-meta_description (str, optional): Description for metadata. Defaults to empty string.
-meta_category (str, optional): Category for metadata. Defaults to empty string.
-register (list, optional): List of registered items. Default is None.
-links (list, optional): List of ChainLink objects. Default is None.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -199,8 +191,60 @@ links (list, optional): List of ChainLink objects. Default is None.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="nova_utils.utils.ssi_xml_utils.ModelIO">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.ssi_xml_utils.</span></span><span class="sig-name descname"><span class="pre">ModelIO</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">io_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/ssi_xml_utils.html#ModelIO"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.ssi_xml_utils.ModelIO" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<blockquote>
+<div><p>ModelIO defines the inputs and outputs of a model in a chain or trainer file.</p>
+</div></blockquote>
+<p>This class is used to create and work with ChainLinks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>io_type</strong> (<em>str</em>) – Defines if the object describes an input or an output. Can be either “input” or “output”</p></li>
+<li><p><strong>io_id</strong> (<em>str</em>) – String for the model to identify the input</p></li>
+<li><p><strong>io_data</strong> (<em>str</em>) – <p>Description of the data &lt;data_class&gt;:&lt;data_type&gt;:&lt;specific_data_type&gt;</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;data_class&quot;</span></code></dt><dd><p>General data class. Either “annotation” or “stream”</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;data_type&quot;</span></code></dt><dd><p>Type of the data_class. Matches classnames data type from nova_utils.data .
+“Video”, “Audio”, “SSIStream” for streams. “Discrete”, “Free” or “Continuous” for annotations.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;specific_data_type&quot;</span></code></dt><dd><p>Optional string identifier to specify either the annotation scheme or the type of feature. E.g. “transcript” or “Openface”</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>io_type</strong> (<em>str</em>) – Defines if the object describes an input or an output. Can be either “input” or “output”</p></li>
+<li><p><strong>io_id</strong> (<em>str</em>) – String for the model to identify the input</p></li>
+<li><p><strong>io_data</strong> (<em>str</em>) – <p>Description of the data &lt;data_class&gt;:&lt;data_type&gt;:&lt;specific_data_type&gt;</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;data_class&quot;</span></code></dt><dd><p>General data class. Either “annotation” or “stream”</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;data_type&quot;</span></code></dt><dd><p>Type of the data_class. Matches classnames data type from nova_utils.data .
+“Video”, “Audio”, “SSIStream” for streams. “Discrete”, “Free” or “Continuous” for annotations.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;specific_data_type&quot;</span></code></dt><dd><p>Optional string identifier to specify either the annotation scheme or the type of feature. E.g. “transcript” or “Openface”</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="nova_utils.utils.ssi_xml_utils.ModelIO.get_default">
+<span class="sig-name descname"><span class="pre">get_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/ssi_xml_utils.html#ModelIO.get_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.ssi_xml_utils.ModelIO.get_default" title="Permalink to this definition"></a></dt>
+<dd><p>Returns: The default value for a io_data if set. Else None.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.utils.ssi_xml_utils.Trainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.ssi_xml_utils.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_script_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_option_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_option_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_weights_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_stream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_create</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PythonModel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_multirole_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">users</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">streams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">register</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info_trained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_right_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_left_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_balance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nova-server'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ssi_v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'5'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xml_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/ssi_xml_utils.html#Trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.ssi_xml_utils.Trainer" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.utils.ssi_xml_utils.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_script_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_option_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_option_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_weights_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_stream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_create</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PythonModel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_multirole_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">users</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">streams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">register</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info_trained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_right_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_left_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_balance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nova-server'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ssi_v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'5'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xml_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/ssi_xml_utils.html#Trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.ssi_xml_utils.Trainer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for representing and working with Trainer configuration.</p>
 <p>This class is used to create, load, and write Trainer configurations in XML format.</p>
@@ -209,7 +253,7 @@ links (list, optional): List of ChainLink objects. Default is None.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_script_path</strong> (<em>str</em>) – Path to the model script file.</p></li>
 <li><p><strong>model_option_path</strong> (<em>str</em>) – Path to the model option file.</p></li>
-<li><p><strong>model_option_string</strong> (<em>str</em>) – Model option string.</p></li>
+<li><p><strong>model_optstr</strong> (<em>str</em>) – Model option string.</p></li>
 <li><p><strong>model_weights_path</strong> (<em>str</em>) – Path to the model weights file.</p></li>
 <li><p><strong>model_stream</strong> (<em>int</em>) – Model stream identifier.</p></li>
 <li><p><strong>model_create</strong> (<em>str</em>) – Model creation type.</p></li>
@@ -223,13 +267,14 @@ links (list, optional): List of ChainLink objects. Default is None.</p>
 <li><p><strong>meta_left_ctx</strong> (<em>int</em>) – Left context size for the Trainer.</p></li>
 <li><p><strong>meta_balance</strong> (<em>str</em>) – Balance type for the Trainer.</p></li>
 <li><p><strong>meta_backend</strong> (<em>str</em>) – Backend type for the Trainer.</p></li>
+<li><p><strong>meta_io</strong> (<em>list</em><em>[</em><a class="reference internal" href="#nova_utils.utils.ssi_xml_utils.ModelIO" title="nova_utils.utils.ssi_xml_utils.ModelIO"><em>ModelIO</em></a><em>]</em><em>, </em><em>optional</em>) – Description of the inputs and outputs of the model.</p></li>
 <li><p><strong>ssi_v</strong> (<em>str</em>) – SSI version.</p></li>
 <li><p><strong>xml_version</strong> (<em>str</em>) – XML version.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>madel_script_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the model script file. Defaults to empty string.</p></li>
+<li><p><strong>model_script_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the model script file. Defaults to empty string.</p></li>
 <li><p><strong>model_option_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the model option file. Defaults to empty string.</p></li>
 <li><p><strong>model_option_string</strong> (<em>str</em><em>, </em><em>optional</em>) – Model option string. Defaults to empty string.</p></li>
 <li><p><strong>model_weights_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the model weights file. Defaults to empty string.</p></li>
@@ -245,9 +290,9 @@ links (list, optional): List of ChainLink objects. Default is None.</p>
 <li><p><strong>meta_left_ctx</strong> (<em>int</em><em>, </em><em>optional</em>) – Left context value for metadata. Default is 0.</p></li>
 <li><p><strong>meta_balance</strong> (<em>str</em><em>, </em><em>optional</em>) – Balance type for metadata. Default is “none”.</p></li>
 <li><p><strong>meta_backend</strong> (<em>str</em><em>, </em><em>optional</em>) – Backend type for metadata. Default is “nova-server”.</p></li>
+<li><p><strong>meta_io</strong> (<em>list</em><em>[</em><a class="reference internal" href="#nova_utils.utils.ssi_xml_utils.ModelIO" title="nova_utils.utils.ssi_xml_utils.ModelIO"><em>ModelIO</em></a><em>]</em><em>, </em><em>optional</em>) – Description of the inputs and outputs of the model. Defaults to None.</p></li>
 <li><p><strong>ssi_v</strong> (<em>str</em><em>, </em><em>optional</em>) – SSI version. Default is “5”.</p></li>
 <li><p><strong>xml_version</strong> (<em>str</em><em>, </em><em>optional</em>) – XML version. Default is “1.0”.</p></li>
-<li><p><strong>model_script_path</strong> (<em>str</em>) – </p></li>
 </ul>
 </dd>
 </dl>

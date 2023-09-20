@@ -108,7 +108,7 @@
 <dd class="field-even"><p>The loaded data.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="data.html#data.data.Data" title="data.data.Data">Data</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.Data" title="nova_utils.data.data.Data">Data</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -120,7 +120,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>any</em>) – The data to be saved.</p></li>
+<li><p><strong>data</strong> (<em>Union</em><em>[</em><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.Annotation" title="nova_utils.data.annotation.Annotation"><em>Annotation</em></a><em>, </em><a class="reference internal" href="data.html#data.stream.SSIStream" title="data.stream.SSIStream"><em>SSIStream</em></a><em>, </em><a class="reference internal" href="data.html#data.stream.Video" title="data.stream.Video"><em>Video</em></a><em>, </em><a class="reference internal" href="data.html#data.stream.Audio" title="data.stream.Audio"><em>Audio</em></a><em>]</em>) – The data to be saved.</p></li>
 <li><p><strong>fp</strong> (<em>Path</em>) – The file path for saving the data.</p></li>
 <li><p><strong>overwrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to overwrite the file if it exists.</p></li>
 <li><p><strong>*args</strong> – Variable length argument list.
@@ -203,7 +203,7 @@ to handle data loading and saving operations, respectively.</p>
 <dd class="field-even"><p>A Data object representing the loaded data.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="data.html#data.data.Data" title="data.data.Data">Data</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.Data" title="nova_utils.data.data.Data">Data</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NotImplementedError</strong> – If the method is not implemented by a subclass.</p>
@@ -273,7 +273,7 @@ to handle data loading and saving operations, respectively.</p>
 <dd class="field-even"><p>An Annotation object loaded from the database.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="data.html#data.annotation.Annotation" title="data.annotation.Annotation">Annotation</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.Annotation" title="nova_utils.data.annotation.Annotation">Annotation</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -291,7 +291,7 @@ to handle data loading and saving operations, respectively.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>annotation</strong> (<a class="reference internal" href="data.html#data.annotation.Annotation" title="data.annotation.Annotation"><em>Annotation</em></a>) – The Annotation object to be saved.</p></li>
+<li><p><strong>annotation</strong> (<a class="reference internal" href="nova_utils.data.annotation.html#nova_utils.data.annotation.Annotation" title="nova_utils.data.annotation.Annotation"><em>Annotation</em></a>) – The Annotation object to be saved.</p></li>
 <li><p><strong>dataset</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the dataset. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.</p></li>
 <li><p><strong>session</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the session. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.</p></li>
 <li><p><strong>annotator</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the annotator. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.</p></li>
@@ -505,7 +505,7 @@ Load session data from the specified dataset and session name.</p>
 If the session does not exist, an empty Session object is returned.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="data.html#data.session.Session" title="data.session.Session">Session</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="nova_utils.data.session.html#nova_utils.data.session.Session" title="nova_utils.data.session.Session">Session</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -552,16 +552,16 @@ If the session does not exist, an empty Session object is returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data.handler.mongo_handler.StreamHandler.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_ext</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_valid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data/handler/mongo_handler.html#StreamHandler.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data.handler.mongo_handler.StreamHandler.save" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_ext</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_valid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data/handler/mongo_handler.html#StreamHandler.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data.handler.mongo_handler.StreamHandler.save" title="Permalink to this definition"></a></dt>
 <dd><p>Save a Stream object to the MongoDB database and store associated file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>stream</strong> (<a class="reference internal" href="data.html#data.stream.Stream" title="data.stream.Stream"><em>Stream</em></a>) – The Stream object to be saved.</p></li>
-<li><p><strong>dataset</strong> (<em>str</em>) – Name of the dataset.</p></li>
-<li><p><strong>session</strong> (<em>str</em>) – Name of the session.</p></li>
-<li><p><strong>role</strong> (<em>str</em>) – Name of the role.</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – Name of the stream.</p></li>
+<li><p><strong>dataset</strong> (<em>str</em>) – Name of the dataset. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.</p></li>
+<li><p><strong>session</strong> (<em>str</em>) – Name of the session. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.</p></li>
+<li><p><strong>role</strong> (<em>str</em>) – Name of the role. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name of the stream. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.</p></li>
 <li><p><strong>data_type</strong> (<em>str</em>) – Media type of the stream data as specified in NOVA-DB.</p></li>
 <li><p><strong>file_ext</strong> (<em>str</em><em>, </em><em>optional</em>) – File extension. Defaults to None.</p></li>
 <li><p><strong>dim_labels</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimension labels. Defaults to None.</p></li>

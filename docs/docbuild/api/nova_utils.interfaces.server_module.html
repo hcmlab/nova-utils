@@ -91,9 +91,17 @@
 <span id="nova-utils-interfaces-server-module-module"></span><h1>nova_utils.interfaces.server_module module<a class="headerlink" href="#module-nova_utils.interfaces.server_module" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Extractor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.interfaces.server_module.</span></span><span class="sig-name descname"><span class="pre">Extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Extractor" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.interfaces.server_module.</span></span><span class="sig-name descname"><span class="pre">Extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Extractor" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#nova_utils.interfaces.server_module.Processor" title="nova_utils.interfaces.server_module.Processor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Processor</span></code></a></p>
 <p>Base class of a feature extractor. Implement this interface in your own class to build a feature extractor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_io</strong> (<em>list</em><em>[</em><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.ModelIO" title="nova_utils.utils.ssi_xml_utils.ModelIO"><em>nova_utils.utils.ssi_xml_utils.ModelIO</em></a><em>]</em>) – </p></li>
+<li><p><strong>opts</strong> (<em>dict</em>) – </p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Extractor.chainable">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chainable</span></span><a class="headerlink" href="#nova_utils.interfaces.server_module.Extractor.chainable" title="Permalink to this definition"></a></dt>
@@ -130,9 +138,17 @@ An arbitrary number of streams maybe returned.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Predictor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.interfaces.server_module.</span></span><span class="sig-name descname"><span class="pre">Predictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Predictor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Predictor" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.interfaces.server_module.</span></span><span class="sig-name descname"><span class="pre">Predictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Predictor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Predictor" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#nova_utils.interfaces.server_module.Processor" title="nova_utils.interfaces.server_module.Processor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Processor</span></code></a></p>
 <p>Base class of a data predictor. Implement this interface if you want to write annotations to a database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_io</strong> (<em>list</em><em>[</em><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.ModelIO" title="nova_utils.utils.ssi_xml_utils.ModelIO"><em>nova_utils.utils.ssi_xml_utils.ModelIO</em></a><em>]</em>) – </p></li>
+<li><p><strong>opts</strong> (<em>dict</em>) – </p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Predictor.to_anno">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_anno</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Predictor.to_anno"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Predictor.to_anno" title="Permalink to this definition"></a></dt>
@@ -155,9 +171,17 @@ An arbitrary number of streams maybe returned.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Processor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.interfaces.server_module.</span></span><span class="sig-name descname"><span class="pre">Processor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Processor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Processor" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.interfaces.server_module.</span></span><span class="sig-name descname"><span class="pre">Processor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Processor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Processor" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Base class of a data processor. This interface builds the foundation for all data processing classes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_io</strong> (<em>list</em><em>[</em><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.ModelIO" title="nova_utils.utils.ssi_xml_utils.ModelIO"><em>nova_utils.utils.ssi_xml_utils.ModelIO</em></a><em>]</em>) – </p></li>
+<li><p><strong>opts</strong> (<em>dict</em>) – </p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Processor.DEPENDENCIES">
 <span class="sig-name descname"><span class="pre">DEPENDENCIES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#nova_utils.interfaces.server_module.Processor.DEPENDENCIES" title="Permalink to this definition"></a></dt>
@@ -206,9 +230,17 @@ An arbitrary number of streams maybe returned.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Trainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.interfaces.server_module.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Trainer" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.interfaces.server_module.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Trainer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#nova_utils.interfaces.server_module.Processor" title="nova_utils.interfaces.server_module.Processor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Processor</span></code></a></p>
 <p>Base class of a Trainer. Implement this interface in your own class to build a model that is trainable from within nova</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_io</strong> (<em>list</em><em>[</em><a class="reference internal" href="nova_utils.utils.ssi_xml_utils.html#nova_utils.utils.ssi_xml_utils.ModelIO" title="nova_utils.utils.ssi_xml_utils.ModelIO"><em>nova_utils.utils.ssi_xml_utils.ModelIO</em></a><em>]</em>) – </p></li>
+<li><p><strong>opts</strong> (<em>dict</em>) – </p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.interfaces.server_module.Trainer.load">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/interfaces/server_module.html#Trainer.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.interfaces.server_module.Trainer.load" title="Permalink to this definition"></a></dt>

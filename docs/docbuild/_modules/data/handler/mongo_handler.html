@@ -779,7 +779,7 @@
 <span class="sd">            client (MongoClient): The MongoDB client connected to the database. Readonly</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">data_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_load_stream</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -858,11 +858,11 @@
 <div class="viewcode-block" id="StreamHandler.save"><a class="viewcode-back" href="../../../api/data.handler.html#data.handler.mongo_handler.StreamHandler.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">stream</span><span class="p">:</span> <span class="n">Stream</span><span class="p">,</span>
-        <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">role</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">data_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">role</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span> <span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">file_ext</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dim_labels</span><span class="p">:</span> <span class="p">[]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">is_valid</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -872,10 +872,10 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            stream (Stream): The Stream object to be saved.</span>
-<span class="sd">            dataset (str): Name of the dataset.</span>
-<span class="sd">            session (str): Name of the session.</span>
-<span class="sd">            role (str): Name of the role.</span>
-<span class="sd">            name (str): Name of the stream.</span>
+<span class="sd">            dataset (str): Name of the dataset. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.</span>
+<span class="sd">            session (str): Name of the session. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.</span>
+<span class="sd">            role (str): Name of the role. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.</span>
+<span class="sd">            name (str): Name of the stream. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.</span>
 <span class="sd">            data_type (str): Media type of the stream data as specified in NOVA-DB.</span>
 <span class="sd">            file_ext (str, optional): File extension. Defaults to None.</span>
 <span class="sd">            dim_labels (list, optional): Dimension labels. Defaults to None.</span>
@@ -885,20 +885,23 @@
 <span class="sd">            FileNotFoundError: If the data directory is not set.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+
+        <span class="c1"># save file to disk</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">session</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">session</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">session</span>
+        <span class="n">role</span> <span class="o">=</span> <span class="n">role</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">role</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">role</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">file_ext</span> <span class="o">=</span> <span class="n">file_ext</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">file_ext</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">ext</span>
+        <span class="n">dim_labels</span> <span class="o">=</span> <span class="n">dim_labels</span> <span class="k">if</span> <span class="ow">not</span>  <span class="n">dim_labels</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">dim_labels</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Data directory was not set. Can&#39;t access files&quot;</span><span class="p">)</span>
 
-        <span class="c1"># write file</span>
-        <span class="k">if</span> <span class="n">file_ext</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">SSIStream</span><span class="p">):</span>
-                <span class="n">file_ext</span> <span class="o">=</span> <span class="s2">&quot;stream&quot;</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">Audio</span><span class="p">):</span>
-                <span class="n">file_ext</span> <span class="o">=</span> <span class="s2">&quot;wav&quot;</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">Video</span><span class="p">):</span>
-                <span class="n">file_ext</span> <span class="o">=</span> <span class="s2">&quot;mp4&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">NotADirectoryError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Specified data directory </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="si">}</span><span class="s2"> is not a directory.&quot;</span><span class="p">)</span>
 
-        <span class="n">file_name</span> <span class="o">=</span> <span class="n">role</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">file_ext</span>
-        <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">/</span> <span class="n">dataset</span> <span class="o">/</span> <span class="n">session</span> <span class="o">/</span> <span class="n">file_name</span><span class="p">)</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">role</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="n">file_ext</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">/</span> <span class="n">dataset</span> <span class="o">/</span> <span class="n">session</span> <span class="o">/</span> <span class="n">file_name</span>
 
         <span class="n">FileHandler</span><span class="p">()</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span>
 

@@ -107,6 +107,10 @@ The highest time resolution for processing is therefore 1ms.</p>
 <li><p><strong>sessions</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of session names to process. Defaults to None.</p></li>
 <li><p><strong>data</strong> (<em>list</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – <p>List of data descriptions. Defaults to None. The dictionary should have the following fields:</p>
 <dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;id&quot;</span></code>:</dt><dd><p>Unique id to map the data to a given input / output.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code>:</dt><dd><p>IO type of the data. Either “input” or “output”</p>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">&quot;src&quot;</span></code></dt><dd><p>The source and datatype to load the data from separated by ‘:’ . Source can be either ‘db’ for database or ‘file’ to load from disc.
 The dataytpye is eiter ‘stream’ or ‘anno’. E.g. ‘db:anno’ .</p>
 </dd>
@@ -163,6 +167,8 @@ The dataytpye is eiter ‘stream’ or ‘anno’. E.g. ‘db:anno’ .</p>
 
 <span class="c1"># Define data descriptions</span>
 <span class="n">annotation</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span> <span class="p">:</span> <span class="s2">&quot;my_transcript_1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span>
     <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;db:anno&quot;</span><span class="p">,</span>
     <span class="s2">&quot;scheme&quot;</span><span class="p">:</span> <span class="s2">&quot;transcript&quot;</span><span class="p">,</span>
     <span class="s2">&quot;annotator&quot;</span><span class="p">:</span> <span class="s2">&quot;test_annotator&quot;</span><span class="p">,</span>
@@ -170,12 +176,16 @@ The dataytpye is eiter ‘stream’ or ‘anno’. E.g. ‘db:anno’ .</p>
 <span class="p">}</span>
 
 <span class="n">stream</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span> <span class="p">:</span> <span class="s2">&quot;model_output&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;type&quot;</span> <span class="p">:</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span>
     <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;db:stream&quot;</span><span class="p">,</span>
     <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;test_role&quot;</span><span class="p">,</span>
     <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;extracted_features&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 
 <span class="n">file</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;just_a_file&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;output&quot;</span><span class="p">,</span>
     <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;file:stream&quot;</span><span class="p">,</span>
     <span class="s2">&quot;fp&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/my/video/test_video.mp4&quot;</span><span class="p">,</span>
 <span class="p">}</span>
@@ -210,7 +220,7 @@ The dataytpye is eiter ‘stream’ or ‘anno’. E.g. ‘db:anno’ .</p>
 <dd class="field-even"><p>Initialized session object.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="data.html#data.session.Session" title="data.session.Session">Session</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="nova_utils.data.session.html#nova_utils.data.session.Session" title="nova_utils.data.session.Session">Session</a></p>
 </dd>
 </dl>
 </dd></dl>

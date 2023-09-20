@@ -88,6 +88,8 @@
 <span class="sd">    Metadata for a data stream, providing information about the stream properties.</span>
 
 <span class="sd">    Attributes:</span>
+<span class="sd">        name (str): Name of the stream.</span>
+<span class="sd">        ext (str): File extension of the stream including the leading &#39;.&#39;</span>
 <span class="sd">        duration (float): Duration of the stream in seconds.</span>
 <span class="sd">        sample_shape (tuple): Shape of individual samples in the stream.</span>
 <span class="sd">        num_samples (int): Total number of samples in the stream.</span>
@@ -95,6 +97,8 @@
 <span class="sd">        dtype (np.dtype): Data type of the samples.</span>
 
 <span class="sd">    Args:</span>
+<span class="sd">        name (str): Name of the stream.</span>
+<span class="sd">        ext (str): File extension of the stream including the leading &#39;.&#39;</span>
 <span class="sd">        duration (float, optional): Duration of the stream in seconds.</span>
 <span class="sd">        sample_shape (tuple, optional): Shape of individual samples in the stream.</span>
 <span class="sd">        num_samples (int, optional): Number of samples in the stream.</span>
@@ -104,6 +108,8 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sample_shape</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -113,6 +119,8 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize a StreamMetaData instance with stream properties.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sample_shape</span> <span class="o">=</span> <span class="n">sample_shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_samples</span> <span class="o">=</span> <span class="n">num_samples</span>
@@ -163,7 +171,9 @@
 <span class="sd">        duration (float, optional): Duration of the stream in seconds.Will be added to metadata.</span>
 <span class="sd">        sample_shape (tuple, optional): Shape of individual samples in the stream. Will be added to metadata.</span>
 <span class="sd">        num_samples (int, optional): Number of samples in the stream. Will be added to metadata.</span>
-<span class="sd">        dtype (np.dtype, optional): Data type of the samples. Will be added to metadata.</span>
+<span class="sd">        dtype (np.dtype, optional): Data type of the samples. Will be added to metadata. Defaults to np.float32 .</span>
+<span class="sd">        name (str, optional): Name of the stream.</span>
+<span class="sd">        ext (str, optional): File extension of the stream including the leading &#39;.&#39;. Defaults to &#39;.stream&#39;, &#39;.mp4&#39; or &#39;.wav&#39; depending on the Streamtype.</span>
 <span class="sd">        **kwargs: Additional keyword arguments for DynamicData.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -172,10 +182,12 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sample_shape</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">SSINPDataType</span><span class="o">.</span><span class="n">FLOAT</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -184,8 +196,16 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Add Metadata</span>
+        <span class="k">if</span> <span class="n">ext</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SSIStream</span><span class="p">):</span>
+                <span class="n">ext</span> <span class="o">=</span> <span class="s1">&#39;.stream&#39;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Video</span><span class="p">):</span>
+                <span class="n">ext</span> <span class="o">=</span> <span class="s1">&#39;.mp4&#39;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Audio</span><span class="p">):</span>
+                <span class="n">ext</span> <span class="o">=</span> <span class="s1">&#39;.wav&#39;</span>
+
         <span class="n">stream_meta_data</span> <span class="o">=</span> <span class="n">StreamMetaData</span><span class="p">(</span>
-            <span class="n">duration</span><span class="p">,</span> <span class="n">sample_shape</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">,</span> <span class="n">dtype</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">ext</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">sample_shape</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">,</span> <span class="n">dtype</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">stream_meta_data</span><span class="p">)</span>
 
@@ -216,7 +236,8 @@
 <span class="sd">        CHUNK_DTYPE (np.dtype): Data type definition for SSI stream chunks.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        data (np.ndarray): The SSI stream data.</span>
+<span class="sd">        data (np.ndarray): The SSI stream data. Shape is (num_samples,) + (sample_shape,)</span>
+<span class="sd">        sample_rate (float): Sampling rate of the SSI stream.</span>
 <span class="sd">        chunks (np.ndarray, optional): Chunks of the SSI stream.</span>
 <span class="sd">        **kwargs: Additional keyword arguments for Stream.</span>
 
@@ -226,20 +247,23 @@
 
     <span class="n">CHUNK_DTYPE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
         <span class="p">[</span>
-            <span class="p">(</span><span class="s2">&quot;from&quot;</span><span class="p">,</span> <span class="n">SSINPDataType</span><span class="o">.</span><span class="n">FLOAT</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
-            <span class="p">(</span><span class="s2">&quot;to&quot;</span><span class="p">,</span> <span class="n">SSINPDataType</span><span class="o">.</span><span class="n">FLOAT</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
-            <span class="p">(</span><span class="s2">&quot;byte&quot;</span><span class="p">,</span> <span class="n">SSINPDataType</span><span class="o">.</span><span class="n">INT</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
-            <span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="n">SSINPDataType</span><span class="o">.</span><span class="n">INT</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;from&quot;</span><span class="p">,</span> <span class="n">SSINPDataType</span><span class="o">.</span><span class="n">FLOAT</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="c1"># start of chunk in seconds</span>
+            <span class="p">(</span><span class="s2">&quot;to&quot;</span><span class="p">,</span> <span class="n">SSINPDataType</span><span class="o">.</span><span class="n">FLOAT</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="c1"># end of chunk in seconds</span>
+            <span class="p">(</span><span class="s2">&quot;byte&quot;</span><span class="p">,</span> <span class="n">SSINPDataType</span><span class="o">.</span><span class="n">INT</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="c1"># number of bytes for the chunk</span>
+            <span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="n">SSINPDataType</span><span class="o">.</span><span class="n">INT</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="c1"># number of samples for the chunk</span>
         <span class="p">]</span>
     <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">chunks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">chunks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize an SSIStream instance with SSI stream data and metadata.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">sample_rate</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Add Metadata</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">chunks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_samples</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">chunks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_samples</span> <span class="o">/</span> <span class="n">sample_rate</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">CHUNK_DTYPE</span><span class="p">)</span>
         <span class="n">ssistream_meta</span> <span class="o">=</span> <span class="n">SSIStreamMetaData</span><span class="p">(</span><span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">ssistream_meta</span><span class="p">)</span></div>
 
@@ -251,14 +275,14 @@
 <span class="sd">    This class extends the Stream class with attributes and functionality specific to audio streams.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        data (np.ndarray): The audio stream data.</span>
+<span class="sd">        data (np.ndarray): The audio stream data. Shape is (num_channels, num_samples). Dtype is float.</span>
 <span class="sd">        sample_rate (float): Sampling rate of the audio stream.</span>
 <span class="sd">        **kwargs: Additional keyword arguments for Stream.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">sample_rate</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Video"><a class="viewcode-back" href="../../api/data.html#data.stream.Video">[docs]</a><span class="k">class</span> <span class="nc">Video</span><span class="p">(</span><span class="n">Stream</span><span class="p">):</span>
@@ -268,14 +292,14 @@
 <span class="sd">    This class extends the Stream class with attributes and functionality specific to video streams.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        data (np.ndarray): The video stream data.</span>
+<span class="sd">        data (np.ndarray): The video stream data. Shape is (num_samples, height, width, num_channels)</span>
 <span class="sd">        sample_rate (float): Sampling rate of the video stream.</span>
 <span class="sd">        **kwargs: Additional keyword arguments for Stream.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">sample_rate</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>

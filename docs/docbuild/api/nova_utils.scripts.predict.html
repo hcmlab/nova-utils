@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="nova_utils.scripts.train module" href="nova_utils.scripts.train.html" />
+    <link rel="next" title="nova_utils.scripts.process module" href="nova_utils.scripts.process.html" />
     <link rel="prev" title="nova_utils.scripts.parsers module" href="nova_utils.scripts.parsers.html" /> 
 </head>
 
@@ -52,6 +52,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="nova_utils.scripts.process.html">nova_utils.scripts.process module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="nova_utils.scripts.train.html">nova_utils.scripts.train module</a></li>
 </ul>
 </li>
@@ -107,7 +108,9 @@
                   <span class="p">[</span><span class="o">--</span><span class="n">right_context</span> <span class="n">RIGHT_CONTEXT</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">stride</span> <span class="n">STRIDE</span><span class="p">]</span>
                   <span class="p">[</span><span class="o">--</span><span class="n">add_rest_class</span> <span class="n">ADD_REST_CLASS</span><span class="p">]</span>
                   <span class="p">[</span><span class="o">--</span><span class="n">fill_missing_data</span> <span class="n">FILL_MISSING_DATA</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cml_dir</span> <span class="n">CML_DIR</span><span class="p">]</span>
-                  <span class="p">[</span><span class="o">--</span><span class="n">opt_str</span> <span class="n">OPT_STR</span><span class="p">]</span> <span class="o">--</span><span class="n">trainer_file_path</span> <span class="n">TRAINER_FILE_PATH</span>
+                  <span class="p">[</span><span class="o">--</span><span class="n">cache_dir</span> <span class="n">CACHE_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">tmp_dir</span> <span class="n">TMP_DIR</span><span class="p">]</span>
+                  <span class="p">[</span><span class="o">--</span><span class="n">opt_str</span> <span class="n">OPT_STR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">model_io</span> <span class="n">MODEL_IO</span><span class="p">]</span>
+                  <span class="o">--</span><span class="n">trainer_file_path</span> <span class="n">TRAINER_FILE_PATH</span>
 </pre></div>
 </div>
 <section id="named-arguments">
@@ -162,10 +165,19 @@
 <dd><p>Whether to fill missing data. Defaults to True</p>
 </dd>
 <dt><kbd>--cml_dir</kbd></dt>
-<dd><p>CML-Base directory for the NOVA-Server module</p>
+<dd><p>CML base directory for the NOVA-Server module</p>
+</dd>
+<dt><kbd>--cache_dir</kbd></dt>
+<dd><p>Cache directory for the NOVA-Server module</p>
+</dd>
+<dt><kbd>--tmp_dir</kbd></dt>
+<dd><p>tmp base directory for the NOVA-Server module</p>
 </dd>
 <dt><kbd>--opt_str</kbd></dt>
 <dd><p>Json formatted String containing dictionaries with key value pairs, setting the options for a NOVA-Server module</p>
+</dd>
+<dt><kbd>--model_io</kbd></dt>
+<dd><p>Json formatted String containing ModelIO objects</p>
 </dd>
 <dt><kbd>--trainer_file_path</kbd></dt>
 <dd><p>Path to the trainer file using Windows UNC-Style</p>
@@ -188,7 +200,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="nova_utils.scripts.parsers.html" class="btn btn-neutral float-left" title="nova_utils.scripts.parsers module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="nova_utils.scripts.train.html" class="btn btn-neutral float-right" title="nova_utils.scripts.train module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="nova_utils.scripts.process.html" class="btn btn-neutral float-right" title="nova_utils.scripts.process module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

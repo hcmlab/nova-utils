@@ -118,6 +118,10 @@
 <span class="sd">        sessions (list[str], optional): List of session names to process. Defaults to None.</span>
 <span class="sd">        data (list[dict[str, str]], optional): List of data descriptions. Defaults to None. The dictionary should have the following fields:</span>
 
+<span class="sd">            ``&quot;id&quot;``:</span>
+<span class="sd">                Unique id to map the data to a given input / output.</span>
+<span class="sd">            ``&quot;type&quot;``:</span>
+<span class="sd">                IO type of the data. Either &quot;input&quot; or &quot;output&quot;</span>
 <span class="sd">            ``&quot;src&quot;``</span>
 <span class="sd">                The source and datatype to load the data from separated by &#39;:&#39; . Source can be either &#39;db&#39; for database or &#39;file&#39; to load from disc.</span>
 <span class="sd">                The dataytpye is eiter &#39;stream&#39; or &#39;anno&#39;. E.g. &#39;db:anno&#39; .</span>
@@ -171,6 +175,8 @@
 
 <span class="sd">            # Define data descriptions</span>
 <span class="sd">            annotation = {</span>
+<span class="sd">                &quot;id&quot; : &quot;my_transcript_1&quot;,</span>
+<span class="sd">                &quot;type&quot;: &quot;input&quot;,</span>
 <span class="sd">                &quot;src&quot;: &quot;db:anno&quot;,</span>
 <span class="sd">                &quot;scheme&quot;: &quot;transcript&quot;,</span>
 <span class="sd">                &quot;annotator&quot;: &quot;test_annotator&quot;,</span>
@@ -178,12 +184,16 @@
 <span class="sd">            }</span>
 
 <span class="sd">            stream = {</span>
+<span class="sd">                &quot;id&quot; : &quot;model_output&quot;,</span>
+<span class="sd">                &quot;type&quot; : &quot;input&quot;,</span>
 <span class="sd">                &quot;src&quot;: &quot;db:stream&quot;,</span>
 <span class="sd">                &quot;role&quot;: &quot;test_role&quot;,</span>
 <span class="sd">                &quot;name&quot;: &quot;extracted_features&quot;,</span>
 <span class="sd">            }</span>
 
 <span class="sd">            file = {</span>
+<span class="sd">                &quot;id&quot;: &quot;just_a_file&quot;,</span>
+<span class="sd">                &quot;type&quot;: &quot;output&quot;,</span>
 <span class="sd">                &quot;src&quot;: &quot;file:stream&quot;,</span>
 <span class="sd">                &quot;fp&quot;: &quot;/path/to/my/video/test_video.mp4&quot;,</span>
 <span class="sd">            }</span>
@@ -236,7 +246,7 @@
 
         <span class="c1"># If stride has not been explicitly set it&#39;s the same as the frame size</span>
         <span class="k">if</span> <span class="n">stride</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">frame_size</span>
+            <span class="n">stride</span> <span class="o">=</span> <span class="n">frame_size</span>
 
         <span class="c1"># Parse all times to milliseconds</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">left_context</span> <span class="o">=</span> <span class="n">string_utils</span><span class="o">.</span><span class="n">parse_time_string_to_ms</span><span class="p">(</span><span class="n">left_context</span><span class="p">)</span>
@@ -320,6 +330,11 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            str: String representation of the data description.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">data_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">id</span>
+
         <span class="n">src</span><span class="p">,</span> <span class="n">type_</span> <span class="o">=</span> <span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
         <span class="n">delim</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span>
         <span class="k">if</span> <span class="n">src</span> <span class="o">==</span> <span class="s2">&quot;db&quot;</span><span class="p">:</span>
@@ -354,11 +369,12 @@
 
         <span class="c1"># setting session data</span>
         <span class="k">for</span> <span class="n">data_desc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-            <span class="n">data_initialized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_data_from_description</span><span class="p">(</span>
-                <span class="n">data_desc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">session_name</span>
-            <span class="p">)</span>
-            <span class="n">data_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_description_to_string</span><span class="p">(</span><span class="n">data_desc</span><span class="p">)</span>
-            <span class="n">data</span><span class="p">[</span><span class="n">data_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_initialized</span>
+            <span class="k">if</span> <span class="n">data_desc</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
+                <span class="n">data_initialized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_data_from_description</span><span class="p">(</span>
+                    <span class="n">data_desc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">session_name</span>
+                <span class="p">)</span>
+                <span class="n">data_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_description_to_string</span><span class="p">(</span><span class="n">data_desc</span><span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">data_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_initialized</span>
         <span class="n">session</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
 
         <span class="c1"># update session duration</span>

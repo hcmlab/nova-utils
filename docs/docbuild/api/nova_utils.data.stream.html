@@ -107,7 +107,7 @@ Date: 18.8.2023</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – The audio stream data.</p></li>
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – The audio stream data. Shape is (num_channels, num_samples). Dtype is float.</p></li>
 <li><p><strong>sample_rate</strong> (<em>float</em>) – Sampling rate of the audio stream.</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments for Stream.</p></li>
 </ul>
@@ -117,7 +117,7 @@ Date: 18.8.2023</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.data.stream.SSIStream">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">SSIStream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#SSIStream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.SSIStream" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">SSIStream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#SSIStream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.SSIStream" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#nova_utils.data.stream.Stream" title="nova_utils.data.stream.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a></p>
 <p>A class representing an SSI data stream.</p>
 <p>This class extends the Stream class with additional attributes specific to SSI streams.</p>
@@ -130,7 +130,8 @@ Date: 18.8.2023</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – The SSI stream data.</p></li>
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – The SSI stream data. Shape is (num_samples,) + (sample_shape,)</p></li>
+<li><p><strong>sample_rate</strong> (<em>float</em>) – Sampling rate of the SSI stream.</p></li>
 <li><p><strong>chunks</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Chunks of the SSI stream.</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments for Stream.</p></li>
 </ul>
@@ -170,7 +171,7 @@ Date: 18.8.2023</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.data.stream.Stream">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">Stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#Stream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.Stream" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">Stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_shape=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.float32'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#Stream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.Stream" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="nova_utils.data.data.html#nova_utils.data.data.DynamicData" title="nova_utils.data.data.DynamicData"><code class="xref py py-class docutils literal notranslate"><span class="pre">DynamicData</span></code></a></p>
 <p>A class representing a generic data stream along with associated metadata.</p>
 <p>This class extends the DynamicData class and implements methods for working
@@ -186,7 +187,9 @@ with stream data.</p>
 <li><p><strong>duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration of the stream in seconds.Will be added to metadata.</p></li>
 <li><p><strong>sample_shape</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Shape of individual samples in the stream. Will be added to metadata.</p></li>
 <li><p><strong>num_samples</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of samples in the stream. Will be added to metadata.</p></li>
-<li><p><strong>dtype</strong> (<em>np.dtype</em><em>, </em><em>optional</em>) – Data type of the samples. Will be added to metadata.</p></li>
+<li><p><strong>dtype</strong> (<em>np.dtype</em><em>, </em><em>optional</em>) – Data type of the samples. Will be added to metadata. Defaults to np.float32 .</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the stream.</p></li>
+<li><p><strong>ext</strong> (<em>str</em><em>, </em><em>optional</em>) – File extension of the stream including the leading ‘.’. Defaults to ‘.stream’, ‘.mp4’ or ‘.wav’ depending on the Streamtype.</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments for DynamicData.</p></li>
 </ul>
 </dd>
@@ -215,12 +218,14 @@ with stream data.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.data.stream.StreamMetaData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">StreamMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#StreamMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.StreamMetaData" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">StreamMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#StreamMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.StreamMetaData" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Metadata for a data stream, providing information about the stream properties.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the stream.</p></li>
+<li><p><strong>ext</strong> (<em>str</em>) – File extension of the stream including the leading ‘.’</p></li>
 <li><p><strong>duration</strong> (<em>float</em>) – Duration of the stream in seconds.</p></li>
 <li><p><strong>sample_shape</strong> (<em>tuple</em>) – Shape of individual samples in the stream.</p></li>
 <li><p><strong>num_samples</strong> (<em>int</em>) – Total number of samples in the stream.</p></li>
@@ -230,6 +235,8 @@ with stream data.</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the stream.</p></li>
+<li><p><strong>ext</strong> (<em>str</em>) – File extension of the stream including the leading ‘.’</p></li>
 <li><p><strong>duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration of the stream in seconds.</p></li>
 <li><p><strong>sample_shape</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Shape of individual samples in the stream.</p></li>
 <li><p><strong>num_samples</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of samples in the stream.</p></li>
@@ -249,7 +256,7 @@ with stream data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – The video stream data.</p></li>
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – The video stream data. Shape is (num_samples, height, width, num_channels)</p></li>
 <li><p><strong>sample_rate</strong> (<em>float</em>) – Sampling rate of the video stream.</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments for Stream.</p></li>
 </ul>

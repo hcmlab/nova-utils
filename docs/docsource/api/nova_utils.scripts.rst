@@ -15,4 +15,5 @@ Submodules
    nova_utils.scripts.extract
    nova_utils.scripts.parsers
    nova_utils.scripts.predict
+   nova_utils.scripts.process
    nova_utils.scripts.train
