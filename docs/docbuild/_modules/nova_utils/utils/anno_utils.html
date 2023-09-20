@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nova_utils.utils.anno_utils &mdash; NOVA-Utils 1.1.1 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            NOVA-Utils
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/nova_utils.scripts.html">nova_utils.scripts package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/nova_utils.data.html">nova_utils.data package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/nova_utils.interfaces.html">nova_utils.interfaces package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/nova_utils.utils.html">nova_utils.utils package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NOVA-Utils</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">nova_utils.utils.anno_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for nova_utils.utils.anno_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Utility module for all annotation data</span>
+
+<span class="sd">Author:</span>
+<span class="sd">    Dominik Schiller &lt;dominik.schiller@uni-a.de&gt;</span>
+<span class="sd">Date:</span>
+<span class="sd">    21.8.2023</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+<span class="kn">from</span> <span class="nn">nova_utils.utils.type_definitions</span> <span class="kn">import</span> <span class="n">SSILabelDType</span><span class="p">,</span> <span class="n">LabelDType</span>
+<span class="kn">from</span> <span class="nn">nova_utils.utils.type_definitions</span> <span class="kn">import</span> <span class="n">SchemeType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+
+
+<span class="c1"># TODO: Currently we do not take the rest class into account when calculating the label for the frame. Maybe we should do this</span>
+<div class="viewcode-block" id="get_overlap"><a class="viewcode-back" href="../../../api/nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.get_overlap">[docs]</a><span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">get_overlap</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculating all overlapping intervals between the given array of time intervals and the interval [start, end]</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a (np.ndarray): numpy array of shape (n,2), where each entry contains an interval [from, to]</span>
+<span class="sd">        start (int): start time of the interval to check in ms</span>
+<span class="sd">        end (int): end time of the interval of the interval to check in ms</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Numpy array with boolean values. The array is true where the interval specified in a overlaps [start, end]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">annos_for_sample</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="c1"># annotation is bigger than frame</span>
+        <span class="p">((</span><span class="n">a</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">a</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">end</span><span class="p">))</span>
+        <span class="c1"># end of annotation is in frame</span>
+        <span class="o">|</span> <span class="p">((</span><span class="n">a</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">a</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">))</span>
+        <span class="c1"># start of annotation is in frame</span>
+        <span class="o">|</span> <span class="p">((</span><span class="n">a</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">a</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">annos_for_sample</span></div>
+
+
+<div class="viewcode-block" id="get_anno_majority"><a class="viewcode-back" href="../../../api/nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.get_anno_majority">[docs]</a><span class="k">def</span> <span class="nf">get_anno_majority</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">overlap_idxs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the index of the annotation with the largest overlap with the current frame</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a (np.ndarray): numpy array of shape (1,2), where each entry contains an interval [from, to]</span>
+<span class="sd">        overlap_idxs (np.ndarray): aray of boolean values where a is overlapping the interval [start, end] (as returned by get _get_overlap())</span>
+<span class="sd">        start (int): start of the interval to check</span>
+<span class="sd">        end (int): end of the interval to check</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: rewrite for numba jit</span>
+    <span class="n">majority_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">overlap</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">overlap_idxs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">cur_overlap</span> <span class="o">:=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">)</span> <span class="o">&gt;</span> <span class="n">overlap</span><span class="p">:</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="n">cur_overlap</span>
+            <span class="n">majority_index</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="k">return</span> <span class="n">majority_index</span></div>
+
+
+<div class="viewcode-block" id="label_is_garbage"><a class="viewcode-back" href="../../../api/nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.label_is_garbage">[docs]</a><span class="k">def</span> <span class="nf">label_is_garbage</span><span class="p">(</span><span class="n">label_id</span><span class="p">,</span> <span class="n">garbage_label_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if a label is considered garbage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        label_id: The ID of the label to check.</span>
+<span class="sd">        garbage_label_id: The ID of the garbage label.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if the label is garbage, False otherwise.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check for nan or compare with garbage label id</span>
+    <span class="k">if</span> <span class="n">label_id</span> <span class="o">!=</span> <span class="n">label_id</span> <span class="ow">or</span> <span class="n">label_id</span> <span class="o">==</span> <span class="n">garbage_label_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="data_contains_garbage"><a class="viewcode-back" href="../../../api/nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.data_contains_garbage">[docs]</a><span class="k">def</span> <span class="nf">data_contains_garbage</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">garbage_label_id</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NAN</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if a data array contains garbage values.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (np.ndarray): The data array to check.</span>
+<span class="sd">        garbage_label_id(object): The ID of the garbage label.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if the data contains garbage values, False otherwise.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># if data array is numerical</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">data</span> <span class="o">!=</span> <span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">garbage_label_id</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">))(</span><span class="n">data</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="convert_label_to_ssi_dtype"><a class="viewcode-back" href="../../../api/nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.convert_label_to_ssi_dtype">[docs]</a><span class="k">def</span> <span class="nf">convert_label_to_ssi_dtype</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">annotation_scheme_type</span><span class="p">:</span> <span class="n">SchemeType</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert label data to SSILabelDType based on the annotation scheme type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (np.ndarray): The label data to convert.</span>
+<span class="sd">        annotation_scheme_type (SchemeType): The annotation scheme type.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: The converted label data with the appropriate SSILabelDType.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Convert from milliseconds to seconds</span>
+    <span class="k">if</span> <span class="n">annotation_scheme_type</span> <span class="o">==</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="p">:</span>
+        <span class="n">tmp_anno_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span>
+        <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span>
+        <span class="k">return</span> <span class="n">tmp_anno_data</span>
+
+    <span class="k">elif</span> <span class="n">annotation_scheme_type</span> <span class="o">==</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">FREE</span><span class="p">:</span>
+        <span class="n">tmp_anno_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">FREE</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span>
+        <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span>
+        <span class="k">return</span> <span class="n">tmp_anno_data</span>
+    <span class="k">elif</span> <span class="n">annotation_scheme_type</span> <span class="o">==</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Annotation Scheme Type </span><span class="si">{</span><span class="n">annotation_scheme_type</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> mot supported&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="convert_ssi_to_label_dtype"><a class="viewcode-back" href="../../../api/nova_utils.utils.anno_utils.html#nova_utils.utils.anno_utils.convert_ssi_to_label_dtype">[docs]</a><span class="k">def</span> <span class="nf">convert_ssi_to_label_dtype</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">annotation_scheme_type</span><span class="p">:</span> <span class="n">SchemeType</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert SSILabelDType data to LabelDType based on the annotation scheme type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (np.ndarray): The SSILabelDType data to convert.</span>
+<span class="sd">        annotation_scheme_type (SchemeType): The annotation scheme type.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: The converted LabelDType data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tmp_anno_data</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="c1"># Convert from milliseconds to seconds</span>
+    <span class="k">if</span> <span class="n">annotation_scheme_type</span> <span class="o">==</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="p">:</span>
+        <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1000</span>
+        <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1000</span>
+        <span class="n">tmp_anno_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">LabelDType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tmp_anno_data</span>
+
+    <span class="k">elif</span> <span class="n">annotation_scheme_type</span> <span class="o">==</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">FREE</span><span class="p">:</span>
+        <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1000</span>
+        <span class="n">tmp_anno_data</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1000</span>
+        <span class="n">tmp_anno_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">LabelDType</span><span class="o">.</span><span class="n">FREE</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tmp_anno_data</span>
+
+    <span class="k">elif</span> <span class="n">annotation_scheme_type</span> <span class="o">==</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tmp_anno_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">LabelDType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Annotation Scheme Type </span><span class="si">{</span><span class="n">annotation_scheme_type</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> mot supported&quot;</span>
+        <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Dominik Schiller.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
