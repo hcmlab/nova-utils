@@ -10,6 +10,54 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
+class ModelIO:
+    """
+     ModelIO defines the inputs and outputs of a model in a chain or trainer file.
+
+    This class is used to create and work with ChainLinks.
+
+    Attributes:
+        io_type (str): Defines if the object describes an input or an output. Can be either "input" or "output"
+        io_id (str): String for the model to identify the input
+        io_data(str): Description of the data <data_class>:<data_type>:<specific_data_type>
+
+            ``"data_class"``
+                     General data class. Either "annotation" or "stream"
+            ``"data_type"``
+                     Type of the data_class. Matches classnames data type from nova_utils.data .
+                     "Video", "Audio", "SSIStream" for streams. "Discrete", "Free" or "Continuous" for annotations.
+            ``"specific_data_type"``
+                    Optional string identifier to specify either the annotation scheme or the type of feature. E.g. "transcript" or "Openface"
+
+    Args:
+        io_type (str): Defines if the object describes an input or an output. Can be either "input" or "output"
+        io_id (str): String for the model to identify the input
+        io_data(str): Description of the data <data_class>:<data_type>:<specific_data_type>
+
+            ``"data_class"``
+                     General data class. Either "annotation" or "stream"
+            ``"data_type"``
+                     Type of the data_class. Matches classnames data type from nova_utils.data .
+                     "Video", "Audio", "SSIStream" for streams. "Discrete", "Free" or "Continuous" for annotations.
+            ``"specific_data_type"``
+                    Optional string identifier to specify either the annotation scheme or the type of feature. E.g. "transcript" or "Openface"
+    """
+
+    def __init__(
+        self,
+        io_type: str,
+        io_id: str,
+        io_data: str,
+    ):
+        """
+        Initialize a ModelIO object with the specified parameters.
+
+        """
+        self.io_type = io_type
+        self.io_id = io_id
+        self.io_data = io_data
+
+
 class Trainer:
     """
     Class for representing and working with Trainer configuration.
@@ -19,7 +67,7 @@ class Trainer:
     Attributes:
         model_script_path (str): Path to the model script file.
         model_option_path (str): Path to the model option file.
-        model_option_string (str): Model option string.
+        model_optstr (str): Model option string.
         model_weights_path (str): Path to the model weights file.
         model_stream (int): Model stream identifier.
         model_create (str): Model creation type.
@@ -33,11 +81,12 @@ class Trainer:
         meta_left_ctx (int): Left context size for the Trainer.
         meta_balance (str): Balance type for the Trainer.
         meta_backend (str): Backend type for the Trainer.
+        meta_io(list[ModelIO], optional): Description of the inputs and outputs of the model.
         ssi_v (str): SSI version.
         xml_version (str): XML version.
 
     Args:
-        madel_script_path (str, optional): Path to the model script file. Defaults to empty string.
+        model_script_path (str, optional): Path to the model script file. Defaults to empty string.
         model_option_path (str, optional): Path to the model option file. Defaults to empty string.
         model_option_string (str, optional): Model option string. Defaults to empty string.
         model_weights_path (str, optional): Path to the model weights file. Defaults to empty string.
@@ -53,6 +102,7 @@ class Trainer:
         meta_left_ctx (int, optional): Left context value for metadata. Default is 0.
         meta_balance (str, optional): Balance type for metadata. Default is "none".
         meta_backend (str, optional): Backend type for metadata. Default is "nova-server".
+        meta_io(list[ModelIO], optional): Description of the inputs and outputs of the model. Defaults to None.
         ssi_v (str, optional): SSI version. Default is "5".
         xml_version (str, optional): XML version. Default is "1.0".
 
@@ -76,6 +126,7 @@ class Trainer:
         meta_left_ctx: int = 0,
         meta_balance: str = "none",
         meta_backend: str = "nova-server",
+        meta_io: list[ModelIO] = None,
         ssi_v="5",
         xml_version="1.0",
     ):
@@ -100,6 +151,7 @@ class Trainer:
         self.meta_left_ctx = meta_left_ctx
         self.meta_balance = meta_balance
         self.meta_backend = meta_backend
+        self.meta_io = meta_io if meta_io is not None else []
         self.ssi_v = ssi_v
         self.xml_version = xml_version
         self.model_multi_role_input = model_multirole_input
@@ -128,6 +180,11 @@ class Trainer:
             self.meta_right_ctx = int(meta.get("rightContext", default="0"))
             self.meta_balance = meta.get("balance", default="none")
             self.meta_backend = meta.get("backend", default="Python")
+
+            for io_tag in meta.findall("io"):
+                self.meta_io.append(
+                    ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"))
+                )
         if register is not None:
             for r in register:
                 self.register.append(r.attrib)
@@ -161,7 +218,7 @@ class Trainer:
         """
         root = ET.Element("trainer")
         ET.SubElement(root, "info", trained=str(self.info_trained))
-        ET.SubElement(
+        meta = ET.SubElement(
             root,
             "meta",
             leftContext=str(self.meta_left_ctx),
@@ -169,6 +226,17 @@ class Trainer:
             balance=self.meta_balance,
             backend=self.meta_backend,
         )
+
+        io: ModelIO
+        for io in self.meta_io:
+            ET.SubElement(
+                meta,
+                "io",
+                id=io.io_id,
+                type=io.io_type,
+                data=io.io_data
+            )
+
         register = ET.SubElement(root, "register")
         for r in self.register:
             ET.SubElement(register, "item", **r)
@@ -254,21 +322,23 @@ class Chain:
 
     Attributes:
         meta_frame_step (str): Meta frame step value.
-        meta_left_context (str): Meta left context value.
-        meta_right_context (str): Meta right context value.
+        meta_left_ctx (str): Meta left context value.
+        meta_right_ctx (str): Meta right context value.
         meta_backend (str): Backend type for the Chain.
         meta_description (str): Description for the Chain.
         meta_category (str): Category for the Chain.
+        meta_io(list[ModelIO], optional): Description of the inputs and outputs of the model.
         register (list): List of register configurations.
         links (list): List of ChainLink configurations.
 
-    Argss:
+    Args:
         meta_frame_step (str, optional): Meta frame step information. Defaults to empty string.
         meta_left_context (str, optional): Left context metadata. Defaults to empty string.
         meta_right_context (str, optional): Right context metadata. Defaults to empty string.
         meta_backend (str, optional): Backend type for metadata. Default is "nova-server".
         meta_description (str, optional): Description for metadata. Defaults to empty string.
         meta_category (str, optional): Category for metadata. Defaults to empty string.
+        meta_io(list[ModelIO], optional): Description of the inputs and outputs of the model. Defaults to None.
         register (list, optional): List of registered items. Default is None.
         links (list, optional): List of ChainLink objects. Default is None.
 
@@ -282,6 +352,7 @@ class Chain:
         meta_backend: str = "nova-server",
         meta_description: str = "",
         meta_category: str = "",
+        meta_io: list[ModelIO] = None,
         register: list = None,
         links: list = None,
     ):
@@ -295,6 +366,7 @@ class Chain:
         self.meta_backend = meta_backend
         self.meta_description = meta_description
         self.meta_category = meta_category
+        self.meta_io = meta_io if meta_io is not None else []
         self.register = register if register else []
         self.links = links if links else []
 
@@ -322,6 +394,10 @@ class Chain:
             self.meta_backend = meta.attrib.get("backend", "nova-server")
             self.meta_description = meta.attrib.get("description", "")
             self.meta_category = meta.attrib.get("category", "")
+            for io_tag in meta.findall("io"):
+                self.meta_io.append(
+                    ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"))
+                )
 
         if register is not None:
             for r in register:
@@ -341,7 +417,7 @@ class Chain:
 
         """
         root = ET.Element("chain")
-        ET.SubElement(
+        meta = ET.SubElement(
             root,
             "meta",
             frameStep=str(self.meta_frame_step),
@@ -351,9 +427,22 @@ class Chain:
             description=str(self.meta_description),
             category=str(self.meta_category),
         )
+
+        io: ModelIO
+        for io in self.meta_io:
+            ET.SubElement(
+                meta,
+                "io",
+                id=io.io_id,
+                type=io.io_type,
+                data=io.io_data
+            )
+
         register = ET.SubElement(root, "register")
         for r in self.register:
             ET.SubElement(register, "item", **r)
+
+
 
         cl: ChainLink
         for cl in self.links:
@@ -377,6 +466,16 @@ class Chain:
 
 
 if __name__ == "__main__":
+
+    trainer_in_fp = Path(
+        r"/Users/dominikschiller/Work/github/nova-server-modules/test/io_test.trainer"
+    )
+    trainer_out_fp = Path("test_trainer.trainer")
+
+    trainer = Trainer()
+    trainer.load_from_file(trainer_in_fp)
+    trainer.write_to_file(trainer_out_fp)
+
     chain_in_fp = Path(
         "/Users/dominikschiller/Work/github/nova-server-modules/chains/nova-server/utility/uc1/uc1.chain"
     )
@@ -386,12 +485,3 @@ if __name__ == "__main__":
     chain.load_from_file(chain_in_fp)
     chain.write_to_file(chain_out_fp)
     breakpoint()
-
-    trainer_in_fp = Path(
-        r"Z:\nova\cml\models\trainer\discrete\base_emotions\feature{compare[480ms,40ms,480ms]}\linsvm\linsvm.compare.trainer"
-    )
-    trainer_out_fp = Path(".test_trainer.trainer")
-
-    trainer = Trainer()
-    trainer.load_from_file(trainer_in_fp)
-    trainer.write_trainer_to_file(trainer_out_fp)

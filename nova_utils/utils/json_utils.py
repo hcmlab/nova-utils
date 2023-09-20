@@ -8,7 +8,34 @@ Date:
 """
 
 import json
-from nova_utils.utils.ssi_xml_utils import Chain, ChainLink, Trainer
+from nova_utils.utils.ssi_xml_utils import Chain, ChainLink, Trainer, ModelIO
+
+
+class ModelIOEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for ModelIO objects.
+
+    This encoder is used to serialize ModelIO objects to JSON format.
+
+    Attributes:
+        None
+
+    """
+
+    def default(self, obj):
+        """
+        Encodes a ModelIO object to JSON.
+
+        Args:
+            obj (ModelIO): The ModelIO object to encode.
+
+        Returns:
+            dict: A dictionary representation of the ModelIO object.
+
+        """
+        if isinstance(obj, ModelIO):
+            return {"type": obj.io_type, "id": obj.io_id, "data": obj.io_data}
+        return super().default(obj)
 
 
 class ChainLinkEncoder(json.JSONEncoder):
@@ -75,6 +102,7 @@ class ChainEncoder(json.JSONEncoder):
                 "meta_backend": obj.meta_backend,
                 "meta_description": obj.meta_description,
                 "meta_category": obj.meta_category,
+                "meta_io": json.dumps(obj.meta_io, cls=ModelIOEncoder),
                 "register": obj.register,
                 "links": json.dumps(obj.links, cls=ChainLinkEncoder),
             }
@@ -120,6 +148,7 @@ class TrainerEncoder(json.JSONEncoder):
                 "meta_left_ctx": obj.meta_left_ctx,
                 "meta_balance": obj.meta_balance,
                 "meta_backend": obj.meta_backend,
+                "meta_io": json.dumps(obj.meta_io, cls=ModelIOEncoder),
                 "ssi_v": obj.ssi_v,
                 "xml_version": obj.xml_version,
             }
