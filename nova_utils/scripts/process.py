@@ -20,10 +20,9 @@ Example:
 """
 
 import argparse
-import json
 from typing import Union, Type
 from pathlib import Path, PureWindowsPath
-from nova_utils.utils import ssi_xml_utils, string_utils, json_utils
+from nova_utils.utils import ssi_xml_utils, string_utils
 from nova_utils.data.provider.nova_iterator import NovaIterator
 from nova_utils.scripts.parsers import (
     nova_db_parser,
@@ -31,7 +30,7 @@ from nova_utils.scripts.parsers import (
     nova_server_module_parser,
 )
 from nova_utils.interfaces.server_module import Predictor, Extractor
-from nova_utils.data.handler.mongo_handler import AnnotationHandler, StreamHandler
+from nova_utils.data.handler import mongo_handler as db_handler
 from importlib.machinery import SourceFileLoader
 
 # Main parser for predict specific options
@@ -80,11 +79,11 @@ def _main():
         "ns_cl_" + model_script_path.stem, str(model_script_path)
     ).load_module()
     print(f"Trainer module {Path(model_script_path).name} loaded")
-
-    model_io = json.loads(args.model_io, cls=json_utils.ModelIODecoder)
     opts = string_utils.parse_nova_option_string(args.opt_str)
-    processor_class: Union[Type[Predictor], Type[Extractor]] = getattr(source, trainer.model_create)
-    processor = processor_class(model_io=model_io, opts=opts)
+    processor_class: Union[Type[Predictor], Type[Extractor]] = getattr(
+        source, trainer.model_create
+    )
+    processor = processor_class(model_io=trainer.meta_io, opts=opts)
     print(f"Model {trainer.model_create} created")
 
     # Build data loaders
@@ -99,48 +98,55 @@ def _main():
         iterators.append(ni)
     print("Data iterators initialized")
 
-    # Init database handler
-    annotation_handler = AnnotationHandler(**vars(db_args))
-    stream_handler = StreamHandler(**vars(db_args), data_dir=iter_args.data_dir)
+    # Init data handler
+    annotation_handler = db_handler.AnnotationHandler(**vars(db_args))
+    stream_handler = db_handler.StreamHandler(**vars(db_args), data_dir=iter_args.data_dir)
 
     # Iterate over all sessions
     for ds_iter in iterators:
-
         annos = []
         streams = []
 
-        print(f"Predict session {ds_iter.sessions[0]}...")
+        # Data processing
+        print(f"Process session {ds_iter.sessions[0]}...")
         try:
             data = processor.process_data(ds_iter)
+
             if isinstance(processor, Predictor):
                 annos = processor.to_anno(data)
+
             if isinstance(processor, Extractor):
                 streams = processor.to_stream(data)
+
         except FileNotFoundError as e:
             print(
-                f"\tIterator exited with error: '{str(e)}'. Continuing with next session."
+                f"\tProcessor exited with error: '{str(e)}'. Continuing with next session."
             )
             caught_ex = True
             continue
         finally:
             print("...done")
 
-        print("Saving annotations to database...")
-        for anno in annos:
-            try:
-                annotation_handler.save(anno)
-            except FileExistsError as e:
-                print(f"\tCould not save annotation: '{str(e)}' ")
-                caught_ex = True
-        print("...done")
+        # Data Saving
+        if annos:
+            print("Saving annotations to database...")
+            for anno in annos:
+                try:
+                    annotation_handler.save(anno)
+                except FileExistsError as e:
+                    print(f"\tCould not save annotation: '{str(e)}' ")
+                    caught_ex = True
+            print("...done")
 
-        print("Saving streams to disk...")
-        for stream in streams:
-            try:
-                stream_handler.save(stream)
-            except FileExistsError as e:
-                print(f"\tCould not save stream: '{str(e)}'")
-                caught_ex = True
+        if streams:
+            print("Saving streams to disk...")
+            for stream in streams:
+                try:
+                    stream_handler.save(stream)
+                except FileExistsError as e:
+                    print(f"\tCould not save stream: '{str(e)}'")
+                    caught_ex = True
+            print("...done")
 
     print("Processing completed!")
     if caught_ex:

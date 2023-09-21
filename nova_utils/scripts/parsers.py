@@ -121,8 +121,3 @@ nova_server_module_parser.add_argument(
     type=str,
     help="Json formatted String containing dictionaries with key value pairs, setting the options for a NOVA-Server module",
 )
-nova_server_module_parser.add_argument(
-    "--model_io",
-    type=str,
-    help="Json formatted String containing ModelIO objects",
-)
