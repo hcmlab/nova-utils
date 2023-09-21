@@ -41,6 +41,7 @@ class ModelIO:
                      "Video", "Audio", "SSIStream" for streams. "Discrete", "Free" or "Continuous" for annotations.
             ``"specific_data_type"``
                     Optional string identifier to specify either the annotation scheme or the type of feature. E.g. "transcript" or "Openface"
+        io_default_value (str): Default value for stream name or annotation scheme to read from or write to
     """
 
     def __init__(
@@ -48,7 +49,9 @@ class ModelIO:
         io_type: str,
         io_id: str,
         io_data: str,
+        io_default_value: str,
     ):
+
         """
         Initialize a ModelIO object with the specified parameters.
 
@@ -56,18 +59,7 @@ class ModelIO:
         self.io_type = io_type
         self.io_id = io_id
         self.io_data = io_data
-
-    def get_default(self):
-        """
-
-        Returns: The default value for a io_data if set. Else None.
-
-        """
-        data_desc = self.io_data.split(':')
-        if len(data_desc) == 3:
-            return data_desc[2]
-        else:
-            return None
+        self.io_default_value = io_default_value
 
 class Trainer:
     """
@@ -194,7 +186,7 @@ class Trainer:
 
             for io_tag in meta.findall("io"):
                 self.meta_io.append(
-                    ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"))
+                    ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"), io_tag.get("default_value"))
                 )
         if register is not None:
             for r in register:
@@ -245,7 +237,8 @@ class Trainer:
                 "io",
                 id=io.io_id,
                 type=io.io_type,
-                data=io.io_data
+                data=io.io_data,
+                default_value=io.io_default_value
             )
 
         register = ET.SubElement(root, "register")

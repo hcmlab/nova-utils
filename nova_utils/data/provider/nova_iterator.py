@@ -46,6 +46,8 @@ class NovaIterator:
 
             ``"id"``:
                 Unique id to map the data to a given input / output.
+            ``"name"``:
+                Output name for streams
             ``"type"``:
                 IO type of the data. Either "input" or "output"
             ``"src"``

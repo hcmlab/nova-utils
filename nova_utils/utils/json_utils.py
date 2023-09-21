@@ -34,7 +34,7 @@ class ModelIOEncoder(json.JSONEncoder):
 
         """
         if isinstance(obj, ModelIO):
-            return {"type": obj.io_type, "id": obj.io_id, "data": obj.io_data}
+            return {"type": obj.io_type, "id": obj.io_id, "data": obj.io_data, "default_value": obj.io_default_value}
         return super().default(obj)
 
 class ModelIODecoder(json.JSONDecoder):
@@ -42,7 +42,7 @@ class ModelIODecoder(json.JSONDecoder):
         json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
     def object_hook(self, json_obj):
         if json_obj.get("type") and json_obj.get("id") and json_obj.get("data"):
-            return ModelIO(json_obj["type"], json_obj["id"], json_obj["data"])
+            return ModelIO(json_obj["type"], json_obj["id"], json_obj["data"], json_obj["default_value"])
         else:
             raise ValueError("Invalid JSON format for ModelIO decoding.")
 
