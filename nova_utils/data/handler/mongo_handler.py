@@ -788,7 +788,7 @@ class StreamHandler(IHandler, MongoHandler):
         session: str = None,
         role: str = None ,
         name: str = None,
-        data_type: str = None,
+        data_type: str = 'feature',
         file_ext: str = None,
         dim_labels: [] = None,
         is_valid: bool = True,
@@ -818,7 +818,8 @@ class StreamHandler(IHandler, MongoHandler):
         role = role if not role is None else stream.meta_data.role
         name = name if not name is None else stream.meta_data.name
         file_ext = file_ext if not file_ext is None else stream.meta_data.ext
-        dim_labels = dim_labels if not  dim_labels is None else stream.meta_data.dim_labels
+
+        #dim_labels = dim_labels if not  dim_labels is None else stream.meta_data.dim_labels
 
         if not self.data_dir:
             raise FileNotFoundError("Data directory was not set. Can't access files")
@@ -835,7 +836,7 @@ class StreamHandler(IHandler, MongoHandler):
 
         # write db entry
         stream_document = {
-            "fileExt": file_ext,
+            "fileExt": file_ext.strip('.'),
             "name": name,
             "sr": meta_data.sample_rate,
             "type": data_type,

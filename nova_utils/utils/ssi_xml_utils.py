@@ -80,10 +80,13 @@ class Trainer:
         streams (list): List of stream configurations.
         register (list): List of utilized dlls.
         info_trained (bool): Indicates if the Trainer has been trained.
+        meta_frame_step (int): Frame Ssep  for the Trainer.
         meta_right_ctx (int): Right context size for the Trainer.
         meta_left_ctx (int): Left context size for the Trainer.
         meta_balance (str): Balance type for the Trainer.
         meta_backend (str): Backend type for the Trainer.
+        meta_category (str): Category of the trainer. Default is "".
+        meta_description (str): Description of the trainer. Default is "".
         meta_io(list[ModelIO], optional): Description of the inputs and outputs of the model.
         ssi_v (str): SSI version.
         xml_version (str): XML version.
@@ -101,10 +104,13 @@ class Trainer:
         streams (list, optional): List of stream information. Default is None.
         register (list, optional): List of registered items. Default is None.
         info_trained (bool, optional): Indicates if the model is trained. Default is False.
+        meta_frame_step (int, optional): Frame step value for metadata. Default is 0.
         meta_right_ctx (int, optional): Right context value for metadata. Default is 0.
         meta_left_ctx (int, optional): Left context value for metadata. Default is 0.
         meta_balance (str, optional): Balance type for metadata. Default is "none".
         meta_backend (str, optional): Backend type for metadata. Default is "nova-server".
+        meta_category (str, optional): Category of the trainer. Default is "".
+        meta_description (str, optional): Description of the trainer. Default is "".
         meta_io(list[ModelIO], optional): Description of the inputs and outputs of the model. Defaults to None.
         ssi_v (str, optional): SSI version. Default is "5".
         xml_version (str, optional): XML version. Default is "1.0".
@@ -125,10 +131,13 @@ class Trainer:
         streams: list = None,
         register: list = None,
         info_trained: bool = False,
+        meta_frame_step: int = 0,
         meta_right_ctx: int = 0,
         meta_left_ctx: int = 0,
         meta_balance: str = "none",
         meta_backend: str = "nova-server",
+        meta_description: str = "",
+        meta_category: str = "",
         meta_io: list[ModelIO] = None,
         ssi_v="5",
         xml_version="1.0",
@@ -150,10 +159,13 @@ class Trainer:
         self.streams = streams if streams is not None else []
         self.register = register if register is not None else []
         self.info_trained = info_trained
+        self.meta_frame_step = meta_frame_step
         self.meta_right_ctx = meta_right_ctx
         self.meta_left_ctx = meta_left_ctx
         self.meta_balance = meta_balance
         self.meta_backend = meta_backend
+        self.meta_description = meta_description
+        self.meta_category = meta_category
         self.meta_io = meta_io if meta_io is not None else []
         self.ssi_v = ssi_v
         self.xml_version = xml_version
@@ -179,10 +191,13 @@ class Trainer:
         if info is not None:
             self.info_trained = info.get("trained")
         if meta is not None:
-            self.meta_left_ctx = int(meta.get("leftContext", default="0"))
-            self.meta_right_ctx = int(meta.get("rightContext", default="0"))
+            self.meta_left_ctx = meta.get("leftContext", default="0")
+            self.meta_right_ctx = meta.get("rightContext", default="0")
+            self.meta_frame_step = meta.get("frameStep", default="0")
             self.meta_balance = meta.get("balance", default="none")
             self.meta_backend = meta.get("backend", default="Python")
+            self.meta_description = meta.get("description", default="")
+            self.meta_category = meta.get("category", default="")
 
             for io_tag in meta.findall("io"):
                 self.meta_io.append(
@@ -224,10 +239,13 @@ class Trainer:
         meta = ET.SubElement(
             root,
             "meta",
+            frameStep=str(self.meta_frame_step),
             leftContext=str(self.meta_left_ctx),
             rightContex=str(self.meta_right_ctx),
             balance=self.meta_balance,
             backend=self.meta_backend,
+            category=self.meta_category,
+            description=self.meta_description
         )
 
         io: ModelIO
@@ -472,7 +490,7 @@ class Chain:
 if __name__ == "__main__":
 
     trainer_in_fp = Path(
-        r"/Users/dominikschiller/Work/github/nova-server-modules/test/io_test.trainer"
+        r"C:\Users\schildom\Documents\github\nova-server-modules\demo\uc1\uc1.trainer"
     )
     trainer_out_fp = Path("test_trainer.trainer")
 
