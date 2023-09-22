@@ -297,7 +297,7 @@ class NovaIterator:
 
         # setting session data
         for data_desc in self.data:
-            if data_desc['type'] == 'input':
+            if data_desc.get('type') == 'input':
                 data_initialized = self._init_data_from_description(
                     data_desc, self.dataset, session_name
                 )

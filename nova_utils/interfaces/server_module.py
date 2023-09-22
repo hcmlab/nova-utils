@@ -1,7 +1,12 @@
 from abc import ABC, abstractmethod
+
+import numpy as np
+
 from nova_utils.data.annotation import Annotation
 from nova_utils.utils.ssi_xml_utils import ModelIO
 from nova_utils.utils.string_utils import parse_nova_option_string
+
+
 class Processor(ABC):
     """
     Base class of a data processor. This interface builds the foundation for all data processing classes.
@@ -13,7 +18,10 @@ class Processor(ABC):
     # Flag to indicate whether the processed input belongs to one role or to multiple roles
     SINGLE_ROLE_INPUT = True
 
-    #TODO read trainer or chain file for default options
+    # Prefix for provided datastreams that are missing the id-tag
+    UNKNOWN_ID = '<unk>_'
+
+    # TODO read trainer or chain file for default options
     def __init__(self, model_io: list[ModelIO], opts: dict):
         self.model = None
         self.data = None
@@ -21,36 +29,43 @@ class Processor(ABC):
         self.options = opts
         self.model_io = model_io
 
-    @abstractmethod
-    def preprocess_sample(self, sample: dict ):
+    def preprocess_sample(self, sample: dict):
         """Preprocess data to convert between nova-server dataset iterator item to the raw model input as required in process_sample.
 
         Args:
-            sample (dict):
+            sample :
         """
-        return sample
+        return list(sample.values())[0]
 
-    @abstractmethod
     def process_sample(self, sample):
         """Applying processing steps (e.g. feature extraction, data prediction etc... ) to the provided data."""
         return sample
 
-    @abstractmethod
     def postprocess_sample(self, sample):
         """Apply any optional postprocessing to the data (e.g. scaling, mapping etc...)"""
         return sample
 
     def process_data(self, ds_iter) -> dict:
-        """Returning a dictionary that contains the original keys from the dataset iterator and processed samples as value. Can be overwritten to customize the processing"""
+        """Returning a dictionary that contains the original keys from the dataset iterator and a list of processed samples as value. Can be overwritten to customize the processing"""
         self.ds_iter = ds_iter
-        processed = {k: [] for k in ds_iter.data_schemes.keys()}
+
+        # Get all data streams of type "input" that match an id from the modules trainer file
+        processed = {
+            k: []
+            for k in [
+                d.get("id")
+                for d in ds_iter.data
+                if d.get("type") == "input" and d.get("id") in [mio.io_id for mio in self.model_io]
+            ]
+        }
 
         for sample in ds_iter:
-            for k in ds_iter.data_schemes.keys():
-                out = self.preprocess_sample(sample[k])
+            for id, output_list in processed.items():
+                data_for_id = {id: sample[id]}
+                out = self.preprocess_sample(data_for_id)
                 out = self.process_sample(out)
                 out = self.postprocess_sample(out)
-                processed[k].append(out)
+                output_list.append(out)
 
         return processed
 
