@@ -493,7 +493,7 @@ class AnnotationHandler(IHandler, MongoHandler):
 
             anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
 
-            anno_duration = anno_data[-1]["to"]
+            anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
             anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes)
             annotation = DiscreteAnnotation(
                 # role=role,
@@ -543,7 +543,7 @@ class AnnotationHandler(IHandler, MongoHandler):
 
             anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
 
-            anno_duration = anno_data[-1]["to"]
+            anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
             anno_scheme = FreeAnnotationScheme(name=scheme)
             annotation = FreeAnnotation(
                 # role=role,
