@@ -446,7 +446,7 @@ class AnnotationHandler(IHandler, MongoHandler):
         return success
 
     def load(
-        self, dataset: str, scheme: str, session: str, annotator: str, role: str
+        self, dataset: str, scheme: str, session: str, annotator: str, role: str, header_only: bool = False
     ) -> Annotation:
         """
         Load annotation data from MongoDB and create an Annotation object.
@@ -457,6 +457,8 @@ class AnnotationHandler(IHandler, MongoHandler):
             session (str): Name of the session.
             annotator (str): Name of the annotator.
             role (str): Name of the role.
+            header_only (bool): If true only the annotation header will be loaded.
+
 
         Returns:
             Annotation: An Annotation object loaded from the database.
@@ -479,21 +481,24 @@ class AnnotationHandler(IHandler, MongoHandler):
         (scheme_doc,) = anno_doc["scheme"]
         scheme_type = scheme_doc["type"]
 
+        anno_data = None
+        anno_duration = 0
+
         # discrete scheme
         if scheme_type == SchemeType.DISCRETE.name:
             scheme_classes = {l["id"]: l["name"] for l in scheme_doc["labels"]}
 
-            anno_data = np.array(
-                [
-                    (x["from"], x["to"], x["id"], x["conf"])
-                    for x in anno_data_doc["labels"]
-                ],
-                dtype=SSILabelDType.DISCRETE.value,
-            )
+            if not header_only:
+                anno_data = np.array(
+                    [
+                        (x["from"], x["to"], x["id"], x["conf"])
+                        for x in anno_data_doc["labels"]
+                    ],
+                    dtype=SSILabelDType.DISCRETE.value,
+                )
+                anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
+                anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
 
-            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
-
-            anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
             anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes)
             annotation = DiscreteAnnotation(
                 # role=role,
@@ -512,13 +517,15 @@ class AnnotationHandler(IHandler, MongoHandler):
             sr = scheme_doc["sr"]
             min_val = scheme_doc["min"]
             max_val = scheme_doc["max"]
-            anno_data = np.array(
-                [(x["score"], x["conf"]) for x in anno_data_doc["labels"]],
-                dtype=SSILabelDType.CONTINUOUS.value,
-            )
-            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.CONTINUOUS)
 
-            anno_duration = len(anno_data_doc["labels"]) / sr
+            if not header_only:
+                anno_data = np.array(
+                    [(x["score"], x["conf"]) for x in anno_data_doc["labels"]],
+                    dtype=SSILabelDType.CONTINUOUS.value,
+                )
+                anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.CONTINUOUS)
+                anno_duration = len(anno_data_doc["labels"]) / sr
+
             anno_scheme = ContinuousAnnotationScheme(
                 name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val
             )
@@ -533,17 +540,19 @@ class AnnotationHandler(IHandler, MongoHandler):
 
         # free scheme
         elif scheme_type == SchemeType.FREE.name:
-            anno_data = np.array(
-                [
-                    (x["from"], x["to"], x["name"], x["conf"])
-                    for x in anno_data_doc["labels"]
-                ],
-                dtype=SSILabelDType.FREE.value,
-            )
 
-            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
+            if not header_only:
+                anno_data = np.array(
+                    [
+                        (x["from"], x["to"], x["name"], x["conf"])
+                        for x in anno_data_doc["labels"]
+                    ],
+                    dtype=SSILabelDType.FREE.value,
+                )
 
-            anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
+                anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
+                anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
+
             anno_scheme = FreeAnnotationScheme(name=scheme)
             annotation = FreeAnnotation(
                 # role=role,
@@ -727,7 +736,7 @@ class StreamHandler(IHandler, MongoHandler):
             return {}
         return result
 
-    def load(self, dataset: str, session: str, role: str, name: str) -> Stream:
+    def load(self, dataset: str, session: str, role: str, name: str, header_only: bool = False) -> Stream:
         """
         Load a Stream object from MongoDB and create a Stream instance.
 
@@ -736,6 +745,7 @@ class StreamHandler(IHandler, MongoHandler):
             session (str): Name of the session.
             role (str): Name of the role.
             name (str): Name of the stream.
+            header_only (bool): If true only the stream header will be loaded.
 
         Returns:
             Stream: A Stream object loaded from the database.
@@ -761,7 +771,7 @@ class StreamHandler(IHandler, MongoHandler):
             raise FileNotFoundError(f"No such file {file_path}")
 
         # data
-        data = FileHandler().load(file_path)
+        data = FileHandler().load(file_path, header_only = header_only)
         assert isinstance(data, Stream)
 
         # meta data

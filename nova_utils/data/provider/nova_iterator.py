@@ -81,7 +81,7 @@ class NovaIterator:
         end (int, float, str): End time for processing measured in time.
         left_context (int, float, str): Left context duration measured in time.
         right_context (int, float, str): Right context duration measured in time.
-        stride (int, float, str): Stride for iterating over data measured in time.
+        stride (int, float, str): Stride for iterating  data measured in time.
         add_rest_class (bool): Whether to add a rest class for discrete annotations.
         fill_missing_data (bool): Whether to fill missing data.
 
@@ -212,7 +212,7 @@ class NovaIterator:
 
         self._iterable = self._yield_sample()
 
-    def _init_data_from_description(self, data_desc: dict, dataset: str, session: str) -> Data:
+    def _init_data_from_description(self, data_desc: dict, dataset: str, session: str, header_only: bool = False) -> Data:
         """
         Initialize data from a data description.
 
@@ -220,6 +220,7 @@ class NovaIterator:
             data_desc (dict): Data description dictionary.
             dataset (str): Dataset name.
             session (str): Session name.
+            header_only (bool): If true only the header information for all session data will be loaded.
 
         Returns:
             Data: Initialized data object.
@@ -233,6 +234,7 @@ class NovaIterator:
                     scheme=data_desc["scheme"],
                     annotator=data_desc["annotator"],
                     role=data_desc["role"],
+                    header_only=header_only
                 )
             elif type_ == "stream":
                 return self._db_stream_handler.load(
@@ -240,7 +242,9 @@ class NovaIterator:
                     session=session,
                     name=data_desc["name"],
                     role=data_desc["role"],
+                    header_only=header_only
                 )
+
             else:
                 raise ValueError(f"Unknown data type {type_} for data.")
         elif src == "file":
@@ -295,6 +299,7 @@ class NovaIterator:
 
         """Opens all annotations and data readers"""
         data = {}
+        extra_data = {}
 
         # setting session data
         for data_desc in self.data:
@@ -304,7 +309,15 @@ class NovaIterator:
                 )
                 data_id = self._data_description_to_string(data_desc)
                 data[data_id] = data_initialized
+            else:
+                data_initialized = self._init_data_from_description(
+                    data_desc, self.dataset, session_name, header_only=True
+                )
+                data_id = self._data_description_to_string(data_desc)
+                extra_data[data_id] = data_initialized
+
         session.data = data
+        session.extra_data = extra_data
 
         # update session duration
         min_dur = session.duration if session.duration is not None else sys.maxsize

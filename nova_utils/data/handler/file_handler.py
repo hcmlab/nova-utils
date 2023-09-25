@@ -205,12 +205,14 @@ class _AnnotationFileHandler(IHandler):
 
         return fmt
 
-    def load(self, fp: Path) -> Annotation:
+    def load(self, fp: Path, header_only: bool = False) -> Annotation:
         """
         Load annotation data from an XML file.
 
         Args:
             fp (Path): The file path of the XML annotation file.
+            header_only (bool): If true only the stream header will be loaded.
+
 
         Returns:
             Annotation: The loaded annotation data as an Annotation object.
@@ -240,9 +242,11 @@ class _AnnotationFileHandler(IHandler):
             scheme_classes = {}
             for item in scheme:
                 scheme_classes[item.get("id")] = item.get("name")
-            anno_data = self._load_data_discrete(data_path, ftype)
 
-            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
+            anno_data = None
+            if not header_only:
+                anno_data = self._load_data_discrete(data_path, ftype)
+                anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
 
             anno_scheme = DiscreteAnnotationScheme(
                 name=scheme_name, classes=scheme_classes
@@ -259,8 +263,11 @@ class _AnnotationFileHandler(IHandler):
             sr = float(scheme.get("sr"))
             min_val = float(scheme.get("min"))
             max_val = float(scheme.get("max"))
-            anno_data = self._load_data_continuous(data_path, ftype)
-            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.CONTINUOUS)
+
+            anno_data = None
+            if not header_only:
+                anno_data = self._load_data_continuous(data_path, ftype)
+                anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.CONTINUOUS)
             anno_scheme = ContinuousAnnotationScheme(
                 name=scheme_name, sample_rate=sr, min_val=min_val, max_val=max_val
             )
@@ -273,8 +280,10 @@ class _AnnotationFileHandler(IHandler):
 
         # free scheme
         elif scheme_type == SchemeType.FREE.name:
-            anno_data = self._load_data_free(data_path, ftype, size)
-            anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
+            anno_data = None
+            if not header_only:
+                anno_data = self._load_data_free(data_path, ftype, size)
+                anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
             anno_scheme = FreeAnnotationScheme(name=scheme_name)
             annotation = FreeAnnotation(
                 scheme=anno_scheme,
@@ -522,12 +531,14 @@ class _SSIStreamFileHandler(IHandler):
         if ftype == SSIFileType.BINARY:
             data.data.tofile(data_path)
 
-    def load(self, fp, **kwargs) -> Data:
+    def load(self, fp, header_only: bool = False, **kwargs) -> Data:
         """
         Load SSIStream data from a file.
 
         Args:
             fp (Path): The file path of the SSIStream.
+            header_only (bool): If true only the stream header will be loaded.
+
             **kwargs: Arbitrary keyword arguments.
 
         Returns:
@@ -546,14 +557,16 @@ class _SSIStreamFileHandler(IHandler):
         name = header['name']
         ext = header['ext']
 
-        data = self._load_data(
-            fp=data_path,
-            size=num_samples,
-            dtype=dtype,
-            dim=sample_shape[0],
-            delim=delim,
-            ftype=SSIFileType[ftype],
-        )
+        data = None
+        if not header_only:
+            data = self._load_data(
+                fp=data_path,
+                size=num_samples,
+                dtype=dtype,
+                dim=sample_shape[0],
+                delim=delim,
+                ftype=SSIFileType[ftype],
+            )
 
         ssi_stream = SSIStream(
             data=data,
@@ -618,12 +631,14 @@ class _VideoFileHandler(IHandler):
         metadata = json.loads(result.stdout)
         return metadata
 
-    def load(self, fp: Path) -> Data:
+    def load(self, fp: Path, header_only: bool = False) -> Data:
         """
         Load video data from a file.
 
         Args:
             fp (Path): The file path of the video.
+            header_only (bool): If true only the stream header will be loaded.
+
 
         Returns:
             Data: The loaded video data.
@@ -644,11 +659,14 @@ class _VideoFileHandler(IHandler):
 
         # file loading
         video_reader = decord.VideoReader(str(fp.resolve()), ctx=cpu(0))
-        lazy_video_data = _LazyArray(
-            video_reader,
-            shape=(num_samples,) + sample_shape[1:],
-            dtype=dtype,
-        )
+
+        lazy_video_data = None
+        if not header_only:
+            lazy_video_data = _LazyArray(
+                video_reader,
+                shape=(num_samples,) + sample_shape[1:],
+                dtype=dtype,
+            )
 
         video_ = Video(
             data=lazy_video_data,
@@ -711,12 +729,14 @@ class _AudioFileHandler(IHandler):
         metadata = json.loads(result.stdout)
         return metadata
 
-    def load(self, fp: Path) -> Data:
+    def load(self, fp: Path, header_only: bool = False) -> Data:
         """
         Load audio data from a file.
 
         Args:
             fp (Path): The file path of the audio.
+            header_only (bool): If true only the stream header will be loaded.
+
 
         Returns:
             Data: The loaded audio data.
@@ -737,10 +757,12 @@ class _AudioFileHandler(IHandler):
         num_samples = _num_samples
 
         # file loading
-        audio_reader = decord.AudioReader(str(fp.resolve()), ctx=cpu(0))
-        lazy_audio_data = _LazyArray(
-            audio_reader, shape=audio_reader.shape, dtype=dtype
-        )
+        lazy_audio_data = None
+        if not header_only:
+            audio_reader = decord.AudioReader(str(fp.resolve()), ctx=cpu(0))
+            lazy_audio_data = _LazyArray(
+                audio_reader, shape=audio_reader.shape, dtype=dtype
+            )
 
         audio_ = Audio(
             data=lazy_audio_data,
@@ -810,12 +832,13 @@ class FileHandler(IHandler):
     def __init__(self, data_type: int = None):
         self.data_type = data_type
 
-    def load(self, fp: Path) -> Data:
+    def load(self, fp: Path, header_only: bool = False) -> Data:
         """
         Load data from a file.
 
         Args:
             fp (Path): The file path.
+            header_only (bool): If true only the stream header will be loaded.
 
         Returns:
             Data: The loaded data.
