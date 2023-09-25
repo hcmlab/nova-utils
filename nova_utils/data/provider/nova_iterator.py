@@ -248,6 +248,7 @@ class NovaIterator:
         else:
             raise ValueError(f"Unknown source type {src} for data.")
 
+
     def _data_description_to_string(self, data_desc: dict) -> str:
         """
         Convert data description to a string representation.
@@ -322,6 +323,7 @@ class NovaIterator:
             raise ValueError(f"Unable to determine duration for session {session.name}")
 
         return session
+
 
     def _yield_sample(self) -> dict[str, np.ndarray]:
         """
@@ -428,19 +430,25 @@ if __name__ == "__main__":
 
     annotation = {
         "src": "db:anno",
-        "scheme": "transcript",
-        "annotator": "whisperx",
-        "role": "testrole",
+        "scheme": "diarization",
+        "type": "input",
+        "id": "annotation",
+        "annotator": "schildom",
+        "role": "testrole2",
     }
 
     stream = {
         "src": "db:stream",
+        "type": "input",
+        "id": "featurestream",
         "role": "testrole",
         "name": "arousal.synchrony[testrole2]",
     }
 
     file = {
         "src": "file:stream",
+        "type": "input",
+        "id": "file",
         "fp": "/Users/dominikschiller/Work/github/nova-utils/test_files/new_test_video.mp4",
     }
 
@@ -452,9 +460,9 @@ if __name__ == "__main__":
         dataset,
         DATA_DIR,
         sessions=sessions,
-        data=[annotation, file],
-        frame_size="5s",
-        end="20s",
+        data=[annotation],
+        frame_size="25s",
+        end="100s",
     )
 
     a = next(nova_iterator)

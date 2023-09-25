@@ -7,9 +7,9 @@ import sys
 from abc import ABC, abstractmethod
 from numpy import dtype
 from nova_utils.data.data import DynamicData
-from nova_utils.utils.anno_utils import get_overlap, get_anno_majority, label_is_garbage
-import pandas as pd
+from nova_utils.utils.anno_utils import get_overlap, label_is_garbage
 from nova_utils.utils.type_definitions import LabelDType, SchemeType
+
 
 class AnnoMetaData:
     """
@@ -114,7 +114,7 @@ class ContinuousAnnotationScheme(IAnnotationScheme):
     """
 
     def __init__(
-        self, *args, sample_rate: float, min_val: float, max_val: float, **kwargs
+            self, *args, sample_rate: float, min_val: float, max_val: float, **kwargs
     ):
         """
         Initialize a ContinuousAnnotationScheme instance with the provided sampling rate and value range.
@@ -186,17 +186,17 @@ class Annotation(DynamicData):
     GARBAGE_LABEL_ID = np.NAN
 
     def __init__(
-        self,
-        scheme: IAnnotationScheme,
-        annotator: str = None,
-        duration: float = None,
-        **kwargs,
+            self,
+            scheme: IAnnotationScheme,
+            annotator: str = None,
+            duration: float = None,
+            **kwargs,
     ):
         """
         Initialize an Annotation instance with data, scheme, and annotator information.
         """
         super().__init__(**kwargs)
-        self._annotation_scheme = scheme
+        self.annotation_scheme = scheme
 
         # Create meta data
         anno_meta_data = AnnoMetaData(annotator=annotator, duration=duration)
@@ -240,7 +240,6 @@ class DiscreteAnnotation(Annotation):
         self._data_values = None
         self._data_interval = None
         self.data = data
-        self.rest_label_id = self.NOVA_GARBAGE_LABEL_ID
 
     @property
     def annotation_scheme(self) -> DiscreteAnnotationScheme:
@@ -253,6 +252,8 @@ class DiscreteAnnotation(Annotation):
         if not isinstance(value, DiscreteAnnotationScheme):
             raise TypeError(f"Expecting {DiscreteAnnotationScheme}, got {type(value)}.")
         self._annotation_scheme = value
+        # Rest class ID is last label ID + 1
+        self.rest_label_id = len(self._annotation_scheme.classes)
 
     @property
     def data(self) -> np.ndarray:
@@ -264,9 +265,13 @@ class DiscreteAnnotation(Annotation):
         assert value is None or value.dtype == self.annotation_scheme.label_dtype
         self._data = value
         if value is not None:
-            df_tmp = pd.DataFrame(value)
-            self._data_interval = df_tmp[["from", "to"]].values
-            self._data_values = df_tmp[["id", "conf"]].values
+            # Extract 'from' and 'to' columns and create a new array
+            self._data_interval = np.empty((len(value), 2), dtype='<i4')
+            self._data_interval[:, 0] = value['from']
+            self._data_interval[:, 1] = value['to']
+            # df_tmp = pd.DataFrame(value)
+            # self._data_interval = value[['from','to']]
+            # self._data_values = df_tmp[["id", "conf"]].values
 
     def sample_from_interval(self, start: int, end: int):
         """
@@ -281,15 +286,22 @@ class DiscreteAnnotation(Annotation):
         """
 
         overlap_idxs = get_overlap(self._data_interval, start, end)
+        dist = np.zeros((len(self.annotation_scheme.classes) + 1), )
 
-        if not overlap_idxs.any():
-            return self.rest_label_id
+        # For each sample point where we have an overlap with the label
+        for annotation in self.data[overlap_idxs]:
+            dur = np.minimum(end, annotation['to']) - np.maximum(start, annotation['from'])
 
-        majority_idx = get_anno_majority(self._data_interval, overlap_idxs, start, end)
-        label = self._data_values[majority_idx, 0]
-        if label_is_garbage(label, self.NOVA_GARBAGE_LABEL_ID):
-            return self.GARBAGE_LABEL_ID
-        return label
+            # If one label is garbage return garbage
+            if int(annotation['id']) is self.NOVA_GARBAGE_LABEL_ID:
+                return self.GARBAGE_LABEL_ID
+
+            dist[annotation['id']] += dur
+
+        # Rest class takes the rest amount of time
+        dist[-1] = end - start - sum(dist)
+
+        return dist / sum(dist)
 
 
 class FreeAnnotation(Annotation):
@@ -315,7 +327,6 @@ class FreeAnnotation(Annotation):
         self._data_interval = None
         self.data = data
 
-
     @property
     def annotation_scheme(self) -> FreeAnnotationScheme:
         """Get the free annotation scheme used for the data."""
@@ -338,9 +349,16 @@ class FreeAnnotation(Annotation):
         assert value is None or value.dtype == self.annotation_scheme.label_dtype
         self._data = value
         if value is not None:
-            df_tmp = pd.DataFrame(value)
-            self._data_interval = df_tmp[["from", "to"]].values
-            self._data_values = df_tmp[["name", "conf"]].values
+            # Extract 'from' and 'to' columns and create a new array
+            self._data_interval = np.empty((len(value), 2), dtype='<i4')
+            self._data_interval[:, 0] = value['from']
+            self._data_interval[:, 1] = value['to']
+
+            # self._data_interval = value[['from', 'to']]
+            # self._data_values = value[['name', 'conf']]
+            # df_tmp = pd.DataFrame(value)
+            # self._data_interval = df_tmp[["from", "to"]].values
+            # self._data_values = df_tmp[["name", "conf"]].values
 
     def sample_from_interval(self, start: int, end: int):
         """
@@ -358,7 +376,8 @@ class FreeAnnotation(Annotation):
         if not annos_for_sample.any():
             return np.asarray([])
 
-        return self._data_values[annos_for_sample, 0]
+        return self.data[annos_for_sample]['name']
+    # return self._data_values[annos_for_sample, 0]
 
 
 class ContinuousAnnotation(Annotation):

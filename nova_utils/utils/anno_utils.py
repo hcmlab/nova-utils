@@ -40,6 +40,36 @@ def get_overlap(a: np.ndarray, start: int, end: int):
     return annos_for_sample
 
 
+def get_anno_majority_distribution(a: np.ndarray, overlap_idxs: np.ndarray, start: int, end: int, num_classes: int) -> np.ndarray:
+    """
+    Returns an array of the distribution of annotations within the current frame
+
+    Args:
+        a (np.ndarray): numpy array of shape (1,2), where each entry contains an interval [from, to]
+        overlap_idxs (np.ndarray): aray of boolean values where a is overlapping the interval [start, end] (as returned by get _get_overlap())
+        start (int): start of the interval to check
+        end (int): end of the interval to check
+        num_classes (int): total number of classes
+
+    Returns:
+        np.ndarray numpy array containing the data distribution of the classes within the given frame. each index in the array matches the respective class id.
+        np.NaN if a label is detected that ist negative or larger than num_classes
+    """
+    dist = np.zeros( (num_classes,) )
+
+    # for each sample point where we have an overlap with the label
+    for annotation in a[overlap_idxs]:
+        dur = np.minimum(end, annotation['to']) - np.maximum(start, annotation['from'])
+        if int(annotation['id']) not in range(num_classes):
+            return np.NaN
+
+        dist[annotation['id']] += dur
+
+    # Rest class takes the rest amount of time
+    dist[-1] = end-start-sum(dist)
+    assert sum(dist) == end-start
+    return dist / sum(dist)
+
 def get_anno_majority(a: np.ndarray, overlap_idxs: np.ndarray, start: int, end: int):
     """
     Returns the index of the annotation with the largest overlap with the current frame
@@ -83,7 +113,7 @@ def label_is_garbage(label_id, garbage_label_id):
     return False
 
 
-def data_contains_garbage(data: np.ndarray, garbage_label_id: object = np.NAN):
+def data_contains_garbage(data: Union[np.ndarray, int], garbage_label_id: object = np.NAN):
     """
     Check if a data array contains garbage values.
 
@@ -95,6 +125,9 @@ def data_contains_garbage(data: np.ndarray, garbage_label_id: object = np.NAN):
         bool: True if the data contains garbage values, False otherwise.
 
     """
+    if isinstance(data, int):
+        if data == garbage_label_id:
+            return True
     # if data array is numerical
     if np.issubdtype(data.dtype, np.number):
         if np.isnan(data).any():
