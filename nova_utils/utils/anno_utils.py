@@ -218,7 +218,7 @@ def _pack(data : np.ndarray[LabelDType.DISCRETE], max_time_gap=0):
 
     # Conditions to stop label aggregation
     label_changes = data['id'][:-1] != data['id'][1:]
-    larger_than_max_gap = data['to'][:-1] - data['from'][1:] > max_time_gap
+    larger_than_max_gap = data['from'][1:] - data['to'][:-1] > max_time_gap
     change = [a or b for a,b in zip(label_changes, larger_than_max_gap)]
 
     split_data = np.split(data, np.where(change)[0]+1)
@@ -289,6 +289,6 @@ def pack_remove(data : np.ndarray[LabelDType.DISCRETE], min_gap: int = 0, min_du
     data_copy = _remove(data_copy, min_dur)
 
     # Pack
-    data_copy = _remove(data_copy, min_gap)
+    data_copy = _pack(data_copy, min_gap)
 
     return data_copy
