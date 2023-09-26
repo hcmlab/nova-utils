@@ -132,7 +132,7 @@ def _main():
             print("Saving annotations to database...")
             for anno in annos:
                 try:
-                    annotation_handler.save(anno)
+                    annotation_handler.save(anno, overwrite=True)
                 except FileExistsError as e:
                     print(f"\tCould not save annotation: '{str(e)}' ")
                     caught_ex = True

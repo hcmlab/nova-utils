@@ -326,6 +326,12 @@ class AnnotationHandler(IHandler, MongoHandler):
             return {}
         return result[0]
 
+    def _load_scheme(self, dataset:str, scheme:str) -> dict:
+        result = self.client[dataset][SCHEME_COLLECTION].find_one({"name": scheme})
+        if not result:
+            return {}
+        return result
+
     def _update_annotation(
         self,
         dataset: str,
@@ -445,6 +451,7 @@ class AnnotationHandler(IHandler, MongoHandler):
 
         return success
 
+
     def load(
         self, dataset: str, scheme: str, session: str, annotator: str, role: str, header_only: bool = False
     ) -> Annotation:
@@ -468,19 +475,22 @@ class AnnotationHandler(IHandler, MongoHandler):
             TypeError: If the scheme type is unknown.
         """
         # load annotation from mongo db
-        anno_doc = self._load_annotation(dataset, session, annotator, role, scheme)
+        if header_only:
+            scheme_doc = self._load_scheme(dataset, scheme)
+        else:
+            anno_doc = self._load_annotation(dataset, session, annotator, role, scheme)
 
-        if not anno_doc:
-            raise FileNotFoundError(
-                f"Annotation not found dataset: {dataset} session: {session} annotator: {annotator} role: {role} scheme: {scheme}"
-            )
+            if not anno_doc:
+                raise FileNotFoundError(
+                    f"Annotation not found dataset: {dataset} session: {session} annotator: {annotator} role: {role} scheme: {scheme}"
+                )
 
-        (anno_data_doc,) = anno_doc["data"]
+            (anno_data_doc,) = anno_doc["data"]
 
-        # build annotation object
-        (scheme_doc,) = anno_doc["scheme"]
+            # build annotation object
+            (scheme_doc,) = anno_doc["scheme"]
+
         scheme_type = scheme_doc["type"]
-
         anno_data = None
         anno_duration = 0
 
@@ -569,16 +579,23 @@ class AnnotationHandler(IHandler, MongoHandler):
             raise TypeError(f"Unknown scheme type {scheme_type}")
 
         # setting meta data
-        handler_meta_data = MongoAnnotationMetaData(
-            ip=self._ip,
-            port=self._port,
-            user=self._user,
-            is_locked=anno_doc.get("isLocked"),
-            is_finished=anno_doc.get("isFinished"),
-            annotation_document_id=anno_doc.get("_id"),
-            data_document_id=anno_doc.get("data_id"),
-            last_update=anno_doc.get("date"),
-        )
+        if header_only:
+            handler_meta_data = MongoAnnotationMetaData(
+                ip=self._ip,
+                port=self._port,
+                user=self._user
+            )
+        else:
+            handler_meta_data = MongoAnnotationMetaData(
+                ip=self._ip,
+                port=self._port,
+                user=self._user,
+                is_locked=anno_doc.get("isLocked"),
+                is_finished=anno_doc.get("isFinished"),
+                annotation_document_id=anno_doc.get("_id"),
+                data_document_id=anno_doc.get("data_id"),
+                last_update=anno_doc.get("date"),
+            )
         annotation.meta_data.expand(handler_meta_data)
 
         return annotation
@@ -899,6 +916,7 @@ if __name__ == "__main__":
             annotator="schildom",
             session="04_Oesterreich_test",
             role="testrole2",
+            header_only=True
         )
         t_stop = perf_counter()
         print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
