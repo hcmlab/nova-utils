@@ -41,6 +41,7 @@ class StreamMetaData:
         num_samples: int = None,
         sample_rate: float = None,
         dtype: np.dtype = None,
+
     ):
         """
         Initialize a StreamMetaData instance with stream properties.
@@ -60,9 +61,12 @@ class SSIStreamMetaData:
 
     Attributes:
         chunks (np.ndarray): Chunks of the SSI stream with 'from', 'to', 'byte', and 'num' properties.
+        dimlabels (list[dict]): List of dictionaries mapping an integer id as key (stream index) to a descriptive string as value.
 
     Args:
         chunks (np.ndarray): Chunks of the SSI stream with 'from', 'to', 'byte', and 'num' properties.
+        dimlabels (list[dict]): List of dictionaries mapping an integer id as key (stream index) to a descriptive string as value.
+
     """
 
     CHUNK_DTYPE = np.dtype(
@@ -74,11 +78,12 @@ class SSIStreamMetaData:
         ]
     )
 
-    def __init__(self, chunks: np.ndarray):
+    def __init__(self, chunks: np.ndarray, dimlabels: list = None,):
         """
         Initialize an SSIStreamMetaData instance with chunks information.
         """
         self.chunks = chunks
+        self.dimlabels = dimlabels
 
 
 class Stream(DynamicData):

@@ -800,7 +800,7 @@ class StreamHandler(IHandler, MongoHandler):
         name: str = None,
         data_type: str = 'feature',
         file_ext: str = None,
-        dim_labels: [] = None,
+        dim_labels: list = None,
         is_valid: bool = True,
     ):
         """
@@ -828,9 +828,11 @@ class StreamHandler(IHandler, MongoHandler):
         role = role if not role is None else stream.meta_data.role
         name = name if not name is None else stream.meta_data.name
         file_ext = file_ext if not file_ext is None else stream.meta_data.ext
-
-        #dim_labels = dim_labels if not  dim_labels is None else stream.meta_data.dim_labels
-
+        if isinstance(Stream, SSIStream):
+            dim_labels = dim_labels if not dim_labels is None else stream.meta_data.dim_labels
+        else:
+            dim_labels = None
+            
         if not self.data_dir:
             raise FileNotFoundError("Data directory was not set. Can't access files")
 
