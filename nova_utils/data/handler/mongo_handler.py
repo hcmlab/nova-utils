@@ -477,6 +477,12 @@ class AnnotationHandler(IHandler, MongoHandler):
         # load annotation from mongo db
         if header_only:
             scheme_doc = self._load_scheme(dataset, scheme)
+
+            if not scheme_doc:
+                raise FileNotFoundError(
+                    f"Scheme not found dataset: {dataset} scheme: {scheme}"
+                )
+
         else:
             anno_doc = self._load_annotation(dataset, session, annotator, role, scheme)
 
@@ -773,7 +779,7 @@ class StreamHandler(IHandler, MongoHandler):
         """
         result = self._load_stream(dataset=dataset, stream_name=name)
         if not result:
-            raise ValueError(f"No stream {name} found for dataset {dataset}")
+            raise FileNotFoundError(f"No stream {name} found for dataset {dataset}")
         if not self.data_dir:
             raise FileNotFoundError("Data directory was not set. Can't access files")
 
