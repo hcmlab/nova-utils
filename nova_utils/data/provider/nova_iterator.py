@@ -237,13 +237,18 @@ class NovaIterator:
                     header_only=header_only
                 )
             elif type_ == "stream":
-                return self._db_stream_handler.load(
-                    dataset=dataset,
-                    session=session,
-                    name=data_desc["name"],
-                    role=data_desc["role"],
-                    header_only=header_only
-                )
+                try:
+                    return self._db_stream_handler.load(
+                        dataset=dataset,
+                        session=session,
+                        name=data_desc["name"],
+                        role=data_desc["role"],
+                        header_only=header_only
+                    )
+                except FileNotFoundError as e:
+                    # Only raise file not found error if stream is requested as input
+                    if not header_only:
+                        raise e
 
             else:
                 raise ValueError(f"Unknown data type {type_} for data.")
