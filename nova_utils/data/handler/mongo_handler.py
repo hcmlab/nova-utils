@@ -517,11 +517,9 @@ class AnnotationHandler(IHandler, MongoHandler):
 
             anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes)
             annotation = DiscreteAnnotation(
-                # role=role,
-                # annotator=annotator,
-                # annotation_scheme=anno_scheme,
-                # session=session,
-                # dataset=dataset,
+                role=role,
+                session=session,
+                dataset=dataset,
                 data=anno_data,
                 scheme=anno_scheme,
                 annotator=annotator,
@@ -546,6 +544,9 @@ class AnnotationHandler(IHandler, MongoHandler):
                 name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val
             )
             annotation = ContinuousAnnotation(
+                role=role,
+                session=session,
+                dataset=dataset,
                 data=anno_data,
                 scheme=anno_scheme,
                 annotator=annotator,
@@ -571,11 +572,9 @@ class AnnotationHandler(IHandler, MongoHandler):
 
             anno_scheme = FreeAnnotationScheme(name=scheme)
             annotation = FreeAnnotation(
-                # role=role,
-                # annotator=annotator,
-                # annotation_scheme=anno_scheme,
-                # session=session,
-                # dataset=dataset,
+                role=role,
+                session=session,
+                dataset=dataset,
                 data=anno_data,
                 scheme=anno_scheme,
                 annotator=annotator,
@@ -589,13 +588,15 @@ class AnnotationHandler(IHandler, MongoHandler):
             handler_meta_data = MongoAnnotationMetaData(
                 ip=self._ip,
                 port=self._port,
-                user=self._user
+                user=self._user,
+                dataset=dataset
             )
         else:
             handler_meta_data = MongoAnnotationMetaData(
                 ip=self._ip,
                 port=self._port,
                 user=self._user,
+                dataset=dataset,
                 is_locked=anno_doc.get("isLocked"),
                 is_finished=anno_doc.get("isFinished"),
                 annotation_document_id=anno_doc.get("_id"),
@@ -900,8 +901,8 @@ if __name__ == "__main__":
     from time import perf_counter
     from dotenv import load_dotenv
 
-    test_annotations = True
-    test_streams = False
+    test_annotations = False
+    test_streams = True
 
     load_dotenv("../../../.env")
     IP = os.getenv("NOVA_IP", "")
@@ -976,7 +977,7 @@ if __name__ == "__main__":
     if test_streams:
 
         smh = StreamHandler(
-            ip=IP, port=PORT, user=USER, password=PASSWORD, data_dir=Path(DATA_DIR)
+            db_host=IP, db_port=PORT, db_user=USER, db_password=PASSWORD, data_dir=Path(DATA_DIR)
         )
 
         # Stream
@@ -987,6 +988,7 @@ if __name__ == "__main__":
             session="04_Oesterreich_test",
             role="testrole",
             name="arousal.synchrony[testrole]",
+            header_only=True
         )
         t_stop = perf_counter()
         print(fs.format("Video", int((t_stop - t_start) * 1000)))

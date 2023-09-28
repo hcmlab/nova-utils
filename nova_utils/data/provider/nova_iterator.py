@@ -31,7 +31,7 @@ class NovaIterator:
 
     The NovaIterator takes all information about what data should be loaded and how it should be processed. The class itself then takes care of loading all data and provides an iterator to directly apply a sliding window to the requested data.
     Every time based argument can be passed either as string or a numerical value. If the time is passed as string, the string should end with either 's' to indicate the time is specified in seconds or 'ms' for milliseconds.
-    If the time is passed as a numerical value or as a string without indicating a specific unit it is assumed that an integer value represents milliseconds while a float represents seconds. All numbers will be represented as integer milliseconds internally.
+    If the time is passed as a numerical value or as a string without indicating a specific unit it is assumed texthat an integer value represents milliseconds while a float represents seconds. All numbers will be represented as integer milliseconds internally.
     The highest time resolution for processing is therefore 1ms.
 
     Args:
@@ -225,7 +225,7 @@ class NovaIterator:
         Returns:
             Data: Initialized data object.
         """
-        src, type_ = data_desc["src"].split(":")
+        src, type_, = data_desc["src"].split(":")
         if src == "db":
             if type_ == "anno":
                 return self._db_anno_handler.load(
@@ -249,6 +249,12 @@ class NovaIterator:
                     # Only raise file not found error if stream is requested as input
                     if not header_only:
                         raise e
+                    # Create empty stream file with params
+                    else:
+                        # Todo differentiate types
+                        empty_stream = Stream(None, -1, name=data_desc['name'], role=data_desc["role"], dataset=dataset, session=session)
+                        return empty_stream
+
 
             else:
                 raise ValueError(f"Unknown data type {type_} for data.")
@@ -303,7 +309,8 @@ class NovaIterator:
         session = self._db_session_handler.load(self.dataset, session_name)
 
         """Opens all annotations and data readers"""
-        data = {}
+        input_data = {}
+        output_data_templates = {}
         extra_data = {}
 
         # setting session data
@@ -313,20 +320,24 @@ class NovaIterator:
                     data_desc, self.dataset, session_name
                 )
                 data_id = self._data_description_to_string(data_desc)
-                data[data_id] = data_initialized
+                input_data[data_id] = data_initialized
             else:
                 data_initialized = self._init_data_from_description(
                     data_desc, self.dataset, session_name, header_only=True
                 )
                 data_id = self._data_description_to_string(data_desc)
-                extra_data[data_id] = data_initialized
+                if data_desc.get('type') == 'output':
+                    output_data_templates[data_id] = data_initialized
+                else:
+                    extra_data[data_id] = data_initialized
 
-        session.data = data
+        session.data = input_data
         session.extra_data = extra_data
+        session.output_data_templates = output_data_templates
 
         # update session duration
         min_dur = session.duration if session.duration is not None else sys.maxsize
-        for data_initialized in data.values():
+        for data_initialized in input_data.values():
             if isinstance(data_initialized, Stream):
                 meta_data: StreamMetaData = data_initialized.meta_data
                 if meta_data.duration is not None:
