@@ -263,7 +263,9 @@ class DiscreteAnnotation(Annotation):
         return self._data
 
     @data.setter
-    def data(self, value: np.ndarray):
+    def data(self, value):
+        if value is not None and not isinstance(value, np.ndarray):
+            value = np.asarray(value, dtype=self.annotation_scheme.label_dtype)
         assert value is None or value.dtype == self.annotation_scheme.label_dtype
         self._data = value
         if value is not None:
@@ -353,6 +355,8 @@ class FreeAnnotation(Annotation):
 
     @data.setter
     def data(self, value):
+        if value is not None and not isinstance(value, np.ndarray):
+            value = np.asarray(value, dtype=self.annotation_scheme.label_dtype)
         assert value is None or value.dtype == self.annotation_scheme.label_dtype
         self._data = value
         if value is not None:
@@ -434,7 +438,9 @@ class ContinuousAnnotation(Annotation):
         return self._data
 
     @data.setter
-    def data(self, value: np.ndarray):
+    def data(self, value):
+        if value is not None and not isinstance(value, np.ndarray):
+            value = np.asarray(value, dtype=self.annotation_scheme.label_dtype)
         assert value is None or value.dtype == self.annotation_scheme.label_dtype
         self._data = value
 
