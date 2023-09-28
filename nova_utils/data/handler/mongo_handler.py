@@ -668,7 +668,7 @@ class AnnotationHandler(IHandler, MongoHandler):
         if anno_doc:
             if anno_doc["isLocked"]:
                 raise FileExistsError(
-                    f"Can't overwrite locked annotation dataset: {dataset} session: {session} annotator: {annotator} role: {role} scheme: {scheme}"
+                    f"Can't overwrite locked annotation dataset: {dataset} session: {session} annotator: {annotator} role: {role} scheme: {scheme}. Because annotation is locked."
                 )
             elif not overwrite:
                 raise FileExistsError(
@@ -856,7 +856,7 @@ class StreamHandler(IHandler, MongoHandler):
             dim_labels = dim_labels if not dim_labels is None else stream.meta_data.dim_labels
         else:
             dim_labels = None
-            
+
         if not self.data_dir:
             raise FileNotFoundError("Data directory was not set. Can't access files")
 
