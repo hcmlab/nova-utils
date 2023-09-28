@@ -331,7 +331,7 @@ class NovaIterator:
                 else:
                     extra_data[data_id] = data_initialized
 
-        session.data = input_data
+        session.input_data = input_data
         session.extra_data = extra_data
         session.output_data_templates = output_data_templates
 

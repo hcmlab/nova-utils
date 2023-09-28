@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from nova_utils.data.annotation import Annotation
+from nova_utils.data.stream import Stream
+
 from nova_utils.utils.ssi_xml_utils import ModelIO
 from nova_utils.utils.string_utils import parse_nova_option_string
 
@@ -124,7 +126,7 @@ class Extractor(Processor):
         return False
 
     @abstractmethod
-    def to_stream(self, data: object) -> dict:
+    def to_stream(self, data: object) -> list[Stream]:
         """Converts the return value from process_data() to data stream chunk that can be processed by nova-server.
 
         Args:
@@ -132,16 +134,7 @@ class Extractor(Processor):
 
 
         Returns:
-            dict: A dictionary mapping a stream identifier (usually composed using the role, signal, extracted feature name and sliding window parameters) to a tuple containing a chunk of the data as well as additional information.
-        Each tuple has the form ( type (nova_types.DataTypes), sample_rate (double), data_chunk (numpy.ndarray) ). The shape of the data chunk should in the form of (n_frames, n_features)
-        An arbitrary number of streams maybe returned.
+            list: A list of stream objects.
 
-        Example:
-            ::
-
-                {
-                    'speaker_1.audio.mfcc[10ms,10ms,10ms]' : ( nova_utils.db_utils.nova_types.DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] ),
-                    'speaker_2.audio.mfcc[10ms,10ms,10ms]' : ( nova_utils.db_utils.nova_types.DataTypes.AUDIO, 100, [[0.0, 0.0, ... 0.0], [0.0, 0.0, ... 0.0] ... [0.0, 0.0, ... 0.0]] )
-                }
         """
         raise NotImplemented
