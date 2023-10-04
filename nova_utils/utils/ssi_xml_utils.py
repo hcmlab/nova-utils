@@ -8,7 +8,7 @@ Date:
 """
 import xml.etree.ElementTree as ET
 from pathlib import Path
-
+from nova_utils.utils.string_utils import string_to_bool
 
 class ModelIO:
     """
@@ -61,6 +61,40 @@ class ModelIO:
         self.io_data = io_data
         self.io_default_value = io_default_value
 
+class URI:
+    """
+ URI objects are describing additional resources that are required by a module.
+
+Attributes:
+    uri_id (str): Defines if the object describes an input or an output. Can be either "input" or "output"
+    uri_url (str): String for the model to identify the input
+    uri_hash(str): Md5 hash to verify data integrity
+    uri_tar(bool): If the uri describes a tarball
+
+Args:
+    uri_id (str): Defines if the object describes an input or an output. Can be either "input" or "output"
+    uri_url (str, optional): String for the model to identify the input
+    uri_hash(str, optional): Md5 hash to verify data integrity
+    uri_tar(bool, optional): If the uri describes a tarball
+"""
+
+    def __init__(
+            self,
+            uri_id: str,
+            uri_url: str = None,
+            uri_hash: str = None,
+            uri_tar: bool = False,
+    ):
+
+        """
+        Initialize a ModelIO object with the specified parameters.
+
+        """
+        self.uri_id = uri_id
+        self.uri_url = uri_url
+        self.uri_hash = uri_hash
+        self.uri_tar = uri_tar
+
 class Trainer:
     """
     Class for representing and working with Trainer configuration.
@@ -87,7 +121,8 @@ class Trainer:
         meta_backend (str): Backend type for the Trainer.
         meta_category (str): Category of the trainer. Default is "".
         meta_description (str): Description of the trainer. Default is "".
-        meta_io(list[ModelIO], optional): Description of the inputs and outputs of the model.
+        meta_io(list[ModelIO]): Description of the inputs and outputs of the model.
+        meta_uri(list[URI]): Description of additional resources required by the model.
         ssi_v (str): SSI version.
         xml_version (str): XML version.
 
@@ -112,6 +147,7 @@ class Trainer:
         meta_category (str, optional): Category of the trainer. Default is "".
         meta_description (str, optional): Description of the trainer. Default is "".
         meta_io(list[ModelIO], optional): Description of the inputs and outputs of the model. Defaults to None.
+        meta_uri(list[URI], optional): Description of additional resources required by the model.
         ssi_v (str, optional): SSI version. Default is "5".
         xml_version (str, optional): XML version. Default is "1.0".
 
@@ -139,6 +175,7 @@ class Trainer:
         meta_description: str = "",
         meta_category: str = "",
         meta_io: list[ModelIO] = None,
+        meta_uri: list[URI] = None,
         ssi_v="5",
         xml_version="1.0",
     ):
@@ -167,6 +204,7 @@ class Trainer:
         self.meta_description = meta_description
         self.meta_category = meta_category
         self.meta_io = meta_io if meta_io is not None else []
+        self.meta_uri = meta_uri if meta_uri is not None else []
         self.ssi_v = ssi_v
         self.xml_version = xml_version
         self.model_multi_role_input = model_multirole_input
@@ -189,7 +227,7 @@ class Trainer:
         model = root.find("model")
 
         if info is not None:
-            self.info_trained = info.get("trained")
+            self.info_trained = string_to_bool(info.get("trained", ""))
         if meta is not None:
             self.meta_left_ctx = meta.get("leftContext", default="0")
             self.meta_right_ctx = meta.get("rightContext", default="0")
@@ -202,6 +240,11 @@ class Trainer:
             for io_tag in meta.findall("io"):
                 self.meta_io.append(
                     ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"), io_tag.get("default_value"))
+                )
+
+            for uri_tag in meta.findall("uri"):
+                self.meta_uri.append(
+                    URI( uri_tag.get("id"), uri_tag.get("url"), uri_tag.get("hash"), string_to_bool(uri_tag.get("tar", "")))
                 )
         if register is not None:
             for r in register:
@@ -216,15 +259,14 @@ class Trainer:
             for u in users:
                 self.users.append(u.attrib)
         if model is not None:
-            self.model_stream = model.get("stream", default="0")
-            self.model_create = model.get("create", default="PythonModel")
-            self.model_option_path = model.get("option", default="")
-            self.model_script_path = model.get("script", default="")
-            self.model_weights_path = model.get("path", default="")
-            self.model_optstr = model.get("optstr", default="")
-            self.model_multi_role_input = bool(
-                model.get("multi_role_input", default=False)
-            )
+            self.model_stream = model.get("stream", "0")
+            self.model_create = model.get("create", "PythonModel")
+            self.model_option_path = model.get("option", "")
+            self.model_script_path = model.get("script", "")
+            self.model_weights_path = model.get("path", "")
+            self.model_optstr = model.get("optstr", "")
+            self.model_multi_role_input = string_to_bool( model.get("multi_role_input", "") )
+
 
     def write_to_file(self, fp):
         """
@@ -258,6 +300,18 @@ class Trainer:
                 data=io.io_data,
                 default_value=io.io_default_value
             )
+
+        uri: URI
+        for uri in self.meta_uri:
+            ET.SubElement(
+                meta,
+                "uri",
+                id=uri.uri_id,
+                url=uri.uri_url,
+                hash=uri.uri_hash,
+                tar=str(uri.uri_tar)
+            )
+
 
         register = ET.SubElement(root, "register")
         for r in self.register:
@@ -418,7 +472,7 @@ class Chain:
             self.meta_category = meta.attrib.get("category", "")
             for io_tag in meta.findall("io"):
                 self.meta_io.append(
-                    ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"))
+                    ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"), io_tag.get("default_value"))
                 )
 
         if register is not None:

@@ -227,42 +227,6 @@ def _pack(data : np.ndarray[LabelDType.DISCRETE], max_time_gap=0):
     agg_data = np.asarray([ (x[0]['from'], x[-1]['to'], x[-1]['id'], np.mean(x['conf']) ) for x in split_data], dtype=data.dtype)
     return agg_data
 
-    '''
-    tmp = []
-    labels = []
-
-    # split data on all indices where the nex label is different then the current one
-    data_split = np.split(data, np.where(data['id'][:-1] != data['id'][1:])[0]+1)
-
-    for i, current_label in enumerate(data, 1):
-        last_label = data[i - 1]
-
-        # first run
-        if i == 1:
-            tmp.append(last_label)
-
-        if (
-                current_label[2] == last_label[2]
-                and current_label[0] - last_label[1] <= max_time_gap
-        ):
-            tmp.append(current_label)
-        else:
-            labels.append(
-                (
-                    tmp[0][0],
-                    tmp[-1][1],
-                    tmp[-1][2],
-                    sum([x[3] for x in tmp]) / len(tmp),
-                )
-            )
-            tmp.clear()
-            tmp.append(current_label)
-
-    labels.append(
-        (tmp[0][0], tmp[-1][1], tmp[-1][2], sum([x[3] for x in tmp]) / len(tmp))
-    )
-    
-    return labels'''
 
 def _remove(data: np.ndarray[LabelDType.DISCRETE], min_dur: int = 0):
     return np.delete(data, np.where(data['to'] - data['from'] < min_dur)[0])

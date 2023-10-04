@@ -8,7 +8,7 @@ Date:
 """
 
 import json
-from nova_utils.utils.ssi_xml_utils import Chain, ChainLink, Trainer, ModelIO
+from nova_utils.utils.ssi_xml_utils import Chain, ChainLink, Trainer, ModelIO, URI
 
 
 class ModelIOEncoder(json.JSONEncoder):
@@ -45,6 +45,43 @@ class ModelIODecoder(json.JSONDecoder):
             return ModelIO(json_obj["type"], json_obj["id"], json_obj["data"], json_obj["default_value"])
         else:
             raise ValueError("Invalid JSON format for ModelIO decoding.")
+
+
+class URIEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for ModelIO objects.
+
+    This encoder is used to serialize ModelIO objects to JSON format.
+
+    Attributes:
+        None
+
+    """
+
+    def default(self, obj):
+        """
+        Encodes a ModelIO object to JSON.
+
+        Args:
+            obj (ModelIO): The ModelIO object to encode.
+
+        Returns:
+            dict: A dictionary representation of the ModelIO object.
+
+        """
+        if isinstance(obj, URI):
+            return {"id": obj.uri_id, "url": obj.uri_url, "hash": obj.uri_hash, "tar": obj.uri_tar}
+        return super().default(obj)
+
+class URIDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+    def object_hook(self, json_obj):
+        if json_obj.get("id") and json_obj.get("url") and json_obj.get("hash"):
+            return ModelIO(json_obj["id"], json_obj["url"], json_obj["hash"], json_obj["tar"])
+        else:
+            raise ValueError("Invalid JSON format for ModelIO decoding.")
+
 
 
 class ChainLinkEncoder(json.JSONEncoder):
@@ -159,6 +196,7 @@ class TrainerEncoder(json.JSONEncoder):
                 "meta_balance": obj.meta_balance,
                 "meta_backend": obj.meta_backend,
                 "meta_io": json.dumps(obj.meta_io, cls=ModelIOEncoder),
+                "meta_uri": json.dumps(obj.meta_uri, cls=URIEncoder),
                 "meta_description": obj.meta_description,
                 "meta_category": obj.meta_category,
                 "ssi_v": obj.ssi_v,

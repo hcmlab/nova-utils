@@ -95,6 +95,20 @@ def string_to_enum(enum: Enum, string: str):
             return e
     raise ValueError('{} not part of enumeration  {}'.format(string, enum))
 
+def string_to_bool(string:str) -> bool:
+    '''
+    Parses a given input string to a boolean value
+    Args:
+        string (str): Input string
+
+    Returns:
+        bool: The boolean value of the string
+    '''
+    if string in ['True', 'true', '1']:
+        return True
+    else:
+        return False
+
 def parse_nova_option_string(option_string: str) -> dict:
     """
     Converts a server-module option string to dictionary.
