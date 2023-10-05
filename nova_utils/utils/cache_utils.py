@@ -175,9 +175,9 @@ def get_file(
     """Downloads a file from a URL if it not already in the cache.
 
     By default, the file at the url `origin` is downloaded to the
-    cache_dir '~/.hcai_downlaods', placed in the cache_subdir `downloads`,
+    cache_dir '~/.hcai_downloads', placed in the cache_subdir `downloads`,
     and given the filename `fname`. The final location of a file
-    `example.txt` would therefore be `~/.hcai_downlaods/downloads/example.txt`.
+    `example.txt` would therefore be `~/.hcai_downloads/downloads/example.txt`.
 
     Files in tar, tar.gz, tar.bz, and zip formats can also be extracted.
     Passing a hash will verify the file after download. The command line
@@ -221,9 +221,13 @@ def get_file(
     """
     if cache_dir is None:
         cache_dir = Path.home() / ".nova_utils"
+    else:
+        cache_dir = Path(cache_dir)
 
     if tmp_dir is None:
-        tmp_dir = cache_dir
+        tmp_dir = Path(cache_dir)
+    else:
+        tmp_dir = Path(tmp_dir)
 
     if md5_hash is not None and file_hash is None:
         file_hash = md5_hash

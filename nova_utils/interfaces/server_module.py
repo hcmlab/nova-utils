@@ -4,8 +4,7 @@ import numpy as np
 
 from nova_utils.data.annotation import Annotation
 from nova_utils.data.stream import Stream
-
-from nova_utils.utils.ssi_xml_utils import ModelIO
+from nova_utils.utils.ssi_xml_utils import ModelIO, Trainer
 from nova_utils.utils.string_utils import parse_nova_option_string
 
 
@@ -24,12 +23,13 @@ class Processor(ABC):
     UNKNOWN_ID = '<unk>_'
 
     # TODO read trainer or chain file for default options
-    def __init__(self, model_io: list[ModelIO], opts: dict):
+    def __init__(self, model_io: list[ModelIO], opts: dict, trainer: Trainer = None):
         self.model = None
         self.data = None
         self.output = None
         self.options = opts
         self.model_io = model_io
+        self.trainer = trainer
 
     def preprocess_sample(self, sample: dict):
         """Preprocess data to convert between nova-server dataset iterator item to the raw model input as required in process_sample.

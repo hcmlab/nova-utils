@@ -20,6 +20,7 @@ Example:
 """
 
 import argparse
+import os
 from typing import Union, Type
 from pathlib import Path, PureWindowsPath
 from nova_utils.utils import ssi_xml_utils, string_utils
@@ -55,6 +56,10 @@ def _main():
     iter_args, _ = nova_iterator_parser.parse_known_args()
     module_args, _ = nova_server_module_parser.parse_known_args()
 
+    # Set environment variables
+    os.environ['CACHE_DIR'] = module_args.cache_dir
+    os.environ['TMP_DIR'] = module_args.tmp_dir
+
     caught_ex = False
 
     # Load trainer
@@ -83,7 +88,7 @@ def _main():
     processor_class: Union[Type[Predictor], Type[Extractor]] = getattr(
         source, trainer.model_create
     )
-    processor = processor_class(model_io=trainer.meta_io, opts=opts)
+    processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
     print(f"Model {trainer.model_create} created")
 
     # Build data loaders
