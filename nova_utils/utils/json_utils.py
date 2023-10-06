@@ -198,6 +198,7 @@ class TrainerEncoder(json.JSONEncoder):
                 "meta_io": json.dumps(obj.meta_io, cls=ModelIOEncoder),
                 "meta_uri": json.dumps(obj.meta_uri, cls=URIEncoder),
                 "meta_description": obj.meta_description,
+                "meta_is_iterable": obj.meta_is_iterable,
                 "meta_category": obj.meta_category,
                 "ssi_v": obj.ssi_v,
                 "xml_version": obj.xml_version,

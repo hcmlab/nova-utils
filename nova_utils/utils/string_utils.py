@@ -122,7 +122,7 @@ def parse_nova_option_string(option_string: str) -> dict:
         Enum: The enum value corresponding to the input string.
     """
     options = {}
-
+    print('Parsing options')
     if option_string:
         opts = option_string.split(';')
         for option in opts:
@@ -133,6 +133,6 @@ def parse_nova_option_string(option_string: str) -> dict:
                 options[k] = None
             else:
                 options[k] = v
-            print(k + "=" + v)
-
+            print('\t' + k + "=" + v)
+    print('...done')
     return options

@@ -118,6 +118,7 @@ class Trainer:
         meta_right_ctx (int): Right context size for the Trainer.
         meta_left_ctx (int): Left context size for the Trainer.
         meta_balance (str): Balance type for the Trainer.
+        meta_is_iterable (str): Bool that indicates if the module supports data processing via nova-server iterator.
         meta_backend (str): Backend type for the Trainer.
         meta_category (str): Category of the trainer. Default is "".
         meta_description (str): Description of the trainer. Default is "".
@@ -143,6 +144,7 @@ class Trainer:
         meta_right_ctx (int, optional): Right context value for metadata. Default is 0.
         meta_left_ctx (int, optional): Left context value for metadata. Default is 0.
         meta_balance (str, optional): Balance type for metadata. Default is "none".
+        meta_is_iterable (str, optional): Bool that indicates if the module supports data processing via nova-server iterator.
         meta_backend (str, optional): Backend type for metadata. Default is "nova-server".
         meta_category (str, optional): Category of the trainer. Default is "".
         meta_description (str, optional): Description of the trainer. Default is "".
@@ -174,6 +176,7 @@ class Trainer:
         meta_backend: str = "nova-server",
         meta_description: str = "",
         meta_category: str = "",
+        meta_is_iterable: bool = True,
         meta_io: list[ModelIO] = None,
         meta_uri: list[URI] = None,
         ssi_v="5",
@@ -203,6 +206,7 @@ class Trainer:
         self.meta_backend = meta_backend
         self.meta_description = meta_description
         self.meta_category = meta_category
+        self.meta_is_iterable = meta_is_iterable
         self.meta_io = meta_io if meta_io is not None else []
         self.meta_uri = meta_uri if meta_uri is not None else []
         self.ssi_v = ssi_v
@@ -236,6 +240,7 @@ class Trainer:
             self.meta_backend = meta.get("backend", default="Python")
             self.meta_description = meta.get("description", default="")
             self.meta_category = meta.get("category", default="")
+            self.meta_is_iterable = meta.get("is_iterable", default='True')
 
             for io_tag in meta.findall("io"):
                 self.meta_io.append(
@@ -287,7 +292,8 @@ class Trainer:
             balance=self.meta_balance,
             backend=self.meta_backend,
             category=self.meta_category,
-            description=self.meta_description
+            description=self.meta_description,
+            meta_is_iterable = str(self.meta_is_iterable)
         )
 
         io: ModelIO

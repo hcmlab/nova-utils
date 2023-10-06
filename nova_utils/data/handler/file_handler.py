@@ -13,6 +13,7 @@ import csv
 import decord
 import subprocess
 import json
+import math
 from typing import Union
 from decord import cpu
 from struct import *
@@ -588,7 +589,7 @@ class _LazyArray(np.ndarray):
     """LazyArray class extending numpy.ndarray for video and audio loading."""
 
     def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
-        buffer = mmap.mmap(-1, dtype.itemsize * np.prod(shape), access=mmap.ACCESS_READ)
+        buffer = mmap.mmap(-1, dtype.itemsize * math.prod(shape), access=mmap.ACCESS_READ)
         obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
 
         obj.decord_reader = decord_reader
