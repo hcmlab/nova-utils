@@ -129,10 +129,17 @@ def parse_nova_option_string(option_string: str) -> dict:
             k,v = option.split('=')
             if v in ("True", "False"):
                 options[k] = True if v == "True" else False
+
             elif v == "None":
                 options[k] = None
             else:
-                options[k] = v
+                try:
+                    options[k] = int(v)
+                except:
+                    try:
+                        options[k] = float(v)
+                    except:
+                         options[k] = v
             print('\t' + k + "=" + v)
     print('...done')
     return options

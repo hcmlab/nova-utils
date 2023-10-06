@@ -13,22 +13,15 @@ from urllib import request, error
 from zipfile import ZipFile
 import requests
 import shutil
-from tqdm.auto import tqdm
 from pathlib import Path
 
 def retreive_from_url(url, fp):
 
     with requests.get(url, stream=True, headers={'Accept-Encoding': None}) as r:
 
-        # check header to get content length, in bytes
-        total_length = int(r.headers.get("Content-Length"),0)
-
-        # implement progress bar via tqdm
-        with tqdm.wrapattr(r.raw, "read", total=total_length, desc="")as raw:
-
-            # save the output to a file
-            with open(fp, 'wb')as output:
-                shutil.copyfileobj(raw, output)
+        # save the output to a file
+        with open(fp, 'wb')as output:
+            shutil.copyfileobj(r.raw, output)
 
 def _resolve_hasher(algorithm, file_hash=None):
     """Returns hash algorithm as hashlib function."""
