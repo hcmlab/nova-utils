@@ -644,15 +644,18 @@ class AnnotationHandler(IHandler, MongoHandler):
         role = role if not role is None else annotation.meta_data.role
         scheme = annotation.annotation_scheme.name
 
-        anno_data = convert_label_to_ssi_dtype(
-            annotation.data, annotation.annotation_scheme.scheme_type
-        )
+        if isinstance(annotation.data, np.ndarray) and not annotation.data.size == 0:
+            anno_data = convert_label_to_ssi_dtype(
+                annotation.data, annotation.annotation_scheme.scheme_type
+            )
 
-        # TODO check for none values
-        anno_data = [
-            dict(zip(annotation.annotation_scheme.label_dtype.names, ad.item()))
-            for ad in anno_data
-        ]
+            # TODO check for none values
+            anno_data = [
+                dict(zip(annotation.annotation_scheme.label_dtype.names, ad.item()))
+                for ad in anno_data
+            ]
+        else:
+            anno_data = []
 
         # load annotation to check if an annotation for the provided criteria already exists in the database
         anno_doc = self._load_annotation(
@@ -857,6 +860,8 @@ class StreamHandler(IHandler, MongoHandler):
         role = role if not role is None else stream.meta_data.role
         name = name if not name is None else stream.meta_data.name
         file_ext = file_ext if not file_ext is None else stream.meta_data.ext
+        data_type = data_type if not data_type is None else stream.meta_data.data_type
+
         if isinstance(stream, SSIStream):
             dim_labels = dim_labels if not dim_labels is None else stream.meta_data.dim_labels
         else:

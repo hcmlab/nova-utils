@@ -244,6 +244,9 @@ def pack_remove(data : np.ndarray[LabelDType.DISCRETE], min_gap: int = 0, min_du
 
     '''
 
+    if data.size == 0:
+        return data
+
     data_copy = data.copy()
 
     # Pack
