@@ -252,7 +252,7 @@ def get_file(
     download = False
     if fpath.exists():
         # File found; verify integrity if a hash was provided.
-        if file_hash is not None:
+        if file_hash:
             if not validate_file(fpath, file_hash, algorithm=hash_algorithm):
                 print(
                     "A local file was found, but it seems to be "
