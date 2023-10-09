@@ -407,7 +407,7 @@ class NovaIterator:
                 # Load data for frame
                 data_for_window = {
                     k: v.sample_from_interval(window_start, window_end)
-                    for k, v in self.current_session.data.items()
+                    for k, v in self.current_session.input_data.items()
                 }
 
                 # Performing sanity checks
