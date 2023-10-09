@@ -79,12 +79,12 @@ class SSIStreamMetaData:
         ]
     )
 
-    def __init__(self, chunks: np.ndarray, dimlabels: list = None,):
+    def __init__(self, chunks: np.ndarray, dim_labels: list = None):
         """
         Initialize an SSIStreamMetaData instance with chunks information.
         """
         self.chunks = chunks
-        self.dimlabels = dimlabels
+        self.dim_labels = dim_labels
 
 
 class Stream(DynamicData):
@@ -186,7 +186,7 @@ class SSIStream(Stream):
         ]
     )
 
-    def __init__(self, data: np.ndarray, sample_rate: float, chunks: np.ndarray = None, **kwargs):
+    def __init__(self, data: np.ndarray, sample_rate: float, chunks: np.ndarray = None, dim_labels: list = None, **kwargs):
         """
         Initialize an SSIStream instance with SSI stream data and metadata.
         """
@@ -196,7 +196,7 @@ class SSIStream(Stream):
         if data is not None and chunks is None:
             num_samples = data.shape[0]
             chunks = np.asarray([(0, num_samples / sample_rate, 0, num_samples)], dtype=self.CHUNK_DTYPE)
-        ssistream_meta = SSIStreamMetaData(chunks=chunks)
+        ssistream_meta = SSIStreamMetaData(chunks=chunks, dim_labels=dim_labels)
         self.meta_data.expand(ssistream_meta)
 
 

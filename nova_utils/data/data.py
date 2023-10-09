@@ -71,6 +71,7 @@ class Data:
         dataset: str = None,
         role: str = None,
         session: str = None,
+        **kwargs
     ):
         """
         Initialize a Data instance with data and metadata.

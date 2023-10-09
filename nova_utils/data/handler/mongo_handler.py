@@ -799,6 +799,10 @@ class StreamHandler(IHandler, MongoHandler):
         assert isinstance(data, Stream)
 
         # meta data
+        data.meta_data.role = role
+        data.meta_data.name = name
+        data.meta_data.session = session
+
         handler_meta_data = MongoStreamMetaData(
             ip=self._ip,
             port=self._port,
@@ -810,6 +814,7 @@ class StreamHandler(IHandler, MongoHandler):
             stream_document_id=result.get("_id"),
             sr=result.get("sr"),
             type=result.get("type"),
+            dataset=dataset
         )
         data.meta_data.expand(handler_meta_data)
 
@@ -838,7 +843,7 @@ class StreamHandler(IHandler, MongoHandler):
             name (str): Name of the stream. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.
             data_type (str): Media type of the stream data as specified in NOVA-DB.
             file_ext (str, optional): File extension. Defaults to None.
-            dim_labels (list, optional): Dimension labels. Defaults to None.
+            dim_labels (list[dict], optional): Dimension labels. Defaults to None.
             is_valid (bool, optional): Indicates if the stream data is valid. Defaults to True.
 
         Raises:
@@ -852,7 +857,7 @@ class StreamHandler(IHandler, MongoHandler):
         role = role if not role is None else stream.meta_data.role
         name = name if not name is None else stream.meta_data.name
         file_ext = file_ext if not file_ext is None else stream.meta_data.ext
-        if isinstance(Stream, SSIStream):
+        if isinstance(stream, SSIStream):
             dim_labels = dim_labels if not dim_labels is None else stream.meta_data.dim_labels
         else:
             dim_labels = None
