@@ -231,7 +231,7 @@ def _pack(data : np.ndarray[LabelDType.DISCRETE], max_time_gap=0):
 def _remove(data: np.ndarray[LabelDType.DISCRETE], min_dur: int = 0):
     return np.delete(data, np.where(data['to'] - data['from'] < min_dur)[0])
 
-def pack_remove(data : np.ndarray[LabelDType.DISCRETE], min_gap: int = 0, min_dur: int = 0):
+def pack_remove(data : np.ndarray[LabelDType.DISCRETE], min_gap: int = 0, min_dur: int = 0) -> np.ndarray:
     '''
     Aggregate consecutive annotations with the same label.
     Does only work with discrete label data.
@@ -244,18 +244,19 @@ def pack_remove(data : np.ndarray[LabelDType.DISCRETE], min_gap: int = 0, min_du
 
     '''
 
-    if data.size == 0:
-        return data
-
     data_copy = data.copy()
+    try:
+        # Pack
+        data_copy = _pack(data_copy, min_gap)
 
-    # Pack
-    data_copy = _pack(data_copy, min_gap)
+        # Remove
+        data_copy = _remove(data_copy, min_dur)
 
-    # Remove
-    data_copy = _remove(data_copy, min_dur)
+        # Pack
+        data_copy = _pack(data_copy, min_gap)
 
-    # Pack
-    data_copy = _pack(data_copy, min_gap)
+    except Exception as e:
+        print(f'Exception during data packing. Returning empty Annotation: {e}')
+        return np.array([])
 
     return data_copy
