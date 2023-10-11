@@ -235,6 +235,8 @@ def get_file(
     data_dir = cache_dir / cache_subdir
     data_dir.mkdir(parents=True, exist_ok=True)
 
+    #TODO if a zipfile is loaded we only compare the hash of the zip file. If the original zip file is deleted it
+    # will be downloaded again every time
 
     if untar:
         untar_fpath = data_dir / fname
@@ -280,7 +282,7 @@ def get_file(
     if untar:
         if not untar_fpath.exists():
             _extract_archive(fpath, untar_fpath, archive_format="tar")
-            fpath.unlink()
+            #fpath.unlink()
         return untar_fpath
 
     if extract:
