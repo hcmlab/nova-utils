@@ -13,7 +13,7 @@ import warnings
 
 from typing import Union
 from nova_utils.data.data import Data
-from nova_utils.data.stream import Stream, StreamMetaData
+from nova_utils.data.stream import Stream, StreamMetaData, Audio, Video, SSIStream, DynamicData
 from pathlib import Path
 from nova_utils.data.handler.mongo_handler import (
     AnnotationHandler,
@@ -369,7 +369,7 @@ class NovaIterator:
         """
 
         # Needed to sort the samples later and assure that the order is the same as in nova.
-        sample_counter = 1
+        #sample_counter = 1
 
         for session in self.sessions:
             # Init all data objects for the session and get necessary meta information
@@ -384,15 +384,17 @@ class NovaIterator:
                 _stride = self.stride
 
             # Starting position of the first frame in seconds
-            cpos = max(self.left_context, self.start)
+            #cpos = max(self.left_context, self.start)
+            cpos = 0
 
             # TODO account for stride and framesize being None
             # Generate samples for this session
-            while cpos + self.stride + self.right_context <= min(
+            while cpos + self.stride <= min(
                 self.end, self.current_session.duration
             ):
                 frame_start = cpos
                 frame_end = cpos + _frame_size
+
                 window_start = frame_start - self.left_context
                 window_end = frame_end + self.right_context
 
@@ -405,10 +407,44 @@ class NovaIterator:
                 )
 
                 # Load data for frame
-                data_for_window = {
-                    k: v.sample_from_interval(window_start, window_end)
-                    for k, v in self.current_session.input_data.items()
-                }
+                # data_for_window = {
+                #     k: v.sample_from_interval(window_start, window_end)
+                #     for k, v in self.current_session.input_data.items()
+                # }
+                data_for_window = {}
+                for k,v in self.current_session.input_data.items():
+
+                    # TODO current_session duration is not the correct way to end right padding. We could have longer streams
+                    start_ = max(0, window_start)
+                    end_ = min(self.current_session.duration, window_end)
+                    sample = v.sample_from_interval(start_, end_)
+
+                    # TODO pad continuous annotations
+                    # Apply padding
+                    if isinstance(v, Stream):
+
+                        # Don't pad anything but num_samples axis
+                        sr = v.meta_data.sample_rate / 1000
+                        left_pad = int((0-window_start) * sr) if window_start < 0 else 0
+                        right_pad = int((window_end - self.current_session.duration) * sr) if window_end > self.current_session.duration else 0
+
+                        if left_pad or right_pad:
+                            lr_pad =  ((left_pad, right_pad), )
+                            n_pad = tuple([(0,0)] * (len(sample.shape) -1 ))
+
+                            # Num samples last dim
+                            if isinstance(v, Audio):
+                                pad = n_pad + lr_pad
+                            # Num samples first dim
+                            else:
+                                pad = lr_pad + n_pad
+
+                            sample = np.pad(sample, pad_width=pad, mode='edge')
+                    data_for_window[k] = sample
+
+
+                # pad
+                #np.pad(data_for_window['audio'], pad_width=((0,0),(960,0)), mode='constant', constant_values=1)
 
                 # Performing sanity checks
                 garbage_detected = any(
@@ -417,7 +453,7 @@ class NovaIterator:
 
                 # Incrementing counter
                 cpos += _stride
-                sample_counter += 1
+                #sample_counter += 1
 
                 if garbage_detected:
                     continue
@@ -478,7 +514,7 @@ if __name__ == "__main__":
         "src": "file:stream",
         "type": "input",
         "id": "file",
-        "fp": "/Users/dominikschiller/Work/github/nova-utils/test_files/new_test_video.mp4",
+        "fp": "/Users/dominikschiller/Work/local_nova_dir/test_files/new_test_video_25.mp4",
     }
 
     nova_iterator = NovaIterator(
@@ -489,10 +525,15 @@ if __name__ == "__main__":
         dataset,
         DATA_DIR,
         sessions=sessions,
-        data=[annotation],
-        frame_size="25s",
+        data=[file],
+        frame_size="1s",
+        left_context="2s",
+        right_context="2s",
         end="100s",
     )
 
+
+    while next(nova_iterator):
+        continue
     a = next(nova_iterator)
     breakpoint()
