@@ -514,7 +514,7 @@ class _SSIStreamFileHandler(IHandler):
                 root,
                 "chunk",
                 attrib={
-                    "fromm": f"{chunk['from']:.3f}",
+                    "from": f"{chunk['from']:.3f}",
                     "to": f"{chunk['to']:.3f}",
                     "byte": str(chunk["byte"]),
                     "num": str(chunk["num"]),
