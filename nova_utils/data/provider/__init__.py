@@ -5,5 +5,5 @@ Author:
 Date:
     06th September 2023
 
-The nova-utils data handler package implements different data provideder to interact with multiple datastreams and annotations in a coherent way.
+The nova-utils data handler package implements different data provider to interact with multiple datastreams and annotations in a coherent way.
 """
