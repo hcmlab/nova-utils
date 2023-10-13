@@ -129,18 +129,17 @@ def data_contains_garbage(data: Union[np.ndarray, int], garbage_label_id: object
         if data == garbage_label_id:
             return True
     # if data array is numerical
-    if np.issubdtype(data.dtype, np.number):
-        if np.isnan(data).any():
-            return True
-        elif (data != data).any():
-            return True
-        elif garbage_label_id in data:
-            return True
-        else:
-            return False
+    if isinstance(data, float) or np.issubdtype(data.dtype, np.number):
+            if np.isnan(data).any():
+                return True
+            elif (data != data).any():
+                return True
+            elif garbage_label_id in data:
+                return True
+            else:
+                return False
     else:
         return any(np.vectorize(lambda x: isinstance(x, float) and np.isnan(x))(data))
-
 
 def convert_label_to_ssi_dtype(
     data: np.ndarray, annotation_scheme_type: SchemeType
