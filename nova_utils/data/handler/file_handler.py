@@ -845,7 +845,7 @@ class FileHandler(IHandler):
             Data: The loaded data.
         """
         handler = self._get_handler_for_file(fp)
-        data = handler.load(fp)
+        data = handler.load(fp, header_only)
         data.meta_data.expand(FileMetaData(fp))
         return data
 
