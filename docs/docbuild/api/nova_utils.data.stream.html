@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.data.stream module &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.data.stream module &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -117,7 +117,7 @@ Date: 18.8.2023</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.data.stream.SSIStream">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">SSIStream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#SSIStream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.SSIStream" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">SSIStream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#SSIStream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.SSIStream" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#nova_utils.data.stream.Stream" title="nova_utils.data.stream.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a></p>
 <p>A class representing an SSI data stream.</p>
 <p>This class extends the Stream class with additional attributes specific to SSI streams.</p>
@@ -134,6 +134,7 @@ Date: 18.8.2023</p>
 <li><p><strong>sample_rate</strong> (<em>float</em>) – Sampling rate of the SSI stream.</p></li>
 <li><p><strong>chunks</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Chunks of the SSI stream.</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments for Stream.</p></li>
+<li><p><strong>dim_labels</strong> (<em>list</em>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -151,15 +152,22 @@ Date: 18.8.2023</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nova_utils.data.stream.SSIStreamMetaData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">SSIStreamMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#SSIStreamMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.SSIStreamMetaData" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nova_utils.data.stream.</span></span><span class="sig-name descname"><span class="pre">SSIStreamMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/stream.html#SSIStreamMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.stream.SSIStreamMetaData" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Metadata specific to SSI stream files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Variables<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>chunks</strong> (<em>np.ndarray</em>) – Chunks of the SSI stream with ‘from’, ‘to’, ‘byte’, and ‘num’ properties.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>chunks</strong> (<em>np.ndarray</em>) – Chunks of the SSI stream with ‘from’, ‘to’, ‘byte’, and ‘num’ properties.</p></li>
+<li><p><strong>dimlabels</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em>) – List of dictionaries mapping an integer id as key (stream index) to a descriptive string as value.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>chunks</strong> (<em>np.ndarray</em>) – Chunks of the SSI stream with ‘from’, ‘to’, ‘byte’, and ‘num’ properties.</p>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>chunks</strong> (<em>np.ndarray</em>) – Chunks of the SSI stream with ‘from’, ‘to’, ‘byte’, and ‘num’ properties.</p></li>
+<li><p><strong>dimlabels</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em>) – List of dictionaries mapping an integer id as key (stream index) to a descriptive string as value.</p></li>
+<li><p><strong>dim_labels</strong> (<em>list</em>) – </p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py attribute">

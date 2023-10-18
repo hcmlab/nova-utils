@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.data.provider.nova_iterator module &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.data.provider.nova_iterator module &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -103,7 +103,7 @@
 <p>Iterator class for processing data samples from the Nova dataset.</p>
 <p>The NovaIterator takes all information about what data should be loaded and how it should be processed. The class itself then takes care of loading all data and provides an iterator to directly apply a sliding window to the requested data.
 Every time based argument can be passed either as string or a numerical value. If the time is passed as string, the string should end with either ‘s’ to indicate the time is specified in seconds or ‘ms’ for milliseconds.
-If the time is passed as a numerical value or as a string without indicating a specific unit it is assumed that an integer value represents milliseconds while a float represents seconds. All numbers will be represented as integer milliseconds internally.
+If the time is passed as a numerical value or as a string without indicating a specific unit it is assumed texthat an integer value represents milliseconds while a float represents seconds. All numbers will be represented as integer milliseconds internally.
 The highest time resolution for processing is therefore 1ms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -118,6 +118,8 @@ The highest time resolution for processing is therefore 1ms.</p>
 <li><p><strong>data</strong> (<em>list</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – <p>List of data descriptions. Defaults to None. The dictionary should have the following fields:</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">&quot;id&quot;</span></code>:</dt><dd><p>Unique id to map the data to a given input / output.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;name&quot;</span></code>:</dt><dd><p>Output name for streams</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code>:</dt><dd><p>IO type of the data. Either “input” or “output”</p>
 </dd>
@@ -155,7 +157,7 @@ The dataytpye is eiter ‘stream’ or ‘anno’. E.g. ‘db:anno’ .</p>
 <li><p><strong>end</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – End time for processing measured in time.</p></li>
 <li><p><strong>left_context</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – Left context duration measured in time.</p></li>
 <li><p><strong>right_context</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – Right context duration measured in time.</p></li>
-<li><p><strong>stride</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – Stride for iterating over data measured in time.</p></li>
+<li><p><strong>stride</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em>) – Stride for iterating  data measured in time.</p></li>
 <li><p><strong>add_rest_class</strong> (<em>bool</em>) – Whether to add a rest class for discrete annotations.</p></li>
 <li><p><strong>fill_missing_data</strong> (<em>bool</em>) – Whether to fill missing data.</p></li>
 </ul>

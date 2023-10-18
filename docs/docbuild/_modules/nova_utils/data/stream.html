@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.data.stream &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.data.stream &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -78,6 +78,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">nova_utils.data.data</span> <span class="kn">import</span> <span class="n">DynamicData</span>
 <span class="kn">from</span> <span class="nn">nova_utils.utils.type_definitions</span> <span class="kn">import</span> <span class="n">SSINPDataType</span>
 <span class="kn">from</span> <span class="nn">nova_utils.utils.stream_utils</span> <span class="kn">import</span> <span class="n">time_to_sample_interval</span>
@@ -115,6 +116,7 @@
         <span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize a StreamMetaData instance with stream properties.</span>
@@ -134,9 +136,12 @@
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        chunks (np.ndarray): Chunks of the SSI stream with &#39;from&#39;, &#39;to&#39;, &#39;byte&#39;, and &#39;num&#39; properties.</span>
+<span class="sd">        dimlabels (list[dict]): List of dictionaries mapping an integer id as key (stream index) to a descriptive string as value.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        chunks (np.ndarray): Chunks of the SSI stream with &#39;from&#39;, &#39;to&#39;, &#39;byte&#39;, and &#39;num&#39; properties.</span>
+<span class="sd">        dimlabels (list[dict]): List of dictionaries mapping an integer id as key (stream index) to a descriptive string as value.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">CHUNK_DTYPE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
@@ -148,11 +153,12 @@
         <span class="p">]</span>
     <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">dim_labels</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize an SSIStreamMetaData instance with chunks information.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span> <span class="o">=</span> <span class="n">chunks</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span> <span class="o">=</span> <span class="n">chunks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim_labels</span> <span class="o">=</span> <span class="n">dim_labels</span></div>
 
 
 <div class="viewcode-block" id="Stream"><a class="viewcode-back" href="../../../api/nova_utils.data.stream.html#nova_utils.data.stream.Stream">[docs]</a><span class="k">class</span> <span class="nc">Stream</span><span class="p">(</span><span class="n">DynamicData</span><span class="p">):</span>
@@ -180,7 +186,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
         <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -254,7 +260,7 @@
         <span class="p">]</span>
     <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">chunks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">chunks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dim_labels</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize an SSIStream instance with SSI stream data and metadata.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -264,7 +270,7 @@
         <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">chunks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">num_samples</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">chunks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_samples</span> <span class="o">/</span> <span class="n">sample_rate</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">CHUNK_DTYPE</span><span class="p">)</span>
-        <span class="n">ssistream_meta</span> <span class="o">=</span> <span class="n">SSIStreamMetaData</span><span class="p">(</span><span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">)</span>
+        <span class="n">ssistream_meta</span> <span class="o">=</span> <span class="n">SSIStreamMetaData</span><span class="p">(</span><span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">,</span> <span class="n">dim_labels</span><span class="o">=</span><span class="n">dim_labels</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">ssistream_meta</span><span class="p">)</span></div>
 
 

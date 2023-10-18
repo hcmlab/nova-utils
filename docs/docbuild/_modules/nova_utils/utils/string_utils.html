@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.utils.string_utils &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.utils.string_utils &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -169,6 +169,20 @@
             <span class="k">return</span> <span class="n">e</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> not part of enumeration  </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">enum</span><span class="p">))</span></div>
 
+<div class="viewcode-block" id="string_to_bool"><a class="viewcode-back" href="../../../api/nova_utils.utils.string_utils.html#nova_utils.utils.string_utils.string_to_bool">[docs]</a><span class="k">def</span> <span class="nf">string_to_bool</span><span class="p">(</span><span class="n">string</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Parses a given input string to a boolean value</span>
+<span class="sd">    Args:</span>
+<span class="sd">        string (str): Input string</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: The boolean value of the string</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">string</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
 <div class="viewcode-block" id="parse_nova_option_string"><a class="viewcode-back" href="../../../api/nova_utils.utils.string_utils.html#nova_utils.utils.string_utils.parse_nova_option_string">[docs]</a><span class="k">def</span> <span class="nf">parse_nova_option_string</span><span class="p">(</span><span class="n">option_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts a server-module option string to dictionary.</span>
@@ -182,19 +196,26 @@
 <span class="sd">        Enum: The enum value corresponding to the input string.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
-
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Parsing options&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">option_string</span><span class="p">:</span>
         <span class="n">opts</span> <span class="o">=</span> <span class="n">option_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
             <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="n">option</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">):</span>
                 <span class="n">options</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span> <span class="k">else</span> <span class="kc">False</span>
+
             <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span><span class="p">:</span>
                 <span class="n">options</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">options</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">+</span> <span class="n">v</span><span class="p">)</span>
-
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">options</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">options</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="k">except</span><span class="p">:</span>
+                         <span class="n">options</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">+</span> <span class="n">v</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;...done&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">options</span></div>
 </pre></div>
 

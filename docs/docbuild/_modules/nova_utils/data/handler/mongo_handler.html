@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.data.handler.mongo_handler &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.data.handler.mongo_handler &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -400,6 +400,12 @@
             <span class="k">return</span> <span class="p">{}</span>
         <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+    <span class="k">def</span> <span class="nf">_load_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">scheme</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">[</span><span class="n">dataset</span><span class="p">][</span><span class="n">SCHEME_COLLECTION</span><span class="p">]</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">scheme</span><span class="p">})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">result</span>
+
     <span class="k">def</span> <span class="nf">_update_annotation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -519,8 +525,9 @@
 
         <span class="k">return</span> <span class="n">success</span>
 
+
 <div class="viewcode-block" id="AnnotationHandler.load"><a class="viewcode-back" href="../../../../api/nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.AnnotationHandler.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">scheme</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">annotator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">scheme</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">annotator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">header_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Annotation</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load annotation data from MongoDB and create an Annotation object.</span>
@@ -531,6 +538,8 @@
 <span class="sd">            session (str): Name of the session.</span>
 <span class="sd">            annotator (str): Name of the annotator.</span>
 <span class="sd">            role (str): Name of the role.</span>
+<span class="sd">            header_only (bool): If true only the annotation header will be loaded.</span>
+
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Annotation: An Annotation object loaded from the database.</span>
@@ -540,41 +549,51 @@
 <span class="sd">            TypeError: If the scheme type is unknown.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># load annotation from mongo db</span>
-        <span class="n">anno_doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_annotation</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">annotator</span><span class="p">,</span> <span class="n">role</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">header_only</span><span class="p">:</span>
+            <span class="n">scheme_doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_scheme</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">anno_doc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Annotation not found dataset: </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2"> session: </span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2"> annotator: </span><span class="si">{</span><span class="n">annotator</span><span class="si">}</span><span class="s2"> role: </span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2"> scheme: </span><span class="si">{</span><span class="n">scheme</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">scheme_doc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Scheme not found dataset: </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2"> scheme: </span><span class="si">{</span><span class="n">scheme</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
 
-        <span class="p">(</span><span class="n">anno_data_doc</span><span class="p">,)</span> <span class="o">=</span> <span class="n">anno_doc</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">anno_doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_annotation</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">annotator</span><span class="p">,</span> <span class="n">role</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span>
 
-        <span class="c1"># build annotation object</span>
-        <span class="p">(</span><span class="n">scheme_doc</span><span class="p">,)</span> <span class="o">=</span> <span class="n">anno_doc</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">anno_doc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Annotation not found dataset: </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2"> session: </span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2"> annotator: </span><span class="si">{</span><span class="n">annotator</span><span class="si">}</span><span class="s2"> role: </span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2"> scheme: </span><span class="si">{</span><span class="n">scheme</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="p">(</span><span class="n">anno_data_doc</span><span class="p">,)</span> <span class="o">=</span> <span class="n">anno_doc</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+
+            <span class="c1"># build annotation object</span>
+            <span class="p">(</span><span class="n">scheme_doc</span><span class="p">,)</span> <span class="o">=</span> <span class="n">anno_doc</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>
+
         <span class="n">scheme_type</span> <span class="o">=</span> <span class="n">scheme_doc</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="n">anno_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">anno_duration</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="c1"># discrete scheme</span>
         <span class="k">if</span> <span class="n">scheme_type</span> <span class="o">==</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
             <span class="n">scheme_classes</span> <span class="o">=</span> <span class="p">{</span><span class="n">l</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]:</span> <span class="n">l</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">scheme_doc</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]}</span>
 
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;conf&quot;</span><span class="p">])</span>
-                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">anno_data_doc</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
-                <span class="p">],</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;conf&quot;</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">anno_data_doc</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+                    <span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="p">)</span>
+                <span class="n">anno_duration</span> <span class="o">=</span> <span class="n">anno_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;to&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">anno_data</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
 
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="p">)</span>
-
-            <span class="n">anno_duration</span> <span class="o">=</span> <span class="n">anno_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;to&quot;</span><span class="p">]</span>
             <span class="n">anno_scheme</span> <span class="o">=</span> <span class="n">DiscreteAnnotationScheme</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">scheme</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="n">scheme_classes</span><span class="p">)</span>
             <span class="n">annotation</span> <span class="o">=</span> <span class="n">DiscreteAnnotation</span><span class="p">(</span>
-                <span class="c1"># role=role,</span>
-                <span class="c1"># annotator=annotator,</span>
-                <span class="c1"># annotation_scheme=anno_scheme,</span>
-                <span class="c1"># session=session,</span>
-                <span class="c1"># dataset=dataset,</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="p">,</span>
+                <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+                <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
                 <span class="n">data</span><span class="o">=</span><span class="n">anno_data</span><span class="p">,</span>
                 <span class="n">scheme</span><span class="o">=</span><span class="n">anno_scheme</span><span class="p">,</span>
                 <span class="n">annotator</span><span class="o">=</span><span class="n">annotator</span><span class="p">,</span>
@@ -586,17 +605,22 @@
             <span class="n">sr</span> <span class="o">=</span> <span class="n">scheme_doc</span><span class="p">[</span><span class="s2">&quot;sr&quot;</span><span class="p">]</span>
             <span class="n">min_val</span> <span class="o">=</span> <span class="n">scheme_doc</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span>
             <span class="n">max_val</span> <span class="o">=</span> <span class="n">scheme_doc</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span>
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                <span class="p">[(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;conf&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">anno_data_doc</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]],</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span>
 
-            <span class="n">anno_duration</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">anno_data_doc</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span> <span class="o">/</span> <span class="n">sr</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;conf&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">anno_data_doc</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span>
+                <span class="n">anno_duration</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">anno_data_doc</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span> <span class="o">/</span> <span class="n">sr</span>
+
             <span class="n">anno_scheme</span> <span class="o">=</span> <span class="n">ContinuousAnnotationScheme</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">scheme</span><span class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">sr</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="n">max_val</span>
             <span class="p">)</span>
             <span class="n">annotation</span> <span class="o">=</span> <span class="n">ContinuousAnnotation</span><span class="p">(</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="p">,</span>
+                <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+                <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
                 <span class="n">data</span><span class="o">=</span><span class="n">anno_data</span><span class="p">,</span>
                 <span class="n">scheme</span><span class="o">=</span><span class="n">anno_scheme</span><span class="p">,</span>
                 <span class="n">annotator</span><span class="o">=</span><span class="n">annotator</span><span class="p">,</span>
@@ -607,24 +631,24 @@
 
         <span class="c1"># free scheme</span>
         <span class="k">elif</span> <span class="n">scheme_type</span> <span class="o">==</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">FREE</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;conf&quot;</span><span class="p">])</span>
-                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">anno_data_doc</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
-                <span class="p">],</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">FREE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-            <span class="p">)</span>
 
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">FREE</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;conf&quot;</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">anno_data_doc</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+                    <span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">FREE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="p">)</span>
 
-            <span class="n">anno_duration</span> <span class="o">=</span> <span class="n">anno_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;to&quot;</span><span class="p">]</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">FREE</span><span class="p">)</span>
+                <span class="n">anno_duration</span> <span class="o">=</span> <span class="n">anno_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;to&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">anno_data</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
             <span class="n">anno_scheme</span> <span class="o">=</span> <span class="n">FreeAnnotationScheme</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">scheme</span><span class="p">)</span>
             <span class="n">annotation</span> <span class="o">=</span> <span class="n">FreeAnnotation</span><span class="p">(</span>
-                <span class="c1"># role=role,</span>
-                <span class="c1"># annotator=annotator,</span>
-                <span class="c1"># annotation_scheme=anno_scheme,</span>
-                <span class="c1"># session=session,</span>
-                <span class="c1"># dataset=dataset,</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="p">,</span>
+                <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+                <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
                 <span class="n">data</span><span class="o">=</span><span class="n">anno_data</span><span class="p">,</span>
                 <span class="n">scheme</span><span class="o">=</span><span class="n">anno_scheme</span><span class="p">,</span>
                 <span class="n">annotator</span><span class="o">=</span><span class="n">annotator</span><span class="p">,</span>
@@ -634,16 +658,25 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown scheme type </span><span class="si">{</span><span class="n">scheme_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># setting meta data</span>
-        <span class="n">handler_meta_data</span> <span class="o">=</span> <span class="n">MongoAnnotationMetaData</span><span class="p">(</span>
-            <span class="n">ip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ip</span><span class="p">,</span>
-            <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_port</span><span class="p">,</span>
-            <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_user</span><span class="p">,</span>
-            <span class="n">is_locked</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;isLocked&quot;</span><span class="p">),</span>
-            <span class="n">is_finished</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;isFinished&quot;</span><span class="p">),</span>
-            <span class="n">annotation_document_id</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_id&quot;</span><span class="p">),</span>
-            <span class="n">data_document_id</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_id&quot;</span><span class="p">),</span>
-            <span class="n">last_update</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;date&quot;</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">header_only</span><span class="p">:</span>
+            <span class="n">handler_meta_data</span> <span class="o">=</span> <span class="n">MongoAnnotationMetaData</span><span class="p">(</span>
+                <span class="n">ip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ip</span><span class="p">,</span>
+                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_port</span><span class="p">,</span>
+                <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_user</span><span class="p">,</span>
+                <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">handler_meta_data</span> <span class="o">=</span> <span class="n">MongoAnnotationMetaData</span><span class="p">(</span>
+                <span class="n">ip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ip</span><span class="p">,</span>
+                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_port</span><span class="p">,</span>
+                <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_user</span><span class="p">,</span>
+                <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+                <span class="n">is_locked</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;isLocked&quot;</span><span class="p">),</span>
+                <span class="n">is_finished</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;isFinished&quot;</span><span class="p">),</span>
+                <span class="n">annotation_document_id</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_id&quot;</span><span class="p">),</span>
+                <span class="n">data_document_id</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_id&quot;</span><span class="p">),</span>
+                <span class="n">last_update</span><span class="o">=</span><span class="n">anno_doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;date&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
         <span class="n">annotation</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">handler_meta_data</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">annotation</span></div>
@@ -685,15 +718,18 @@
         <span class="n">role</span> <span class="o">=</span> <span class="n">role</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">role</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">annotation</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">role</span>
         <span class="n">scheme</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">annotation_scheme</span><span class="o">.</span><span class="n">name</span>
 
-        <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_label_to_ssi_dtype</span><span class="p">(</span>
-            <span class="n">annotation</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">annotation</span><span class="o">.</span><span class="n">annotation_scheme</span><span class="o">.</span><span class="n">scheme_type</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">annotation</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_label_to_ssi_dtype</span><span class="p">(</span>
+                <span class="n">annotation</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">annotation</span><span class="o">.</span><span class="n">annotation_scheme</span><span class="o">.</span><span class="n">scheme_type</span>
+            <span class="p">)</span>
 
-        <span class="c1"># TODO check for none values</span>
-        <span class="n">anno_data</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">annotation</span><span class="o">.</span><span class="n">annotation_scheme</span><span class="o">.</span><span class="n">label_dtype</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">ad</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
-            <span class="k">for</span> <span class="n">ad</span> <span class="ow">in</span> <span class="n">anno_data</span>
-        <span class="p">]</span>
+            <span class="c1"># TODO check for none values</span>
+            <span class="n">anno_data</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">annotation</span><span class="o">.</span><span class="n">annotation_scheme</span><span class="o">.</span><span class="n">label_dtype</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">ad</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
+                <span class="k">for</span> <span class="n">ad</span> <span class="ow">in</span> <span class="n">anno_data</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">anno_data</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># load annotation to check if an annotation for the provided criteria already exists in the database</span>
         <span class="n">anno_doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_annotation</span><span class="p">(</span>
@@ -709,7 +745,7 @@
         <span class="k">if</span> <span class="n">anno_doc</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">anno_doc</span><span class="p">[</span><span class="s2">&quot;isLocked&quot;</span><span class="p">]:</span>
                 <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Can&#39;t overwrite locked annotation dataset: </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2"> session: </span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2"> annotator: </span><span class="si">{</span><span class="n">annotator</span><span class="si">}</span><span class="s2"> role: </span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2"> scheme: </span><span class="si">{</span><span class="n">scheme</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Can&#39;t overwrite locked annotation dataset: </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2"> session: </span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2"> annotator: </span><span class="si">{</span><span class="n">annotator</span><span class="si">}</span><span class="s2"> role: </span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2"> scheme: </span><span class="si">{</span><span class="n">scheme</span><span class="si">}</span><span class="s2">. Because annotation is locked.&quot;</span>
                 <span class="p">)</span>
             <span class="k">elif</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span>
@@ -801,7 +837,7 @@
             <span class="k">return</span> <span class="p">{}</span>
         <span class="k">return</span> <span class="n">result</span>
 
-<div class="viewcode-block" id="StreamHandler.load"><a class="viewcode-back" href="../../../../api/nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.StreamHandler.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Stream</span><span class="p">:</span>
+<div class="viewcode-block" id="StreamHandler.load"><a class="viewcode-back" href="../../../../api/nova_utils.data.handler.mongo_handler.html#nova_utils.data.handler.mongo_handler.StreamHandler.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">header_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Stream</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load a Stream object from MongoDB and create a Stream instance.</span>
 
@@ -810,6 +846,7 @@
 <span class="sd">            session (str): Name of the session.</span>
 <span class="sd">            role (str): Name of the role.</span>
 <span class="sd">            name (str): Name of the stream.</span>
+<span class="sd">            header_only (bool): If true only the stream header will be loaded.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Stream: A Stream object loaded from the database.</span>
@@ -820,7 +857,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_stream</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">stream_name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No stream </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> found for dataset </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No stream </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> found for dataset </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Data directory was not set. Can&#39;t access files&quot;</span><span class="p">)</span>
 
@@ -835,10 +872,14 @@
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No such file </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># data</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">header_only</span> <span class="o">=</span> <span class="n">header_only</span><span class="p">)</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Stream</span><span class="p">)</span>
 
         <span class="c1"># meta data</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="n">role</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">session</span>
+
         <span class="n">handler_meta_data</span> <span class="o">=</span> <span class="n">MongoStreamMetaData</span><span class="p">(</span>
             <span class="n">ip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ip</span><span class="p">,</span>
             <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_port</span><span class="p">,</span>
@@ -850,6 +891,7 @@
             <span class="n">stream_document_id</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_id&quot;</span><span class="p">),</span>
             <span class="n">sr</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sr&quot;</span><span class="p">),</span>
             <span class="nb">type</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">),</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span>
         <span class="p">)</span>
         <span class="n">data</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">handler_meta_data</span><span class="p">)</span>
 
@@ -862,9 +904,9 @@
         <span class="n">session</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">role</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span> <span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">data_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;feature&#39;</span><span class="p">,</span>
         <span class="n">file_ext</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">dim_labels</span><span class="p">:</span> <span class="p">[]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dim_labels</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">is_valid</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -878,7 +920,7 @@
 <span class="sd">            name (str): Name of the stream. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.</span>
 <span class="sd">            data_type (str): Media type of the stream data as specified in NOVA-DB.</span>
 <span class="sd">            file_ext (str, optional): File extension. Defaults to None.</span>
-<span class="sd">            dim_labels (list, optional): Dimension labels. Defaults to None.</span>
+<span class="sd">            dim_labels (list[dict], optional): Dimension labels. Defaults to None.</span>
 <span class="sd">            is_valid (bool, optional): Indicates if the stream data is valid. Defaults to True.</span>
 
 <span class="sd">        Raises:</span>
@@ -892,7 +934,12 @@
         <span class="n">role</span> <span class="o">=</span> <span class="n">role</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">role</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">role</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">name</span>
         <span class="n">file_ext</span> <span class="o">=</span> <span class="n">file_ext</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">file_ext</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">ext</span>
-        <span class="n">dim_labels</span> <span class="o">=</span> <span class="n">dim_labels</span> <span class="k">if</span> <span class="ow">not</span>  <span class="n">dim_labels</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">dim_labels</span>
+        <span class="n">data_type</span> <span class="o">=</span> <span class="n">data_type</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">data_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">data_type</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">SSIStream</span><span class="p">):</span>
+            <span class="n">dim_labels</span> <span class="o">=</span> <span class="n">dim_labels</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">dim_labels</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">dim_labels</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dim_labels</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Data directory was not set. Can&#39;t access files&quot;</span><span class="p">)</span>
@@ -909,7 +956,7 @@
 
         <span class="c1"># write db entry</span>
         <span class="n">stream_document</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;fileExt&quot;</span><span class="p">:</span> <span class="n">file_ext</span><span class="p">,</span>
+            <span class="s2">&quot;fileExt&quot;</span><span class="p">:</span> <span class="n">file_ext</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">),</span>
             <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
             <span class="s2">&quot;sr&quot;</span><span class="p">:</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">sample_rate</span><span class="p">,</span>
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">data_type</span><span class="p">,</span>
@@ -938,8 +985,8 @@
     <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
     <span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
 
-    <span class="n">test_annotations</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">test_streams</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">test_annotations</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">test_streams</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">load_dotenv</span><span class="p">(</span><span class="s2">&quot;../../../.env&quot;</span><span class="p">)</span>
     <span class="n">IP</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;NOVA_IP&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -960,6 +1007,7 @@
             <span class="n">annotator</span><span class="o">=</span><span class="s2">&quot;schildom&quot;</span><span class="p">,</span>
             <span class="n">session</span><span class="o">=</span><span class="s2">&quot;04_Oesterreich_test&quot;</span><span class="p">,</span>
             <span class="n">role</span><span class="o">=</span><span class="s2">&quot;testrole2&quot;</span><span class="p">,</span>
+            <span class="n">header_only</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
         <span class="n">t_stop</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;Discrete annotation&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">((</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)))</span>
@@ -1013,7 +1061,7 @@
     <span class="k">if</span> <span class="n">test_streams</span><span class="p">:</span>
 
         <span class="n">smh</span> <span class="o">=</span> <span class="n">StreamHandler</span><span class="p">(</span>
-            <span class="n">ip</span><span class="o">=</span><span class="n">IP</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">PORT</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">USER</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">PASSWORD</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">DATA_DIR</span><span class="p">)</span>
+            <span class="n">db_host</span><span class="o">=</span><span class="n">IP</span><span class="p">,</span> <span class="n">db_port</span><span class="o">=</span><span class="n">PORT</span><span class="p">,</span> <span class="n">db_user</span><span class="o">=</span><span class="n">USER</span><span class="p">,</span> <span class="n">db_password</span><span class="o">=</span><span class="n">PASSWORD</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">DATA_DIR</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="c1"># Stream</span>
@@ -1024,6 +1072,7 @@
             <span class="n">session</span><span class="o">=</span><span class="s2">&quot;04_Oesterreich_test&quot;</span><span class="p">,</span>
             <span class="n">role</span><span class="o">=</span><span class="s2">&quot;testrole&quot;</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="s2">&quot;arousal.synchrony[testrole]&quot;</span><span class="p">,</span>
+            <span class="n">header_only</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
         <span class="n">t_stop</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;Video&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">((</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)))</span>

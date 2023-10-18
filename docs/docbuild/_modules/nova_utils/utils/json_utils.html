@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.utils.json_utils &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.utils.json_utils &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -82,7 +82,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">from</span> <span class="nn">nova_utils.utils.ssi_xml_utils</span> <span class="kn">import</span> <span class="n">Chain</span><span class="p">,</span> <span class="n">ChainLink</span><span class="p">,</span> <span class="n">Trainer</span><span class="p">,</span> <span class="n">ModelIO</span>
+<span class="kn">from</span> <span class="nn">nova_utils.utils.ssi_xml_utils</span> <span class="kn">import</span> <span class="n">Chain</span><span class="p">,</span> <span class="n">ChainLink</span><span class="p">,</span> <span class="n">Trainer</span><span class="p">,</span> <span class="n">ModelIO</span><span class="p">,</span> <span class="n">URI</span>
 
 
 <div class="viewcode-block" id="ModelIOEncoder"><a class="viewcode-back" href="../../../api/nova_utils.utils.json_utils.html#nova_utils.utils.json_utils.ModelIOEncoder">[docs]</a><span class="k">class</span> <span class="nc">ModelIOEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
@@ -108,7 +108,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ModelIO</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">io_type</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">io_id</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">io_data</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">io_type</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">io_id</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">io_data</span><span class="p">,</span> <span class="s2">&quot;default_value&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">io_default_value</span><span class="p">}</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="ModelIODecoder"><a class="viewcode-back" href="../../../api/nova_utils.utils.json_utils.html#nova_utils.utils.json_utils.ModelIODecoder">[docs]</a><span class="k">class</span> <span class="nc">ModelIODecoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecoder</span><span class="p">):</span>
@@ -116,9 +116,46 @@
         <span class="n">json</span><span class="o">.</span><span class="n">JSONDecoder</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">object_hook</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 <div class="viewcode-block" id="ModelIODecoder.object_hook"><a class="viewcode-back" href="../../../api/nova_utils.utils.json_utils.html#nova_utils.utils.json_utils.ModelIODecoder.object_hook">[docs]</a>    <span class="k">def</span> <span class="nf">object_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_obj</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">json_obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">json_obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">json_obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">ModelIO</span><span class="p">(</span><span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">ModelIO</span><span class="p">(</span><span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;default_value&quot;</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid JSON format for ModelIO decoding.&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="URIEncoder"><a class="viewcode-back" href="../../../api/nova_utils.utils.json_utils.html#nova_utils.utils.json_utils.URIEncoder">[docs]</a><span class="k">class</span> <span class="nc">URIEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom JSON encoder for ModelIO objects.</span>
+
+<span class="sd">    This encoder is used to serialize ModelIO objects to JSON format.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="URIEncoder.default"><a class="viewcode-back" href="../../../api/nova_utils.utils.json_utils.html#nova_utils.utils.json_utils.URIEncoder.default">[docs]</a>    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Encodes a ModelIO object to JSON.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obj (ModelIO): The ModelIO object to encode.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dictionary representation of the ModelIO object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">URI</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">uri_id</span><span class="p">,</span> <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">uri_url</span><span class="p">,</span> <span class="s2">&quot;hash&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">uri_hash</span><span class="p">,</span> <span class="s2">&quot;tar&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">uri_tar</span><span class="p">}</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="URIDecoder"><a class="viewcode-back" href="../../../api/nova_utils.utils.json_utils.html#nova_utils.utils.json_utils.URIDecoder">[docs]</a><span class="k">class</span> <span class="nc">URIDecoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecoder</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">JSONDecoder</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">object_hook</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="viewcode-block" id="URIDecoder.object_hook"><a class="viewcode-back" href="../../../api/nova_utils.utils.json_utils.html#nova_utils.utils.json_utils.URIDecoder.object_hook">[docs]</a>    <span class="k">def</span> <span class="nf">object_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">json_obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">json_obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">json_obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hash&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ModelIO</span><span class="p">(</span><span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">],</span> <span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;hash&quot;</span><span class="p">],</span> <span class="n">json_obj</span><span class="p">[</span><span class="s2">&quot;tar&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid JSON format for ModelIO decoding.&quot;</span><span class="p">)</span></div></div>
+
 
 
 <div class="viewcode-block" id="ChainLinkEncoder"><a class="viewcode-back" href="../../../api/nova_utils.utils.json_utils.html#nova_utils.utils.json_utils.ChainLinkEncoder">[docs]</a><span class="k">class</span> <span class="nc">ChainLinkEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
@@ -227,11 +264,16 @@
                 <span class="s2">&quot;streams&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">streams</span><span class="p">,</span>
                 <span class="s2">&quot;register&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">register</span><span class="p">,</span>
                 <span class="s2">&quot;info_trained&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">info_trained</span><span class="p">,</span>
+                <span class="s2">&quot;meta_frame_step&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">meta_frame_step</span><span class="p">,</span>
                 <span class="s2">&quot;meta_right_ctx&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">meta_right_ctx</span><span class="p">,</span>
                 <span class="s2">&quot;meta_left_ctx&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">meta_left_ctx</span><span class="p">,</span>
                 <span class="s2">&quot;meta_balance&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">meta_balance</span><span class="p">,</span>
                 <span class="s2">&quot;meta_backend&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">meta_backend</span><span class="p">,</span>
                 <span class="s2">&quot;meta_io&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">meta_io</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">ModelIOEncoder</span><span class="p">),</span>
+                <span class="s2">&quot;meta_uri&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">meta_uri</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">URIEncoder</span><span class="p">),</span>
+                <span class="s2">&quot;meta_description&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">meta_description</span><span class="p">,</span>
+                <span class="s2">&quot;meta_is_iterable&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">meta_is_iterable</span><span class="p">,</span>
+                <span class="s2">&quot;meta_category&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">meta_category</span><span class="p">,</span>
                 <span class="s2">&quot;ssi_v&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">ssi_v</span><span class="p">,</span>
                 <span class="s2">&quot;xml_version&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">xml_version</span><span class="p">,</span>
             <span class="p">}</span>

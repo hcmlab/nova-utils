@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.utils.anno_utils module &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.utils.anno_utils module &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -54,8 +54,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.anno_utils.convert_ssi_to_label_dtype"><code class="docutils literal notranslate"><span class="pre">convert_ssi_to_label_dtype()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.anno_utils.data_contains_garbage"><code class="docutils literal notranslate"><span class="pre">data_contains_garbage()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.anno_utils.get_anno_majority"><code class="docutils literal notranslate"><span class="pre">get_anno_majority()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.anno_utils.get_anno_majority_distribution"><code class="docutils literal notranslate"><span class="pre">get_anno_majority_distribution()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.anno_utils.get_overlap"><code class="docutils literal notranslate"><span class="pre">get_overlap()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.anno_utils.label_is_garbage"><code class="docutils literal notranslate"><span class="pre">label_is_garbage()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.anno_utils.pack_remove"><code class="docutils literal notranslate"><span class="pre">pack_remove()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="nova_utils.utils.json_utils.html">nova_utils.utils.json_utils module</a></li>
@@ -182,6 +184,30 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="nova_utils.utils.anno_utils.get_anno_majority_distribution">
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">get_anno_majority_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap_idxs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#get_anno_majority_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.get_anno_majority_distribution" title="Permalink to this definition"></a></dt>
+<dd><p>Returns an array of the distribution of annotations within the current frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>np.ndarray</em>) – numpy array of shape (1,2), where each entry contains an interval [from, to]</p></li>
+<li><p><strong>overlap_idxs</strong> (<em>np.ndarray</em>) – aray of boolean values where a is overlapping the interval [start, end] (as returned by get _get_overlap())</p></li>
+<li><p><strong>start</strong> (<em>int</em>) – start of the interval to check</p></li>
+<li><p><strong>end</strong> (<em>int</em>) – end of the interval to check</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – total number of classes</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray numpy array containing the data distribution of the classes within the given frame. each index in the array matches the respective class id.
+np.NaN if a label is detected that ist negative or larger than num_classes</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="nova_utils.utils.anno_utils.get_overlap">
 <span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">get_overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#get_overlap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.get_overlap" title="Permalink to this definition"></a></dt>
 <dd><p>Calculating all overlapping intervals between the given array of time intervals and the interval [start, end]</p>
@@ -217,6 +243,27 @@
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nova_utils.utils.anno_utils.pack_remove">
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.anno_utils.</span></span><span class="sig-name descname"><span class="pre">pack_remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_gap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dur</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/anno_utils.html#pack_remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.anno_utils.pack_remove" title="Permalink to this definition"></a></dt>
+<dd><p>Aggregate consecutive annotations with the same label.
+Does only work with discrete label data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_time_gap</strong> (<em>int</em>) – The minimum amount of time between consecutive samples to be seen as two different samples. Defaults to 0.</p></li>
+<li><p><strong>min_dur</strong> (<em>int</em>) – Minimum duration of one sample Defaults to 0.</p></li>
+<li><p><strong>data</strong> (<em>ndarray</em><em>[</em><em>&lt;LabelDType.DISCRETE: dtype</em><em>(</em><em>[</em><em>(</em><em>'from'</em><em>, </em><em>'&lt;i4'</em><em>)</em><em>, </em><em>(</em><em>'to'</em><em>, </em><em>'&lt;i4'</em><em>)</em><em>, </em><em>(</em><em>'id'</em><em>, </em><em>'&lt;i4'</em><em>)</em><em>, </em><em>(</em><em>'conf'</em><em>, </em><em>'&lt;f4'</em><em>)</em><em>]</em><em>)</em><em>&gt;</em><em>]</em>) – </p></li>
+<li><p><strong>min_gap</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+<p>Returns:</p>
 </dd></dl>
 
 </section>

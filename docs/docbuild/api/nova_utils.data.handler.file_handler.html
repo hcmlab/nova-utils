@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.data.handler.file_handler module &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.data.handler.file_handler module &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -108,11 +108,14 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="nova_utils.data.handler.file_handler.FileHandler.load">
-<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileHandler.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileHandler.load" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/data/handler/file_handler.html#FileHandler.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.data.handler.file_handler.FileHandler.load" title="Permalink to this definition"></a></dt>
 <dd><p>Load data from a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>fp</strong> (<em>Path</em>) – The file path.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fp</strong> (<em>Path</em>) – The file path.</p></li>
+<li><p><strong>header_only</strong> (<em>bool</em>) – If true only the stream header will be loaded.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The loaded data.</p>

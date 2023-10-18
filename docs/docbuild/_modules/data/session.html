@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>data.session &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>data.session &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -83,7 +83,7 @@
 <span class="sd">    Class to stores all information belonging to a specific session during processing</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        data (dict, optional): Additional data associated with the session.</span>
+<span class="sd">        data (dict, optional):  Annotation or Stream data that can be processed by a module.</span>
 <span class="sd">        dataset (str, optional): The dataset or category the session belongs to.</span>
 <span class="sd">        name (str, optional): The name or title of the session.</span>
 <span class="sd">        duration (int, optional): The duration of the session in minutes.</span>
@@ -91,9 +91,11 @@
 <span class="sd">        language (str, optional): The language used in the session.</span>
 <span class="sd">        date (datetime, optional): The date and time of the session.</span>
 <span class="sd">        is_valid (bool, optional): Whether the session is considered valid.</span>
+<span class="sd">        extra_data (dict, optional): Additional stream or annotation information for the session. Might only contain meta information.</span>
+<span class="sd">        output_data_templates (dict, optional): Empty data objects that contain meta information for outputs. Modules can fill the data here.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        data (dict, optional): Additional data associated with the session.</span>
+<span class="sd">        input_data (dict, optional): Annotation or Stream data that can be processed by a module.</span>
 <span class="sd">        dataset (str, optional): The dataset or category the session belongs to.</span>
 <span class="sd">        name (str, optional): The name or title of the session.</span>
 <span class="sd">        duration (int, optional): The duration of the session in milliseconds.</span>
@@ -101,16 +103,20 @@
 <span class="sd">        language (str, optional): The language used in the session.</span>
 <span class="sd">        date (datetime, optional): The date and time of the session.</span>
 <span class="sd">        is_valid (bool, optional): Whether the session is considered valid.</span>
+<span class="sd">        extra_data (dict, optional): Additional stream or annotation information for the session. Might only contain meta information.</span>
+<span class="sd">        output_data_templates (dict, optional): Empty data objects that contain meta information for outputs. Modules can fill the data here.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_valid</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_valid</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">output_data_templates</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_data</span> <span class="o">=</span> <span class="n">input_data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">language</span> <span class="o">=</span> <span class="n">language</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">date</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="n">is_valid</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="n">is_valid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">extra_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_data_templates</span> <span class="o">=</span> <span class="n">output_data_templates</span></div>
 </pre></div>
 
            </div>

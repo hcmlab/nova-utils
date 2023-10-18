@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.data.provider.nova_iterator &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.data.provider.nova_iterator &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -87,7 +87,7 @@
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">nova_utils.data.data</span> <span class="kn">import</span> <span class="n">Data</span>
-<span class="kn">from</span> <span class="nn">nova_utils.data.stream</span> <span class="kn">import</span> <span class="n">Stream</span><span class="p">,</span> <span class="n">StreamMetaData</span>
+<span class="kn">from</span> <span class="nn">nova_utils.data.stream</span> <span class="kn">import</span> <span class="n">Stream</span><span class="p">,</span> <span class="n">StreamMetaData</span><span class="p">,</span> <span class="n">Audio</span><span class="p">,</span> <span class="n">Video</span><span class="p">,</span> <span class="n">SSIStream</span><span class="p">,</span> <span class="n">DynamicData</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">nova_utils.data.handler.mongo_handler</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">AnnotationHandler</span><span class="p">,</span>
@@ -105,7 +105,7 @@
 
 <span class="sd">    The NovaIterator takes all information about what data should be loaded and how it should be processed. The class itself then takes care of loading all data and provides an iterator to directly apply a sliding window to the requested data.</span>
 <span class="sd">    Every time based argument can be passed either as string or a numerical value. If the time is passed as string, the string should end with either &#39;s&#39; to indicate the time is specified in seconds or &#39;ms&#39; for milliseconds.</span>
-<span class="sd">    If the time is passed as a numerical value or as a string without indicating a specific unit it is assumed that an integer value represents milliseconds while a float represents seconds. All numbers will be represented as integer milliseconds internally.</span>
+<span class="sd">    If the time is passed as a numerical value or as a string without indicating a specific unit it is assumed texthat an integer value represents milliseconds while a float represents seconds. All numbers will be represented as integer milliseconds internally.</span>
 <span class="sd">    The highest time resolution for processing is therefore 1ms.</span>
 
 <span class="sd">    Args:</span>
@@ -120,6 +120,8 @@
 
 <span class="sd">            ``&quot;id&quot;``:</span>
 <span class="sd">                Unique id to map the data to a given input / output.</span>
+<span class="sd">            ``&quot;name&quot;``:</span>
+<span class="sd">                Output name for streams</span>
 <span class="sd">            ``&quot;type&quot;``:</span>
 <span class="sd">                IO type of the data. Either &quot;input&quot; or &quot;output&quot;</span>
 <span class="sd">            ``&quot;src&quot;``</span>
@@ -153,7 +155,7 @@
 <span class="sd">        end (int, float, str): End time for processing measured in time.</span>
 <span class="sd">        left_context (int, float, str): Left context duration measured in time.</span>
 <span class="sd">        right_context (int, float, str): Right context duration measured in time.</span>
-<span class="sd">        stride (int, float, str): Stride for iterating over data measured in time.</span>
+<span class="sd">        stride (int, float, str): Stride for iterating  data measured in time.</span>
 <span class="sd">        add_rest_class (bool): Whether to add a rest class for discrete annotations.</span>
 <span class="sd">        fill_missing_data (bool): Whether to fill missing data.</span>
 
@@ -284,7 +286,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_iterable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yield_sample</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_init_data_from_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_desc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_init_data_from_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_desc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">header_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize data from a data description.</span>
 
@@ -292,11 +294,12 @@
 <span class="sd">            data_desc (dict): Data description dictionary.</span>
 <span class="sd">            dataset (str): Dataset name.</span>
 <span class="sd">            session (str): Session name.</span>
+<span class="sd">            header_only (bool): If true only the header information for all session data will be loaded.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Data: Initialized data object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">src</span><span class="p">,</span> <span class="n">type_</span> <span class="o">=</span> <span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="n">src</span><span class="p">,</span> <span class="n">type_</span><span class="p">,</span> <span class="o">=</span> <span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">src</span> <span class="o">==</span> <span class="s2">&quot;db&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">type_</span> <span class="o">==</span> <span class="s2">&quot;anno&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_anno_handler</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
@@ -305,20 +308,35 @@
                     <span class="n">scheme</span><span class="o">=</span><span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">],</span>
                     <span class="n">annotator</span><span class="o">=</span><span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;annotator&quot;</span><span class="p">],</span>
                     <span class="n">role</span><span class="o">=</span><span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;role&quot;</span><span class="p">],</span>
+                    <span class="n">header_only</span><span class="o">=</span><span class="n">header_only</span>
                 <span class="p">)</span>
             <span class="k">elif</span> <span class="n">type_</span> <span class="o">==</span> <span class="s2">&quot;stream&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_stream_handler</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
-                    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
-                    <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
-                    <span class="n">role</span><span class="o">=</span><span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;role&quot;</span><span class="p">],</span>
-                <span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_stream_handler</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+                        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+                        <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                        <span class="n">role</span><span class="o">=</span><span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;role&quot;</span><span class="p">],</span>
+                        <span class="n">header_only</span><span class="o">=</span><span class="n">header_only</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="c1"># Only raise file not found error if stream is requested as input</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">e</span>
+                    <span class="c1"># Create empty stream file with params</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Todo differentiate types</span>
+                        <span class="n">empty_stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">data_desc</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">role</span><span class="o">=</span><span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;role&quot;</span><span class="p">],</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">empty_stream</span>
+
+
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown data type </span><span class="si">{</span><span class="n">type_</span><span class="si">}</span><span class="s2"> for data.&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">src</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_handler</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">data_desc</span><span class="p">[</span><span class="s2">&quot;fp&quot;</span><span class="p">]))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown source type </span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s2"> for data.&quot;</span><span class="p">)</span>
+
 
     <span class="k">def</span> <span class="nf">_data_description_to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_desc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -365,21 +383,35 @@
         <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_session_handler</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">session_name</span><span class="p">)</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Opens all annotations and data readers&quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">input_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">output_data_templates</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">extra_data</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># setting session data</span>
         <span class="k">for</span> <span class="n">data_desc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">data_desc</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">data_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
                 <span class="n">data_initialized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_data_from_description</span><span class="p">(</span>
                     <span class="n">data_desc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">session_name</span>
                 <span class="p">)</span>
                 <span class="n">data_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_description_to_string</span><span class="p">(</span><span class="n">data_desc</span><span class="p">)</span>
-                <span class="n">data</span><span class="p">[</span><span class="n">data_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_initialized</span>
-        <span class="n">session</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+                <span class="n">input_data</span><span class="p">[</span><span class="n">data_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_initialized</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data_initialized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_data_from_description</span><span class="p">(</span>
+                    <span class="n">data_desc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">session_name</span><span class="p">,</span> <span class="n">header_only</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="n">data_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_description_to_string</span><span class="p">(</span><span class="n">data_desc</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">data_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+                    <span class="n">output_data_templates</span><span class="p">[</span><span class="n">data_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_initialized</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">extra_data</span><span class="p">[</span><span class="n">data_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_initialized</span>
+
+        <span class="n">session</span><span class="o">.</span><span class="n">input_data</span> <span class="o">=</span> <span class="n">input_data</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">extra_data</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">output_data_templates</span> <span class="o">=</span> <span class="n">output_data_templates</span>
 
         <span class="c1"># update session duration</span>
         <span class="n">min_dur</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">duration</span> <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span>
-        <span class="k">for</span> <span class="n">data_initialized</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">data_initialized</span> <span class="ow">in</span> <span class="n">input_data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_initialized</span><span class="p">,</span> <span class="n">Stream</span><span class="p">):</span>
                 <span class="n">meta_data</span><span class="p">:</span> <span class="n">StreamMetaData</span> <span class="o">=</span> <span class="n">data_initialized</span><span class="o">.</span><span class="n">meta_data</span>
                 <span class="k">if</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -394,6 +426,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to determine duration for session </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">session</span></div>
+
 
     <span class="k">def</span> <span class="nf">_yield_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -410,7 +443,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Needed to sort the samples later and assure that the order is the same as in nova.</span>
-        <span class="n">sample_counter</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1">#sample_counter = 1</span>
 
         <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">:</span>
             <span class="c1"># Init all data objects for the session and get necessary meta information</span>
@@ -425,15 +458,17 @@
                 <span class="n">_stride</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span>
 
             <span class="c1"># Starting position of the first frame in seconds</span>
-            <span class="n">cpos</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left_context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+            <span class="c1">#cpos = max(self.left_context, self.start)</span>
+            <span class="n">cpos</span> <span class="o">=</span> <span class="mi">0</span>
 
             <span class="c1"># TODO account for stride and framesize being None</span>
             <span class="c1"># Generate samples for this session</span>
-            <span class="k">while</span> <span class="n">cpos</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_context</span> <span class="o">&lt;=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="k">while</span> <span class="n">cpos</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">&lt;=</span> <span class="nb">min</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_session</span><span class="o">.</span><span class="n">duration</span>
             <span class="p">):</span>
                 <span class="n">frame_start</span> <span class="o">=</span> <span class="n">cpos</span>
                 <span class="n">frame_end</span> <span class="o">=</span> <span class="n">cpos</span> <span class="o">+</span> <span class="n">_frame_size</span>
+
                 <span class="n">window_start</span> <span class="o">=</span> <span class="n">frame_start</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_context</span>
                 <span class="n">window_end</span> <span class="o">=</span> <span class="n">frame_end</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_context</span>
 
@@ -446,10 +481,44 @@
                 <span class="p">)</span>
 
                 <span class="c1"># Load data for frame</span>
-                <span class="n">data_for_window</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">sample_from_interval</span><span class="p">(</span><span class="n">window_start</span><span class="p">,</span> <span class="n">window_end</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_session</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="p">}</span>
+                <span class="c1"># data_for_window = {</span>
+                <span class="c1">#     k: v.sample_from_interval(window_start, window_end)</span>
+                <span class="c1">#     for k, v in self.current_session.input_data.items()</span>
+                <span class="c1"># }</span>
+                <span class="n">data_for_window</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_session</span><span class="o">.</span><span class="n">input_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+                    <span class="c1"># TODO current_session duration is not the correct way to end right padding. We could have longer streams</span>
+                    <span class="n">start_</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">window_start</span><span class="p">)</span>
+                    <span class="n">end_</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_session</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">window_end</span><span class="p">)</span>
+                    <span class="n">sample</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">sample_from_interval</span><span class="p">(</span><span class="n">start_</span><span class="p">,</span> <span class="n">end_</span><span class="p">)</span>
+
+                    <span class="c1"># TODO pad continuous annotations</span>
+                    <span class="c1"># Apply padding</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Stream</span><span class="p">):</span>
+
+                        <span class="c1"># Don&#39;t pad anything but num_samples axis</span>
+                        <span class="n">sr</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">sample_rate</span> <span class="o">/</span> <span class="mi">1000</span>
+                        <span class="n">left_pad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="mi">0</span><span class="o">-</span><span class="n">window_start</span><span class="p">)</span> <span class="o">*</span> <span class="n">sr</span><span class="p">)</span> <span class="k">if</span> <span class="n">window_start</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+                        <span class="n">right_pad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">window_end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_session</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span> <span class="o">*</span> <span class="n">sr</span><span class="p">)</span> <span class="k">if</span> <span class="n">window_end</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_session</span><span class="o">.</span><span class="n">duration</span> <span class="k">else</span> <span class="mi">0</span>
+
+                        <span class="k">if</span> <span class="n">left_pad</span> <span class="ow">or</span> <span class="n">right_pad</span><span class="p">:</span>
+                            <span class="n">lr_pad</span> <span class="o">=</span>  <span class="p">((</span><span class="n">left_pad</span><span class="p">,</span> <span class="n">right_pad</span><span class="p">),</span> <span class="p">)</span>
+                            <span class="n">n_pad</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span><span class="mi">1</span> <span class="p">))</span>
+
+                            <span class="c1"># Num samples last dim</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Audio</span><span class="p">):</span>
+                                <span class="n">pad</span> <span class="o">=</span> <span class="n">n_pad</span> <span class="o">+</span> <span class="n">lr_pad</span>
+                            <span class="c1"># Num samples first dim</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">pad</span> <span class="o">=</span> <span class="n">lr_pad</span> <span class="o">+</span> <span class="n">n_pad</span>
+
+                            <span class="n">sample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">pad_width</span><span class="o">=</span><span class="n">pad</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;edge&#39;</span><span class="p">)</span>
+                    <span class="n">data_for_window</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span>
+
+
+                <span class="c1"># pad</span>
+                <span class="c1">#np.pad(data_for_window[&#39;audio&#39;], pad_width=((0,0),(960,0)), mode=&#39;constant&#39;, constant_values=1)</span>
 
                 <span class="c1"># Performing sanity checks</span>
                 <span class="n">garbage_detected</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
@@ -458,7 +527,7 @@
 
                 <span class="c1"># Incrementing counter</span>
                 <span class="n">cpos</span> <span class="o">+=</span> <span class="n">_stride</span>
-                <span class="n">sample_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c1">#sample_counter += 1</span>
 
                 <span class="k">if</span> <span class="n">garbage_detected</span><span class="p">:</span>
                     <span class="k">continue</span>
@@ -500,20 +569,26 @@
 
     <span class="n">annotation</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;db:anno&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;scheme&quot;</span><span class="p">:</span> <span class="s2">&quot;transcript&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;annotator&quot;</span><span class="p">:</span> <span class="s2">&quot;whisperx&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;testrole&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;scheme&quot;</span><span class="p">:</span> <span class="s2">&quot;diarization&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;annotation&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;annotator&quot;</span><span class="p">:</span> <span class="s2">&quot;schildom&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;testrole2&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="n">stream</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;db:stream&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;featurestream&quot;</span><span class="p">,</span>
         <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;testrole&quot;</span><span class="p">,</span>
         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;arousal.synchrony[testrole2]&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="n">file</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;file:stream&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;fp&quot;</span><span class="p">:</span> <span class="s2">&quot;/Users/dominikschiller/Work/github/nova-utils/test_files/new_test_video.mp4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;file&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fp&quot;</span><span class="p">:</span> <span class="s2">&quot;/Users/dominikschiller/Work/local_nova_dir/test_files/new_test_video_25.mp4&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="n">nova_iterator</span> <span class="o">=</span> <span class="n">NovaIterator</span><span class="p">(</span>
@@ -524,11 +599,16 @@
         <span class="n">dataset</span><span class="p">,</span>
         <span class="n">DATA_DIR</span><span class="p">,</span>
         <span class="n">sessions</span><span class="o">=</span><span class="n">sessions</span><span class="p">,</span>
-        <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">annotation</span><span class="p">,</span> <span class="n">file</span><span class="p">],</span>
-        <span class="n">frame_size</span><span class="o">=</span><span class="s2">&quot;5s&quot;</span><span class="p">,</span>
-        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;20s&quot;</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">file</span><span class="p">],</span>
+        <span class="n">frame_size</span><span class="o">=</span><span class="s2">&quot;1s&quot;</span><span class="p">,</span>
+        <span class="n">left_context</span><span class="o">=</span><span class="s2">&quot;2s&quot;</span><span class="p">,</span>
+        <span class="n">right_context</span><span class="o">=</span><span class="s2">&quot;2s&quot;</span><span class="p">,</span>
+        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;100s&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
+
+    <span class="k">while</span> <span class="nb">next</span><span class="p">(</span><span class="n">nova_iterator</span><span class="p">):</span>
+        <span class="k">continue</span>
     <span class="n">a</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">nova_iterator</span><span class="p">)</span>
     <span class="nb">breakpoint</span><span class="p">()</span>
 </pre></div>

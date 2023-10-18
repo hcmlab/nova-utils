@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nova_utils.utils.cache_utils module &mdash; NOVA-Utils 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NOVA-Utils
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nova_utils.scripts.html">nova_utils.scripts package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nova_utils.data.html">nova_utils.data package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nova_utils.interfaces.html">nova_utils.interfaces package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nova_utils.utils.html">nova_utils.utils package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NOVA-Utils</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">nova_utils.utils.cache_utils module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/nova_utils.utils.cache_utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-nova_utils.utils.cache_utils">
+<span id="nova-utils-utils-cache-utils-module"></span><h1>nova_utils.utils.cache_utils module<a class="headerlink" href="#module-nova_utils.utils.cache_utils" title="Permalink to this heading"></a></h1>
+<p>Utilities for file download and caching. Partially transferred from <a class="reference external" href="https://github.com/tensorflow/tensorflow/blob/v2.5.0/tensorflow/python/keras/utils/data_utils.py#L148-L277">https://github.com/tensorflow/tensorflow/blob/v2.5.0/tensorflow/python/keras/utils/data_utils.py#L148-L277</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="nova_utils.utils.cache_utils.get_file">
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.cache_utils.</span></span><span class="sig-name descname"><span class="pre">get_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">untar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md5_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_subdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'downloads'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hash_algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">archive_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmp_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/cache_utils.html#get_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.cache_utils.get_file" title="Permalink to this definition"></a></dt>
+<dd><p>Downloads a file from a URL if it not already in the cache.</p>
+<p>By default, the file at the url <cite>origin</cite> is downloaded to the
+cache_dir ‘~/.hcai_downloads’, placed in the cache_subdir <cite>downloads</cite>,
+and given the filename <cite>fname</cite>. The final location of a file
+<cite>example.txt</cite> would therefore be <cite>~/.hcai_downloads/downloads/example.txt</cite>.</p>
+<p>Files in tar, tar.gz, tar.bz, and zip formats can also be extracted.
+Passing a hash will verify the file after download. The command line
+programs <cite>shasum</cite> and <cite>sha256sum</cite> can compute the hash.</p>
+<p>Example:</p>
+<p><code class="docutils literal notranslate"><span class="pre">`python</span>
+<span class="pre">#TODO</span>
+<span class="pre">`</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> – Name of the file. If an absolute path <cite>/path/to/file.txt</cite> is
+specified the file will be saved at that location.</p></li>
+<li><p><strong>origin</strong> – Original URL of the file.</p></li>
+<li><p><strong>untar</strong> – Deprecated in favor of <cite>extract</cite> argument.
+boolean, whether the file should be decompressed</p></li>
+<li><p><strong>md5_hash</strong> – Deprecated in favor of <cite>file_hash</cite> argument.
+md5 hash of the file for verification</p></li>
+<li><p><strong>file_hash</strong> – The expected hash string of the file after download.
+The sha256 and md5 hash algorithms are both supported.</p></li>
+<li><p><strong>cache_subdir</strong> – Subdirectory under the cache dir where the file is
+saved. If an absolute path <cite>/path/to/folder</cite> is
+specified the file will be saved at that location.</p></li>
+<li><p><strong>hash_algorithm</strong> – Select the hash algorithm to verify the file.
+options are <cite>‘md5’</cite>, <cite>‘sha256’</cite>, and <cite>‘auto’</cite>.
+The default ‘auto’ detects the hash algorithm in use.</p></li>
+<li><p><strong>extract</strong> – True tries extracting the file as an Archive, like tar or zip.</p></li>
+<li><p><strong>archive_format</strong> – Archive format to try for extracting the file.
+Options are <cite>‘auto’</cite>, <cite>‘tar’</cite>, <cite>‘zip’</cite>, and <cite>None</cite>.
+<cite>‘tar’</cite> includes tar, tar.gz, and tar.bz files.
+The default <cite>‘auto’</cite> corresponds to <cite>[‘tar’, ‘zip’]</cite>.
+None or an empty list will return no matches found.</p></li>
+<li><p><strong>cache_dir</strong> – Location to store cached files, when None it
+defaults to the default directory <cite>~/.nova_utils/</cite>.</p></li>
+<li><p><strong>tmp_dir</strong> – Location to download temporary files, when no tmp_dir is specificed
+cache dir is used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path to the downloaded file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nova_utils.utils.cache_utils.retreive_and_unzip">
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.cache_utils.</span></span><span class="sig-name descname"><span class="pre">retreive_and_unzip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./tmp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmp_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./tmp'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/cache_utils.html#retreive_and_unzip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.cache_utils.retreive_and_unzip" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nova_utils.utils.cache_utils.retreive_from_url">
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.cache_utils.</span></span><span class="sig-name descname"><span class="pre">retreive_from_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/cache_utils.html#retreive_from_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.cache_utils.retreive_from_url" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nova_utils.utils.cache_utils.validate_file">
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.cache_utils.</span></span><span class="sig-name descname"><span class="pre">validate_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_hash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">65535</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/cache_utils.html#validate_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.cache_utils.validate_file" title="Permalink to this definition"></a></dt>
+<dd><p>Validates a file against a sha256 or md5 hash.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fpath</strong> – path to the file being validated</p></li>
+<li><p><strong>file_hash</strong> – The expected hash string of the file.
+The sha256 and md5 hash algorithms are both supported.</p></li>
+<li><p><strong>algorithm</strong> – Hash algorithm, one of ‘auto’, ‘sha256’, or ‘md5’.
+The default ‘auto’ detects the hash algorithm in use.</p></li>
+<li><p><strong>chunk_size</strong> – Bytes to read at a time, important for large files.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether the file is valid</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Dominik Schiller.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

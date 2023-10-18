@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>data.handler.file_handler &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>data.handler.file_handler &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -87,6 +87,7 @@
 <span class="kn">import</span> <span class="nn">decord</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">decord</span> <span class="kn">import</span> <span class="n">cpu</span>
 <span class="kn">from</span> <span class="nn">struct</span> <span class="kn">import</span> <span class="o">*</span>
@@ -113,8 +114,16 @@
 <span class="p">)</span>
 <span class="kn">import</span> <span class="nn">mmap</span>
 <span class="kn">import</span> <span class="nn">ffmpegio</span>
-<span class="kn">from</span> <span class="nn">nova_utils.utils.type_definitions</span> <span class="kn">import</span> <span class="n">LabelDType</span><span class="p">,</span> <span class="n">SSILabelDType</span><span class="p">,</span> <span class="n">SSIFileType</span><span class="p">,</span> <span class="n">SSINPDataType</span>
-<span class="kn">from</span> <span class="nn">nova_utils.utils.anno_utils</span> <span class="kn">import</span> <span class="n">convert_label_to_ssi_dtype</span><span class="p">,</span> <span class="n">convert_ssi_to_label_dtype</span>
+<span class="kn">from</span> <span class="nn">nova_utils.utils.type_definitions</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LabelDType</span><span class="p">,</span>
+    <span class="n">SSILabelDType</span><span class="p">,</span>
+    <span class="n">SSIFileType</span><span class="p">,</span>
+    <span class="n">SSINPDataType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">nova_utils.utils.anno_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">convert_label_to_ssi_dtype</span><span class="p">,</span>
+    <span class="n">convert_ssi_to_label_dtype</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">nova_utils.utils.string_utils</span> <span class="kn">import</span> <span class="n">string_to_enum</span>
 
 <span class="c1"># METADATA</span>
@@ -158,6 +167,7 @@
 
 <span class="c1"># ANNOTATIONS</span>
 
+
 <span class="k">class</span> <span class="nc">_AnnotationFileHandler</span><span class="p">(</span><span class="n">IHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Class for handling the loading and saving of data annotations.&quot;&quot;&quot;</span>
 
@@ -175,7 +185,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">SSIFileType</span><span class="o">.</span><span class="n">ASCII</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">SSIFileType</span><span class="o">.</span><span class="n">BINARY</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">SSILabelDType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -203,6 +213,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;FileType </span><span class="si">{}</span><span class="s2"> not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ftype</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">data</span>
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_load_data_free</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -279,12 +290,14 @@
 
         <span class="k">return</span> <span class="n">fmt</span>
 
-    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Annotation</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">header_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Annotation</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load annotation data from an XML file.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            fp (Path): The file path of the XML annotation file.</span>
+<span class="sd">            header_only (bool): If true only the stream header will be loaded.</span>
+
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Annotation: The loaded annotation data as an Annotation object.</span>
@@ -314,9 +327,11 @@
             <span class="n">scheme_classes</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">scheme</span><span class="p">:</span>
                 <span class="n">scheme_classes</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_data_discrete</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">ftype</span><span class="p">)</span>
 
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="p">)</span>
+            <span class="n">anno_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_data_discrete</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">ftype</span><span class="p">)</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">DISCRETE</span><span class="p">)</span>
 
             <span class="n">anno_scheme</span> <span class="o">=</span> <span class="n">DiscreteAnnotationScheme</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">scheme_name</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="n">scheme_classes</span>
@@ -333,8 +348,11 @@
             <span class="n">sr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scheme</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sr&quot;</span><span class="p">))</span>
             <span class="n">min_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scheme</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;min&quot;</span><span class="p">))</span>
             <span class="n">max_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scheme</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max&quot;</span><span class="p">))</span>
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_data_continuous</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">ftype</span><span class="p">)</span>
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span>
+
+            <span class="n">anno_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_data_continuous</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">ftype</span><span class="p">)</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span>
             <span class="n">anno_scheme</span> <span class="o">=</span> <span class="n">ContinuousAnnotationScheme</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">scheme_name</span><span class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">sr</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="n">max_val</span>
             <span class="p">)</span>
@@ -347,8 +365,10 @@
 
         <span class="c1"># free scheme</span>
         <span class="k">elif</span> <span class="n">scheme_type</span> <span class="o">==</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">FREE</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_data_free</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
-            <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">FREE</span><span class="p">)</span>
+            <span class="n">anno_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_data_free</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+                <span class="n">anno_data</span> <span class="o">=</span> <span class="n">convert_ssi_to_label_dtype</span><span class="p">(</span><span class="n">anno_data</span><span class="p">,</span> <span class="n">SchemeType</span><span class="o">.</span><span class="n">FREE</span><span class="p">)</span>
             <span class="n">anno_scheme</span> <span class="o">=</span> <span class="n">FreeAnnotationScheme</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">scheme_name</span><span class="p">)</span>
             <span class="n">annotation</span> <span class="o">=</span> <span class="n">FreeAnnotation</span><span class="p">(</span>
                 <span class="n">scheme</span><span class="o">=</span><span class="n">anno_scheme</span><span class="p">,</span>
@@ -553,7 +573,11 @@
         <span class="c1"># info</span>
         <span class="n">meta_data</span><span class="p">:</span> <span class="n">StreamMetaData</span> <span class="o">|</span> <span class="n">SSIStreamMetaData</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">meta_data</span>
         <span class="n">sr</span> <span class="o">=</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">sample_rate</span>
-        <span class="n">dim</span> <span class="o">=</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">sample_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">sample_shape</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">meta_data</span><span class="o">.</span><span class="n">sample_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">sample_shape</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
         <span class="n">byte</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="n">SSINPDataType</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
         <span class="n">Et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span>
@@ -570,7 +594,11 @@
         <span class="p">)</span>
 
         <span class="c1"># meta</span>
-        <span class="n">Et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s2">&quot;meta&quot;</span><span class="p">)</span>
+        <span class="n">Et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span>
+            <span class="n">root</span><span class="p">,</span>
+            <span class="s2">&quot;meta&quot;</span><span class="p">,</span>
+            <span class="n">attrib</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">media_type</span><span class="p">},</span>
+        <span class="p">)</span>
 
         <span class="c1"># chunks</span>
         <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">chunks</span><span class="p">:</span>
@@ -578,7 +606,7 @@
                 <span class="n">root</span><span class="p">,</span>
                 <span class="s2">&quot;chunk&quot;</span><span class="p">,</span>
                 <span class="n">attrib</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;fromm&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">chunk</span><span class="p">[</span><span class="s1">&#39;from&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;from&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">chunk</span><span class="p">[</span><span class="s1">&#39;from&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;to&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">chunk</span><span class="p">[</span><span class="s1">&#39;to&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;byte&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">chunk</span><span class="p">[</span><span class="s2">&quot;byte&quot;</span><span class="p">]),</span>
                     <span class="s2">&quot;num&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">chunk</span><span class="p">[</span><span class="s2">&quot;num&quot;</span><span class="p">]),</span>
@@ -596,12 +624,14 @@
         <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">SSIFileType</span><span class="o">.</span><span class="n">BINARY</span><span class="p">:</span>
             <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">header_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load SSIStream data from a file.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            fp (Path): The file path of the SSIStream.</span>
+<span class="sd">            header_only (bool): If true only the stream header will be loaded.</span>
+
 <span class="sd">            **kwargs: Arbitrary keyword arguments.</span>
 
 <span class="sd">        Returns:</span>
@@ -617,17 +647,19 @@
         <span class="n">chunks</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;chunks&quot;</span><span class="p">)</span>
         <span class="n">delim</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;delim&quot;</span><span class="p">]</span>
         <span class="n">ftype</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;ftype&quot;</span><span class="p">]</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
-        <span class="n">ext</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;ext&#39;</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;ext&quot;</span><span class="p">]</span>
 
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_data</span><span class="p">(</span>
-            <span class="n">fp</span><span class="o">=</span><span class="n">data_path</span><span class="p">,</span>
-            <span class="n">size</span><span class="o">=</span><span class="n">num_samples</span><span class="p">,</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
-            <span class="n">dim</span><span class="o">=</span><span class="n">sample_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="n">delim</span><span class="o">=</span><span class="n">delim</span><span class="p">,</span>
-            <span class="n">ftype</span><span class="o">=</span><span class="n">SSIFileType</span><span class="p">[</span><span class="n">ftype</span><span class="p">],</span>
-        <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_data</span><span class="p">(</span>
+                <span class="n">fp</span><span class="o">=</span><span class="n">data_path</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">num_samples</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">dim</span><span class="o">=</span><span class="n">sample_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">delim</span><span class="o">=</span><span class="n">delim</span><span class="p">,</span>
+                <span class="n">ftype</span><span class="o">=</span><span class="n">SSIFileType</span><span class="p">[</span><span class="n">ftype</span><span class="p">],</span>
+            <span class="p">)</span>
 
         <span class="n">ssi_stream</span> <span class="o">=</span> <span class="n">SSIStream</span><span class="p">(</span>
             <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
@@ -638,7 +670,7 @@
             <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
             <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">ext</span><span class="o">=</span><span class="n">ext</span>
+            <span class="n">ext</span><span class="o">=</span><span class="n">ext</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">ssi_stream</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">FileSSIStreamMetaData</span><span class="p">(</span><span class="n">delim</span><span class="o">=</span><span class="n">delim</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="n">ftype</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">ssi_stream</span>
@@ -649,7 +681,9 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;LazyArray class extending numpy.ndarray for video and audio loading.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">decord_reader</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
-        <span class="n">buffer</span> <span class="o">=</span> <span class="n">mmap</span><span class="o">.</span><span class="n">mmap</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span> <span class="n">access</span><span class="o">=</span><span class="n">mmap</span><span class="o">.</span><span class="n">ACCESS_READ</span><span class="p">)</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="n">mmap</span><span class="o">.</span><span class="n">mmap</span><span class="p">(</span>
+            <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span> <span class="n">access</span><span class="o">=</span><span class="n">mmap</span><span class="o">.</span><span class="n">ACCESS_READ</span>
+        <span class="p">)</span>
         <span class="n">obj</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span>
 
         <span class="n">obj</span><span class="o">.</span><span class="n">decord_reader</span> <span class="o">=</span> <span class="n">decord_reader</span>
@@ -692,12 +726,14 @@
         <span class="n">metadata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">metadata</span>
 
-    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">header_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load video data from a file.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            fp (Path): The file path of the video.</span>
+<span class="sd">            header_only (bool): If true only the stream header will be loaded.</span>
+
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Data: The loaded video data.</span>
@@ -718,11 +754,14 @@
 
         <span class="c1"># file loading</span>
         <span class="n">video_reader</span> <span class="o">=</span> <span class="n">decord</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span> <span class="n">ctx</span><span class="o">=</span><span class="n">cpu</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-        <span class="n">lazy_video_data</span> <span class="o">=</span> <span class="n">_LazyArray</span><span class="p">(</span>
-            <span class="n">video_reader</span><span class="p">,</span>
-            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,)</span> <span class="o">+</span> <span class="n">sample_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
-        <span class="p">)</span>
+
+        <span class="n">lazy_video_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+            <span class="n">lazy_video_data</span> <span class="o">=</span> <span class="n">_LazyArray</span><span class="p">(</span>
+                <span class="n">video_reader</span><span class="p">,</span>
+                <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,)</span> <span class="o">+</span> <span class="n">sample_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">video_</span> <span class="o">=</span> <span class="n">Video</span><span class="p">(</span>
             <span class="n">data</span><span class="o">=</span><span class="n">lazy_video_data</span><span class="p">,</span>
@@ -745,7 +784,7 @@
 <span class="sd">            fp (Path): The file path for saving the data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">meta_data</span><span class="p">:</span> <span class="n">StreamMetaData</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">meta_data</span>
-        <span class="c1">#sample_rate = int(meta_data.sample_rate)</span>
+        <span class="c1"># sample_rate = int(meta_data.sample_rate)</span>
         <span class="n">sample_rate</span> <span class="o">=</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">sample_rate</span>
         <span class="n">file_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
 
@@ -785,12 +824,14 @@
         <span class="n">metadata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">metadata</span>
 
-    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">header_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load audio data from a file.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            fp (Path): The file path of the audio.</span>
+<span class="sd">            header_only (bool): If true only the stream header will be loaded.</span>
+
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Data: The loaded audio data.</span>
@@ -811,10 +852,12 @@
         <span class="n">num_samples</span> <span class="o">=</span> <span class="n">_num_samples</span>
 
         <span class="c1"># file loading</span>
-        <span class="n">audio_reader</span> <span class="o">=</span> <span class="n">decord</span><span class="o">.</span><span class="n">AudioReader</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span> <span class="n">ctx</span><span class="o">=</span><span class="n">cpu</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-        <span class="n">lazy_audio_data</span> <span class="o">=</span> <span class="n">_LazyArray</span><span class="p">(</span>
-            <span class="n">audio_reader</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">audio_reader</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
-        <span class="p">)</span>
+        <span class="n">lazy_audio_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+            <span class="n">audio_reader</span> <span class="o">=</span> <span class="n">decord</span><span class="o">.</span><span class="n">AudioReader</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span> <span class="n">ctx</span><span class="o">=</span><span class="n">cpu</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">lazy_audio_data</span> <span class="o">=</span> <span class="n">_LazyArray</span><span class="p">(</span>
+                <span class="n">audio_reader</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">audio_reader</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
+            <span class="p">)</span>
 
         <span class="n">audio_</span> <span class="o">=</span> <span class="n">Audio</span><span class="p">(</span>
             <span class="n">data</span><span class="o">=</span><span class="n">lazy_audio_data</span><span class="p">,</span>
@@ -884,18 +927,19 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="n">data_type</span>
 
-<div class="viewcode-block" id="FileHandler.load"><a class="viewcode-back" href="../../../api/data.handler.html#data.handler.file_handler.FileHandler.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+<div class="viewcode-block" id="FileHandler.load"><a class="viewcode-back" href="../../../api/data.handler.html#data.handler.file_handler.FileHandler.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">header_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load data from a file.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            fp (Path): The file path.</span>
+<span class="sd">            header_only (bool): If true only the stream header will be loaded.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Data: The loaded data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">handler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_handler_for_file</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">header_only</span><span class="o">=</span><span class="n">header_only</span><span class="p">)</span>
         <span class="n">data</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">FileMetaData</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">data</span></div>
 

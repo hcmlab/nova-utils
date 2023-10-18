@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nova_utils.utils.string_utils module &mdash; NOVA-Utils 1.1.1 documentation</title>
+  <title>nova_utils.utils.string_utils module &mdash; NOVA-Utils 1.2.6 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -57,6 +57,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">nova_utils.utils.string_utils module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.string_utils.parse_nova_option_string"><code class="docutils literal notranslate"><span class="pre">parse_nova_option_string()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.string_utils.parse_time_string_to_ms"><code class="docutils literal notranslate"><span class="pre">parse_time_string_to_ms()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.string_utils.string_to_bool"><code class="docutils literal notranslate"><span class="pre">string_to_bool()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#nova_utils.utils.string_utils.string_to_enum"><code class="docutils literal notranslate"><span class="pre">string_to_enum()</span></code></a></li>
 </ul>
 </li>
@@ -140,6 +141,25 @@ It converts the frame to an integer value in milliseconds.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If the input format for frame is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nova_utils.utils.string_utils.string_to_bool">
+<span class="sig-prename descclassname"><span class="pre">nova_utils.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">string_to_bool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nova_utils/utils/string_utils.html#string_to_bool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nova_utils.utils.string_utils.string_to_bool" title="Permalink to this definition"></a></dt>
+<dd><p>Parses a given input string to a boolean value
+:param string: Input string
+:type string: str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The boolean value of the string</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>string</strong> (<em>str</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
