@@ -9,7 +9,7 @@ Date:
 
 _MAJOR_VERSION = '1'
 _MINOR_VERSION = '2'
-_PATCH_VERSION = '6'
+_PATCH_VERSION = '7'
 
 __version__ = '.'.join([
     _MAJOR_VERSION,
