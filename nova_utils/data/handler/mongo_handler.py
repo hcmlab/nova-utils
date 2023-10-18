@@ -828,9 +828,9 @@ class StreamHandler(IHandler, MongoHandler):
         stream: Stream,
         dataset: str = None,
         session: str = None,
-        role: str = None ,
+        role: str = None,
         name: str = None,
-        data_type: str = 'feature',
+        media_type: str = None,
         file_ext: str = None,
         dim_labels: list = None,
         is_valid: bool = True,
@@ -844,7 +844,7 @@ class StreamHandler(IHandler, MongoHandler):
             session (str): Name of the session. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.
             role (str): Name of the role. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.
             name (str): Name of the stream. Overwrites the respective attribute from stream.meta_data if set. Defaults to None.
-            data_type (str): Media type of the stream data as specified in NOVA-DB.
+            media_type (str): Media type of the stream data as specified in NOVA-DB.
             file_ext (str, optional): File extension. Defaults to None.
             dim_labels (list[dict], optional): Dimension labels. Defaults to None.
             is_valid (bool, optional): Indicates if the stream data is valid. Defaults to True.
@@ -860,7 +860,7 @@ class StreamHandler(IHandler, MongoHandler):
         role = role if not role is None else stream.meta_data.role
         name = name if not name is None else stream.meta_data.name
         file_ext = file_ext if not file_ext is None else stream.meta_data.ext
-        data_type = data_type if not data_type is None else stream.meta_data.data_type
+        media_type = media_type if not media_type is None else stream.meta_data.media_type
 
         if isinstance(stream, SSIStream):
             dim_labels = dim_labels if not dim_labels is None else stream.meta_data.dim_labels
@@ -885,7 +885,7 @@ class StreamHandler(IHandler, MongoHandler):
             "fileExt": file_ext.strip('.'),
             "name": name,
             "sr": meta_data.sample_rate,
-            "type": data_type,
+            "type": media_type,
             "dimlabels": dim_labels if dim_labels else [],
             "isValid": is_valid,
         }
@@ -1011,7 +1011,7 @@ if __name__ == "__main__":
             session="04_Oesterreich_test",
             role="testrole",
             name="arousal.synchrony[testrole]" + suffix,
-            data_type="video",
+            media_type="video",
             dim_labels=[{"id": 1, "name": "hallo"}, {"id": 2, "name": "nope"}],
         )
 

@@ -40,8 +40,16 @@ from nova_utils.data.stream import (
 )
 import mmap
 import ffmpegio
-from nova_utils.utils.type_definitions import LabelDType, SSILabelDType, SSIFileType, SSINPDataType
-from nova_utils.utils.anno_utils import convert_label_to_ssi_dtype, convert_ssi_to_label_dtype
+from nova_utils.utils.type_definitions import (
+    LabelDType,
+    SSILabelDType,
+    SSIFileType,
+    SSINPDataType,
+)
+from nova_utils.utils.anno_utils import (
+    convert_label_to_ssi_dtype,
+    convert_ssi_to_label_dtype,
+)
 from nova_utils.utils.string_utils import string_to_enum
 
 # METADATA
@@ -85,6 +93,7 @@ class FileSSIStreamMetaData:
 
 # ANNOTATIONS
 
+
 class _AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
 
@@ -102,7 +111,7 @@ class _AnnotationFileHandler(IHandler):
         """
 
         if ftype == SSIFileType.ASCII.name:
-            data =  np.loadtxt(path, dtype=SSILabelDType.DISCRETE.value, delimiter=";")
+            data = np.loadtxt(path, dtype=SSILabelDType.DISCRETE.value, delimiter=";")
         elif ftype == SSIFileType.BINARY.name:
             data = np.fromfile(path, dtype=SSILabelDType.DISCRETE.value)
         else:
@@ -130,6 +139,7 @@ class _AnnotationFileHandler(IHandler):
             raise ValueError("FileType {} not supported".format(ftype))
 
         return data
+
     @staticmethod
     def _load_data_free(path, ftype, size):
         """
@@ -489,7 +499,11 @@ class _SSIStreamFileHandler(IHandler):
         # info
         meta_data: StreamMetaData | SSIStreamMetaData = data.meta_data
         sr = meta_data.sample_rate
-        dim = meta_data.sample_shape[0] if not meta_data.sample_shape is None else data.data[0].shape[0]
+        dim = (
+            meta_data.sample_shape[0]
+            if not meta_data.sample_shape is None
+            else data.data[0].shape[0]
+        )
         byte = np.dtype(meta_data.dtype).itemsize
         dtype = SSINPDataType(meta_data.dtype).name
         Et.SubElement(
@@ -506,7 +520,11 @@ class _SSIStreamFileHandler(IHandler):
         )
 
         # meta
-        Et.SubElement(root, "meta")
+        Et.SubElement(
+            root,
+            "meta",
+            attrib={"type": meta_data.media_type},
+        )
 
         # chunks
         for chunk in meta_data.chunks:
@@ -555,8 +573,8 @@ class _SSIStreamFileHandler(IHandler):
         chunks = header.get("chunks")
         delim = header["delim"]
         ftype = header["ftype"]
-        name = header['name']
-        ext = header['ext']
+        name = header["name"]
+        ext = header["ext"]
 
         data = None
         if not header_only:
@@ -578,7 +596,7 @@ class _SSIStreamFileHandler(IHandler):
             dtype=dtype,
             chunks=chunks,
             name=name,
-            ext=ext
+            ext=ext,
         )
         ssi_stream.meta_data.expand(FileSSIStreamMetaData(delim=delim, ftype=ftype))
         return ssi_stream
@@ -589,7 +607,9 @@ class _LazyArray(np.ndarray):
     """LazyArray class extending numpy.ndarray for video and audio loading."""
 
     def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
-        buffer = mmap.mmap(-1, dtype.itemsize * math.prod(shape), access=mmap.ACCESS_READ)
+        buffer = mmap.mmap(
+            -1, dtype.itemsize * math.prod(shape), access=mmap.ACCESS_READ
+        )
         obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
 
         obj.decord_reader = decord_reader
@@ -690,7 +710,7 @@ class _VideoFileHandler(IHandler):
             fp (Path): The file path for saving the data.
         """
         meta_data: StreamMetaData = data.meta_data
-        #sample_rate = int(meta_data.sample_rate)
+        # sample_rate = int(meta_data.sample_rate)
         sample_rate = meta_data.sample_rate
         file_path = str(fp.resolve())
 
@@ -845,7 +865,7 @@ class FileHandler(IHandler):
             Data: The loaded data.
         """
         handler = self._get_handler_for_file(fp)
-        data = handler.load(fp, header_only)
+        data = handler.load(fp, header_only=header_only)
         data.meta_data.expand(FileMetaData(fp))
         return data
 
