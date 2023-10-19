@@ -5,6 +5,7 @@ import numpy as np
 import nova_utils.data.provider.nova_iterator
 from nova_utils.data.annotation import Annotation
 from nova_utils.data.stream import Stream
+from nova_utils.utils.log_utils import log
 from nova_utils.utils.ssi_xml_utils import ModelIO, Trainer
 from time import perf_counter
 
@@ -67,7 +68,7 @@ class Processor(ABC):
         ds_iter : nova_utils.data.provider.nova_iterator.NovaIterator
         for i, sample in enumerate(ds_iter):
             if i % 100 == 0:
-                print(f'Processing sample {i}. {i / (perf_counter() - pc_start)} samples / s. Processed {i * ds_iter.stride / 1000} Seconds of data.')
+                log(f'Processing sample {i}. {i / (perf_counter() - pc_start)} samples / s. Processed {i * ds_iter.stride / 1000} Seconds of data.')
             for id, output_list in processed.items():
                 data_for_id = {id: sample[id]}
                 out = self.preprocess_sample(data_for_id)
