@@ -523,7 +523,7 @@ class _SSIStreamFileHandler(IHandler):
         Et.SubElement(
             root,
             "meta",
-            attrib={"type": meta_data.media_type},
+            attrib={"type": meta_data.media_type, **meta_data.custom_meta}
         )
 
         # chunks

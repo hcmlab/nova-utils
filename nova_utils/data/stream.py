@@ -23,6 +23,8 @@ class StreamMetaData:
         sample_rate (float): Sampling rate of the stream in Hz.
         dtype (np.dtype): Data type of the samples.
         media_type (string, optional): Media type of the stream data as specified in NOVA-DB. Defaults to feature.
+        custom_meta (dict, optional): Stream type specific meta information to add. E.g. aspect ratio of processed video.
+
 
     Args:
         name (str): Name of the stream.
@@ -33,6 +35,7 @@ class StreamMetaData:
         sample_rate (float, optional): Sampling rate of the stream.
         dtype (np.dtype, optional): Data type of the samples.
         media_type (string, optional): Media type of the stream data as specified in NOVA-DB. Defaults to feature.
+        custom_meta (dict, optional): Stream type specific meta information to add. E.g. aspect ratio of processed video.
     """
 
     def __init__(
@@ -44,7 +47,8 @@ class StreamMetaData:
         num_samples: int = None,
         sample_rate: float = None,
         dtype: np.dtype = None,
-        media_type: str = 'feature'
+        media_type: str = 'feature',
+        custom_meta: dict = None
     ):
         """
         Initialize a StreamMetaData instance with stream properties.
@@ -57,6 +61,7 @@ class StreamMetaData:
         self.sample_rate = sample_rate
         self.dtype = dtype
         self.media_type = media_type
+        self.custom_meta = custom_meta if custom_meta is not None else {}
 
 
 class SSIStreamMetaData:
@@ -110,6 +115,7 @@ class Stream(DynamicData):
         name (str, optional): Name of the stream.
         ext (str, optional): File extension of the stream including the leading '.'. Defaults to '.stream', '.mp4' or '.wav' depending on the stream type.
         media_type (string, optional): Media type of the stream data as specified in NOVA-DB. Defaults to feature.
+        custom_meta (dict, optional): Stream type specific meta information to add. E.g. aspect ratio of processed video.
         **kwargs: Additional keyword arguments for DynamicData.
 
     """
@@ -125,6 +131,7 @@ class Stream(DynamicData):
         num_samples: int = None,
         dtype: np.dtype = SSINPDataType.FLOAT.value,
         media_type: str = 'feature',
+        custom_meta: dict = None,
         **kwargs
     ):
         """
@@ -142,7 +149,7 @@ class Stream(DynamicData):
                 ext = '.wav'
 
         stream_meta_data = StreamMetaData(
-            name, ext, duration, sample_shape, num_samples, sample_rate, dtype, media_type
+            name, ext, duration, sample_shape, num_samples, sample_rate, dtype, media_type, custom_meta
         )
         self.meta_data.expand(stream_meta_data)
 
