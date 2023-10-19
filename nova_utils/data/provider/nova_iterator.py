@@ -389,7 +389,7 @@ class NovaIterator:
 
             # TODO account for stride and framesize being None
             # Generate samples for this session
-            while cpos + self.stride <= min(
+            while cpos + self.stride < min(
                 self.end, self.current_session.duration
             ):
                 frame_start = cpos
@@ -490,8 +490,11 @@ if __name__ == "__main__":
     PASSWORD = os.getenv("NOVA_PASSWORD", "")
     DATA_DIR = Path(os.getenv("NOVA_DATA_DIR", None))
 
-    dataset = "test"
-    sessions = ["04_Oesterreich_test"]
+    # dataset = "test"
+    # sessions = ["04_Oesterreich_test"]
+    #
+    dataset = "aria-noxi"
+    sessions = ["001_2016-03-17_Paris"]
 
     annotation = {
         "src": "db:anno",
@@ -517,6 +520,16 @@ if __name__ == "__main__":
         "fp": "/Users/dominikschiller/Work/local_nova_dir/test_files/new_test_video_25.mp4",
     }
 
+    test = {
+        "src": "db:stream",
+        "type": "input",
+        "id": "explanation_stream",
+        "role": "novice",
+        "name":"audio[48000].gemaps[480ms,40ms,480ms]",
+        "active":"True"
+    }
+
+
     nova_iterator = NovaIterator(
         IP,
         PORT,
@@ -525,15 +538,15 @@ if __name__ == "__main__":
         dataset,
         DATA_DIR,
         sessions=sessions,
-        data=[file],
-        frame_size="1s",
-        left_context="2s",
-        right_context="2s",
-        end="100s",
+        data=[test],
+        #frame_size="1s",
+        #left_context="2s",
+        #right_context="2s",
+        #end="100s",
     )
 
-
-    while next(nova_iterator):
-        continue
-    a = next(nova_iterator)
+    a = list(nova_iterator)
+    # while next(nova_iterator):
+    #     continue
+    # a = next(nova_iterator)
     breakpoint()
