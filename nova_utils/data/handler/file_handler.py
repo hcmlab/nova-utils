@@ -344,7 +344,7 @@ class _AnnotationFileHandler(IHandler):
             )
             for class_id, class_name in data.annotation_scheme.classes.items():
                 Et.SubElement(
-                    scheme, "item", attrib={"name": class_name, "id": class_id}
+                    scheme, "item", attrib={"name": class_name, "id": str(class_id)}
                 )
 
         elif scheme_type == SchemeType.CONTINUOUS:
@@ -891,7 +891,7 @@ class FileHandler(IHandler):
 
 if __name__ == "__main__":
     # Test cases...
-    test_annotations = False
+    test_annotations = True
     test_streams = True
     base_dir = Path("../../../test_files/")
     fh = FileHandler()

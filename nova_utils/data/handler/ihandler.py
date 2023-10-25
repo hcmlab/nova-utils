@@ -9,6 +9,7 @@ Date:
 
 from nova_utils.data.data import Data
 from abc import ABC, abstractmethod
+from typing import Union
 
 
 class IHandler(ABC):
@@ -20,7 +21,7 @@ class IHandler(ABC):
     """
 
     @abstractmethod
-    def load(self, *args, **kwargs) -> Data:
+    def load(self, *args, **kwargs) -> Union[Data, None]:
         """
         Load data using specified arguments and keyword arguments.
 

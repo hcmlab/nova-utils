@@ -31,7 +31,8 @@ from nova_utils.scripts.parsers import (
     nova_server_module_parser,
 )
 from nova_utils.interfaces.server_module import Predictor, Extractor
-from nova_utils.data.handler import mongo_handler as db_handler
+from nova_utils.data.handler import nova_db_handler as db_handler
+from nova_utils.data.handler import file_handler, ihandler
 from importlib.machinery import SourceFileLoader
 
 # Main parser for predict specific options
@@ -103,10 +104,6 @@ def _main():
         iterators.append(ni)
     print("Data iterators initialized")
 
-    # Init data handler
-    annotation_handler = db_handler.AnnotationHandler(**vars(db_args))
-    stream_handler = db_handler.StreamHandler(**vars(db_args), data_dir=iter_args.data_dir)
-
     # Iterate over all sessions
     for ds_iter in iterators:
         annos = []
@@ -115,14 +112,8 @@ def _main():
         # Data processing
         print(f"Process session {ds_iter.sessions[0]}...")
         try:
-            data = processor.process_data(ds_iter)
-
-            if isinstance(processor, Predictor):
-                annos = processor.to_anno(data)
-
-            if isinstance(processor, Extractor):
-                streams = processor.to_stream(data)
-
+            data_processed = processor.process_data(ds_iter)
+            data_output = processor.to_output(data_processed)
         except FileNotFoundError as e:
             print(
                 f"\tProcessor exited with error: '{str(e)}'. Continuing with next session."
@@ -133,25 +124,51 @@ def _main():
             print("...done")
 
         # Data Saving
-        if annos:
-            print("Saving annotations to database...")
-            for anno in annos:
-                try:
-                    annotation_handler.save(anno, overwrite=True)
-                except FileExistsError as e:
-                    print(f"\tCould not save annotation: '{str(e)}' ")
-                    caught_ex = True
-            print("...done")
+        if isinstance(data_output, dict):
+            for io in args['data']:
+                if io['type'] == 'output':
+                    data = data_output.get(io['id'])
+                    if data == None:
+                        print(f'No data found for output id {io.io_id}')
+                        continue
+                    target, dtype = io['src'].split(':')
+                    if target == 'db':
+                        if dtype == 'stream':
+                            data_handler = db_handler.StreamHandler(**vars(db_args), data_dir=iter_args.data_dir)
+                        elif dtype == 'anno':
+                            data_handler = db_handler.AnnotationHandler(**vars(db_args))
+                        else:
+                            print(f'Unsupported datatype {dtype} for storage target nova database')
+                        data_handler.save(data)
+                    elif target == 'file':
+                        data_handler = file_handler
+                    elif target == 'url':
+                        raise NotImplementedError
+                    else:
+                        print(f'Unknown storage target {target} for output id {io.io_id}')
 
-        if streams:
-            print("Saving streams to disk...")
-            for stream in streams:
-                try:
-                    stream_handler.save(stream)
-                except FileExistsError as e:
-                    print(f"\tCould not save stream: '{str(e)}'")
-                    caught_ex = True
-            print("...done")
+            # Init data handler
+            annotation_handler = db_handler.AnnotationHandler(**vars(db_args))
+            stream_handler = db_handler.StreamHandler(**vars(db_args), data_dir=iter_args.data_dir)
+            if annos:
+                print("Saving annotations to database...")
+                for anno in annos:
+                    try:
+                        annotation_handler.save(anno, overwrite=True)
+                    except FileExistsError as e:
+                        print(f"\tCould not save annotation: '{str(e)}' ")
+                        caught_ex = True
+                print("...done")
+
+            if streams:
+                print("Saving streams to disk...")
+                for stream in streams:
+                    try:
+                        stream_handler.save(stream)
+                    except FileExistsError as e:
+                        print(f"\tCould not save stream: '{str(e)}'")
+                        caught_ex = True
+                print("...done")
 
     print("Processing completed!")
     if caught_ex:

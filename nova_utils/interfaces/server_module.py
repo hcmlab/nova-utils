@@ -78,6 +78,11 @@ class Processor(ABC):
 
         return processed
 
+    def to_output(self, data):
+        if isinstance(self, Predictor):
+            return self.to_anno(data)
+        elif isinstance(self, Extractor):
+            return self.to_stream(data)
 
 class Trainer(Processor):
     """
