@@ -15,6 +15,7 @@ from nova_utils.data.handler import (
     input_handler,
 )
 
+
 class Source(Enum):
     DB = "db"  # data.handler.NovaDBHandler
     FILE = "file"  # data.handler.FileHandler
@@ -30,7 +31,7 @@ class DType(Enum):
     TABLE = "table"
 
 
-class SessionManager():
+class SessionManager:
     """
     Class to aggregate and manage interrelated incoming and outgoing datastreams belonging to a single session (e.g multimodal data from the same recording).
 
@@ -89,7 +90,7 @@ class SessionManager():
     def __init__(
         self,
         dataset: str = None,
-        data_description : list[dict[str, str]] = None,
+        data_description: list[dict[str, str]] = None,
         session: str = None,
         source_context: dict[str, dict] = None,
         input_data: dict = None,
@@ -105,12 +106,10 @@ class SessionManager():
             {} if output_data_templates is None else output_data_templates
         )
 
-
         self.source_context = {}
         for src, context in source_context.items():
             src_ = Source(src)
             self.add_source_context(src_, context)
-
 
     def add_source_context(self, source: Source, context: dict):
         """Add all parameters that are necessary to initialize source specific data handler for reading and writing data objects."""
@@ -147,7 +146,7 @@ class SessionManager():
         else:
             raise ValueError(f"Unknown source type {src} for data.")
 
-    def _update_data_description(self, data_description = None):
+    def _update_data_description(self, data_description=None):
         if data_description is not None:
             self.data_description = data_description
         return self.data_description
@@ -185,9 +184,9 @@ class SessionManager():
 
         data_description = self._update_data_description(data_description)
         if data_description is None:
-            raise ValueError('Data description is empty. Either pass a data description to load() or set it as class attribute.')
-
-
+            raise ValueError(
+                "Data description is empty. Either pass a data description to load() or set it as class attribute."
+            )
 
         for desc in data_description:
             try:
@@ -253,7 +252,14 @@ class SessionManager():
                 else:
                     if dtype == DType.STREAM:
                         # Todo differentiate types
-                        data = Stream(None, -1, name=desc['name'], role=desc["role"], dataset=self.dataset, session=self.session)
+                        data = Stream(
+                            None,
+                            -1,
+                            name=desc["name"],
+                            role=desc["role"],
+                            dataset=self.dataset,
+                            session=self.session,
+                        )
 
                     else:
                         # Todo Handle other cases where no header might be loaded
@@ -293,7 +299,9 @@ class SessionManager():
 
         data_description = self._update_data_description(data_description)
         if data_description is None:
-            raise ValueError('Data description is empty. Either pass a data description to save() or set it as class attribute.')
+            raise ValueError(
+                "Data description is empty. Either pass a data description to save() or set it as class attribute."
+            )
 
         for desc in data_description:
             try:
@@ -319,14 +327,10 @@ class SessionManager():
                 ctx = self.source_context[src]
                 if dtype == DType.ANNO:
                     handler = nova_db_handler.AnnotationHandler(**ctx)
-                    success = handler.save(
-                        annotation=data
-                    )
+                    success = handler.save(annotation=data)
                 elif dtype == DType.STREAM:
                     handler = nova_db_handler.StreamHandler(**ctx)
-                    data = handler.save(
-                        stream=data
-                    )
+                    data = handler.save(stream=data)
             elif src == Source.FILE:
                 handler = file_handler.FileHandler()
                 data = handler.save(data=data, fp=Path(desc["uri"]))
@@ -338,9 +342,10 @@ class SessionManager():
             return success
 
 
-
-class DatasetManager():
-    def __init__(self, dataset, data_description, source_context, session_names: list = None):
+class DatasetManager:
+    def __init__(
+        self, dataset, data_description, source_context, session_names: list = None
+    ):
         self.dataset = dataset
         self.data_description = data_description
         self.session_names = session_names
@@ -351,24 +356,35 @@ class DatasetManager():
     def _init_sessions(self):
         if self.session_names is not None:
             for session in self.session_names:
-                sm = SessionManager(self.dataset, self.data_description, session.name, self.source_ctx)
-                self.sessions[session] = {'manager' : sm}
+                sm = SessionManager(
+                    self.dataset, self.data_description, session, self.source_ctx
+                )
+                self.sessions[session] = {"manager": sm}
 
-    def load(self, data_description):
-        for sm in self.session_managers:
-            sm.load(data_description)
-    def save(self, data_description):
-        for sm in self.session_managers:
-            sm.save(data_description)
+    def load_session(self, session_name):
+        self.sessions[session_name]['manager'].load(self.data_description)
+
+    def save_session(self, session_name):
+        self.sessions[session_name]['manager'].save(self.data_description)
+
+    def load(self):
+        for session in self.session_names:
+            self.load_session(session)
+
+    def save(self):
+        for session in self.session_names:
+            self.save_session(session)
+
 
 class NovaDatasetManager(DatasetManager):
-
     def _init_sessions(self):
-        sh = nova_db_handler.SessionHandler(**self.source_ctx['db'])
+        sh = nova_db_handler.SessionHandler(**self.source_ctx["db"])
         sessions = sh.load(self.dataset, self.session_names)
         for session_info in sessions:
-            sm = SessionManager(self.dataset, self.data_description, session_info.name, self.source_ctx)
-            self.sessions[session_info.name] = {'manager' : sm, 'info': session_info}
+            sm = SessionManager(
+                self.dataset, self.data_description, session_info.name, self.source_ctx
+            )
+            self.sessions[session_info.name] = {"manager": sm, "info": session_info}
 
 
 if __name__ == "__main__":
@@ -423,7 +439,7 @@ if __name__ == "__main__":
         "src": "file:anno",
         "type": "output",
         "id": "annotation_out",
-        "uri": './test_output.annotation'
+        "uri": "./test_output.annotation",
     }
 
     # data_aggregator_in = SessionManager(
@@ -433,13 +449,13 @@ if __name__ == "__main__":
     # )
 
     data_aggregator_in = NovaDatasetManager(
-        dataset=dataset,
-        data_description=[annotation],
-        **ctx['db']
+        dataset=dataset, data_description=[annotation], **ctx["db"]
     )
 
     data_aggregator_in.load(data_description=[annotation, annotation_out])
-    data_aggregator_in.output_data_templates['annotation_out'] = data_aggregator_in.input_data['annotation']
+    data_aggregator_in.output_data_templates[
+        "annotation_out"
+    ] = data_aggregator_in.input_data["annotation"]
     data_aggregator_in.save(data_description=[annotation, annotation_out])
 
     breakpoint()

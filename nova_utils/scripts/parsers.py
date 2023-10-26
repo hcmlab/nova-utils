@@ -34,34 +34,40 @@ nova_db_parser.add_argument(
     required=True,
     help="The password for the NOVA-DB server user",
 )
-
-# Parser for NOVA iterator
-nova_iterator_parser = argparse.ArgumentParser(
-    description="Parse Information required to create a NovaIterator", add_help=False
-)
-nova_iterator_parser.add_argument(
-    "--dataset",
-    type=str,
-    required=True,
-    help="Name of the dataset. Must match entries in NOVA-DB",
-)
-nova_iterator_parser.add_argument(
+nova_db_parser.add_argument(
     "--data_dir",
     type=str,
     required=True,
     help="Path to the NOVA data directory using Windows UNC-Style",
 )
-nova_iterator_parser.add_argument(
+
+# Parser for DatasetManager
+dm_parser = argparse.ArgumentParser(
+    description="Parse Information required to create a Dataset Manager", add_help=False
+)
+dm_parser.add_argument(
+    "--dataset",
+    type=str,
+    required=True,
+    help="Name of the dataset. Must match entries in NOVA-DB",
+)
+
+dm_parser.add_argument(
     "--sessions",
     type=json.loads,
     required=True,
     help="Json formatted List of sessions to apply the iterator to",
 )
-nova_iterator_parser.add_argument(
+dm_parser.add_argument(
     "--data",
     type=json.loads,
     required=True,
     help="Json formatted String containing dictionaries that describe the data to load",
+)
+
+# Parser for NOVA iterator
+nova_iterator_parser = argparse.ArgumentParser(
+    description="Parse Information required to create a NovaIterator", add_help=False
 )
 nova_iterator_parser.add_argument(
     "--frame_size",

@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-import nova_utils.data.provider.nova_iterator
+from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
+from nova_utils.data.provider.data_manager import DatasetManager
 from nova_utils.data.annotation import Annotation
 from nova_utils.data.stream import Stream
 from nova_utils.utils.log_utils import log
@@ -49,34 +50,24 @@ class Processor(ABC):
         """Apply any optional postprocessing to the data (e.g. scaling, mapping etc...)"""
         return sample
 
-    def process_data(self, ds_iter) -> dict:
+    def process_data(self, ds_iter: NovaDatasetIterator) -> list:
         """Returning a dictionary that contains the original keys from the dataset iterator and a list of processed samples as value. Can be overwritten to customize the processing"""
         self.ds_iter = ds_iter
 
-        # Get all data streams of type "input" that match an id from the modules trainer file
-        processed = {
-            k: []
-            for k in [
-                d.get("id")
-                for d in ds_iter.data
-                if d.get("type") == "input" and d.get("id") in [mio.io_id for mio in self.model_io]
-            ]
-        }
-
         # Start the stopwatch / counter
         pc_start = perf_counter()
-        ds_iter : nova_utils.data.provider.nova_iterator.NovaIterator
+        output_list = []
         for i, sample in enumerate(ds_iter):
             if i % 100 == 0:
                 log(f'Processing sample {i}. {i / (perf_counter() - pc_start)} samples / s. Processed {i * ds_iter.stride / 1000} Seconds of data.')
-            for id, output_list in processed.items():
-                data_for_id = {id: sample[id]}
-                out = self.preprocess_sample(data_for_id)
-                out = self.process_sample(out)
-                out = self.postprocess_sample(out)
-                output_list.append(out)
+            # for id, output_list in processed.items():
+            #     data_for_id = {id: sample[id]}
+            out = self.preprocess_sample(sample)
+            out = self.process_sample(out)
+            out = self.postprocess_sample(out)
+            output_list.append(out)
 
-        return processed
+        return output_list
 
     def to_output(self, data):
         if isinstance(self, Predictor):

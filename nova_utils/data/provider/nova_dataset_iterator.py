@@ -25,7 +25,7 @@ from nova_utils.data.handler.nova_db_handler import NovaSession
 from nova_utils.utils import string_utils
 from nova_utils.utils.anno_utils import data_contains_garbage
 
-class NovaIterator:
+class NovaDatasetIterator(NovaDatasetManager):
     """Iterator class for processing data samples from the Nova dataset.
 
     The NovaIterator takes all information about what data should be loaded and how it should be processed. The class itself then takes care of loading all data and provides an iterator to directly apply a sliding window to the requested data.
@@ -118,10 +118,11 @@ class NovaIterator:
 
     def __init__(
         self,
+        *args,
         # Data
         #sessions: list[str] = None,
         #data: list[dict] = None,
-        dataset_manager: NovaDatasetManager,
+        #dataset_manager: NovaDatasetManager,
         # Iterator Window
         frame_size: Union[int, float, str] = None,
         start: Union[int, float, str] = None,
@@ -132,8 +133,10 @@ class NovaIterator:
         # Iterator properties
         add_rest_class: bool = True,
         fill_missing_data=True,
+        **kwargs
     ):
-        self.dataset_manager = dataset_manager
+        super().__init__(*args, **kwargs)
+        #self.dataset_manager = dataset_manager
         #self.dataset = dataset
         #self.sessions = sessions
         #self.data = data
@@ -196,7 +199,7 @@ class NovaIterator:
         # Needed to sort the samples later and assure that the order is the same as in nova.
         #sample_counter = 1
 
-        for session_name, session in self.dataset_manager.sessions.items():
+        for session_name, session in self.sessions.items():
             # Init all data objects for the session and get necessary meta information
             self.session_manager : SessionManager
             self.session_info : NovaSession
@@ -346,15 +349,19 @@ if __name__ == "__main__":
         },
     }
 
-    dm = NovaDatasetManager(
-            dataset=dataset,
-            data_description=[annotation],
-            session_names=sessions,
-            source_context= ctx
-        )
+    # dm = NovaDatasetManager(
+    #         dataset=dataset,
+    #         data_description=[annotation],
+    #         session_names=sessions,
+    #         source_context= ctx
+    #     )
 
-    nova_iterator = NovaIterator(
-        dataset_manager=dm,
+    nova_iterator = NovaDatasetIterator(
+        #dataset_manager=dm,
+        dataset=dataset,
+        data_description =[annotation],
+        session_names = sessions,
+        source_context = ctx,
         frame_size="1s",
         left_context="2s",
         right_context="2s",
