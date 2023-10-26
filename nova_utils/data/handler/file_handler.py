@@ -14,6 +14,7 @@ import decord
 import subprocess
 import json
 import math
+from PIL import Image as PILImage
 from typing import Union
 from decord import cpu
 from struct import *
@@ -38,10 +39,10 @@ from nova_utils.data.stream import (
     StreamMetaData,
     SSIStreamMetaData,
 )
+from nova_utils.data.static import Image
 import mmap
 import ffmpegio
 from nova_utils.utils.type_definitions import (
-    LabelDType,
     SSILabelDType,
     SSIFileType,
     SSINPDataType,
@@ -385,6 +386,21 @@ class _AnnotationFileHandler(IHandler):
             np.savetxt(data_path, anno_data, fmt=fmt, delimiter=";")
         if ftype == SSIFileType.BINARY:
             data.data.tofile(data_path, sep="")
+
+
+# Image
+class _ImageFileHandler(IHandler):
+    def load(self, fp, header_only=False) -> Union[Data, None]:
+        pil_img = PILImage.open(fp)
+        pil_img = pil_img.convert('RGB')
+        np_img = np.array(pil_img)
+        img = Image(data=np_img)
+        return img
+
+    def save(self, data, fp, header_only=False):
+        np_img = data.data
+        pil_img = PILImage.fromarray(np_img, mode="RGB")
+        pil_img.save(fp)
 
 
 # SSI STREAMS
@@ -844,6 +860,8 @@ class FileHandler(IHandler):
                 return _AudioFileHandler()
             elif ext in ["mp4"]:
                 return _VideoFileHandler()
+            elif ext in [x[1:] for x in PILImage.registered_extensions()]:
+                return _ImageFileHandler()
             else:
                 raise ValueError(f"Unsupported file extension {fp.suffix}")
         else:
@@ -886,13 +904,14 @@ class FileHandler(IHandler):
         if fp.exists() and not overwrite:
             raise FileExistsError(f"Cannot write {fp} because file already exists")
         handler = self._get_handler_for_file(fp)
-        return handler.save(data, fp, *args, **kwargs)
+        return handler.save(data, fp)
 
 
 if __name__ == "__main__":
     # Test cases...
-    test_annotations = True
-    test_streams = True
+    test_annotations = False
+    test_streams = False
+    test_static = True
     base_dir = Path("../../../test_files/")
     fh = FileHandler()
 
@@ -977,3 +996,10 @@ if __name__ == "__main__":
 
         assert new_video.data[0:30].all() == video.data[0:30].all()
         breakpoint()
+
+    """TESTCASE FOR STATIC DATA"""
+    if test_static:
+        from matplotlib import pyplot as plt
+        image = fh.load(base_dir / "test_image.png")
+        image.data = image.data[..., [2,1,0]]
+        fh.save(image, fp=(base_dir / "test_image_bgr.png"))
