@@ -242,7 +242,7 @@ class SessionManager:
                     data = handler.load(uri=Path(desc["uri"]))
                 elif src == Source.USER:
                     handler = input_handler.InputHandler()
-                    data = handler.load(uri=Path(desc["uri"]))
+                    data = handler.load( input_str = desc['promt']  )
 
             except FileNotFoundError as e:
                 # Only raise file not found error if stream is requested as input
