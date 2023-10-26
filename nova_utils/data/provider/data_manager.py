@@ -328,10 +328,10 @@ class SessionManager:
                     success = handler.save(annotation=data)
                 elif dtype == DType.STREAM:
                     handler = nova_db_handler.StreamHandler(**ctx)
-                    data = handler.save(stream=data)
+                    success = handler.save(stream=data)
             elif src == Source.FILE:
                 handler = file_handler.FileHandler()
-                data = handler.save(data=data, fp=Path(desc["uri"]))
+                success = handler.save(data=data, fp=Path(desc["uri"]))
             elif src == Source.URL:
                 raise NotImplementedError
             elif src == Source.USER:
