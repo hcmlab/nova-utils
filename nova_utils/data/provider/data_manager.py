@@ -1,12 +1,10 @@
 """Data Storage Class for session specific data
 Author: Dominik Schiller <dominik.schiller@uni-a.de>
-Date: 22.8.2023
+Date: 25.10.2023
 """
 from pathlib import Path
-import datetime
 from enum import Enum
 from nova_utils.data.stream import Stream
-from nova_utils.data.data import Data
 from nova_utils.data.data import Data
 from nova_utils.data.handler import (
     file_handler,
@@ -242,7 +240,7 @@ class SessionManager:
                     data = handler.load(uri=Path(desc["uri"]))
                 elif src == Source.USER:
                     handler = input_handler.InputHandler()
-                    data = handler.load( input_str = desc['promt']  )
+                    data = handler.load(input_str=desc["prompt"])
 
             except FileNotFoundError as e:
                 # Only raise file not found error if stream is requested as input
@@ -362,10 +360,10 @@ class DatasetManager:
                 self.sessions[session] = {"manager": sm}
 
     def load_session(self, session_name):
-        self.sessions[session_name]['manager'].load(self.data_description)
+        self.sessions[session_name]["manager"].load(self.data_description)
 
     def save_session(self, session_name):
-        self.sessions[session_name]['manager'].save(self.data_description)
+        self.sessions[session_name]["manager"].save(self.data_description)
 
     def load(self):
         for session in self.session_names:
