@@ -177,7 +177,7 @@ def _main():
             if isinstance(data_output, dict):
                 session_manager : SessionManager
                 session_manager = ss_dataset.sessions[session]['manager']
-                for io_id, data_object in data_output:
+                for io_id, data_object in data_output.items():
                     session_manager.output_data_templates[io_id] = data_object
 
             ss_dataset.save()
