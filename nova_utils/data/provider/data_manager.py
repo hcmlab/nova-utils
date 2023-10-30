@@ -150,6 +150,19 @@ class SessionManager:
             self.data_description = data_description
         return self.data_description
 
+    def _parse_src(self, desc):
+        try:
+            src, dtype = desc["src"].split(":", 1)
+            src = Source(src)
+            dtype_specific = None
+            if ':' in dtype:
+                dtype, dtype_specific = dtype.split(':', 1)
+            dtype = DType(dtype)
+        except:
+            raise ValueError(f'Invalid value for data source {desc["src"]}')
+        return src, dtype_specific, dtype
+
+
     def load(self, data_description=None):
         """
         Args:
@@ -188,16 +201,7 @@ class SessionManager:
             )
 
         for desc in data_description:
-            try:
-
-                src, dtype = desc["src"].split(":", 1)
-                src = Source(src)
-                dtype_specific = None
-                if ':' in dtype:
-                    dtype, dtype_specific = dtype.split(':', 1)
-                dtype = DType(dtype)
-            except:
-                raise ValueError(f'Invalid value for data source {desc["src"]}')
+            src, dtype_specific, dtype = self._parse_src(desc)
 
             header_only = False
             if desc.get("type") == "input":
@@ -318,12 +322,7 @@ class SessionManager:
             )
 
         for desc in data_description:
-            try:
-                src, dtype = desc["src"].split(":")
-                src = Source(src)
-                dtype = DType(dtype)
-            except:
-                raise ValueError(f'Invalid value for data source {desc["src"]}')
+            src, dtype_specific, dtype = self._parse_src(desc)
 
             if not desc.get("type") == "output":
                 continue
