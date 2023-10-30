@@ -190,7 +190,7 @@ class SessionManager:
         for desc in data_description:
             try:
 
-                src, dtype = desc["src"].split(":")
+                src, dtype = desc["src"].split(":", 2)
                 src = Source(src)
                 dtype_specific = None
                 if ':' in dtype:
