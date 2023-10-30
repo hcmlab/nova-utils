@@ -24,7 +24,7 @@ import os
 from typing import Union, Type
 from pathlib import Path, PureWindowsPath
 from nova_utils.utils import ssi_xml_utils, string_utils
-from nova_utils.data.provider.data_manager import NovaDatasetManager, SessionManager
+from nova_utils.data.provider.data_manager import NovaDatasetManager, DatasetManager, SessionManager
 from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
 from nova_utils.scripts.parsers import (
     dm_parser,
@@ -113,7 +113,7 @@ def _main():
         if is_iterable:
             dataset_manager = NovaDatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
         else:
-            dataset_manager = NovaDatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])
+            dataset_manager = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])
 
         single_session_datasets.append(dataset_manager)
 
