@@ -247,7 +247,7 @@ class SessionManager:
                     # Need to set the file handler specifically because we don't know the scheme
                     if dtype == DType.ANNO:
                         if dtype_specific is None or dtype_specific == 'free':
-                            data = FreeAnnotation(scheme=FreeAnnotationScheme(), data=None)
+                            data = FreeAnnotation(scheme=FreeAnnotationScheme(name='generic'), data=None)
                         else:
                             raise ValueError(f"Can\'t create template for {desc} because no scheme information is available.")
                     # Automatic file handler detection
