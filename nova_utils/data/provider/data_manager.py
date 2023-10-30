@@ -6,6 +6,7 @@ from pathlib import Path
 from enum import Enum
 from nova_utils.data.stream import Stream
 from nova_utils.data.data import Data
+from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme
 from nova_utils.data.handler import (
     file_handler,
     nova_db_handler,
@@ -23,7 +24,7 @@ class Source(Enum):
 
 class DType(Enum):
     STREAM = "stream"
-    ANNO = "anno"
+    ANNO = "annotation"#"anno"
     TEXT = "text"
     IMAGE = "image"
     TABLE = "table"
@@ -188,8 +189,12 @@ class SessionManager:
 
         for desc in data_description:
             try:
+
                 src, dtype = desc["src"].split(":")
                 src = Source(src)
+                dtype_specific = None
+                if ':' in dtype:
+                    dtype, dtype_specific = dtype.split(':', 2)
                 dtype = DType(dtype)
             except:
                 raise ValueError(f'Invalid value for data source {desc["src"]}')
@@ -211,6 +216,7 @@ class SessionManager:
                     f"Missing context information source {src}. Call add_source_context() first."
                 )
             try:
+                # DATABASE
                 if src == Source.DB:
                     ctx = self.source_context[src]
                     if dtype == DType.ANNO:
@@ -232,9 +238,19 @@ class SessionManager:
                             role=desc["role"],
                             header_only=header_only,
                         )
+                # FILE
                 elif src == Source.FILE:
-                    handler = file_handler.FileHandler()
-                    data = handler.load(fp=Path(desc["uri"]), header_only=header_only)
+                    # Need to set the file handler specifically because we don't know the scheme
+                    if dtype == DType.ANNO:
+                        if dtype_specific is None or dtype_specific == 'FREE':
+                            data = FreeAnnotation(scheme=FreeAnnotationScheme(), data=None)
+                        else:
+                            raise ValueError(f"Can\'t create template for {desc} because no scheme information is available.")
+                    # Automatic file handler detection
+                    else:
+                        handler = file_handler.FileHandler()
+                        data = handler.load(fp=Path(desc["uri"]), header_only=header_only)
+                # URL
                 elif src == Source.URL:
                     handler = url_handler.URLHandler()
                     data = handler.load(uri=Path(desc["uri"]))
