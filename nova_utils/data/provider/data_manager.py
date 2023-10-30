@@ -190,11 +190,11 @@ class SessionManager:
         for desc in data_description:
             try:
 
-                src, dtype = desc["src"].split(":", 2)
+                src, dtype = desc["src"].split(":", 1)
                 src = Source(src)
                 dtype_specific = None
                 if ':' in dtype:
-                    dtype, dtype_specific = dtype.split(':', 2)
+                    dtype, dtype_specific = dtype.split(':', 1)
                 dtype = DType(dtype)
             except:
                 raise ValueError(f'Invalid value for data source {desc["src"]}')
