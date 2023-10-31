@@ -45,7 +45,7 @@ class SchemeType(Enum):
 ## SSI Typedefs
 
 class SSILabelDType(Enum):
-    """"Enum representing predefined label types for different annotation schemes as used in SSI.
+    """Enum representing predefined label types for different annotation schemes as used in SSI.
 
     Attributes:
         DISCRETE (np.dtype): Discrete label type with fields 'from', 'to', 'id', and 'conf'.
