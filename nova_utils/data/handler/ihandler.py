@@ -20,6 +20,8 @@ class IHandler(ABC):
     to handle data loading and saving operations, respectively.
     """
 
+    default_ext = '.data'
+
     @abstractmethod
     def load(self, *args, **kwargs) -> Union[Data, None]:
         """

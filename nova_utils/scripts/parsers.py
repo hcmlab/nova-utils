@@ -12,33 +12,46 @@ This module defines argparse parsers for configuring the connection to the NOVA-
 import argparse
 import json
 
+# CONTEXT Parser
 # Parser for NOVA database connection
 nova_db_parser = argparse.ArgumentParser(
     description="Parse Information required to connect to the NOVA-DB", add_help=False
 )
 nova_db_parser.add_argument(
-    "--db_host", type=str, required=True, help="The ip-address of the NOVA-DB server"
+    "--db_host", type=str, help="The ip-address of the NOVA-DB server"
 )
 nova_db_parser.add_argument(
-    "--db_port", type=int, required=True, help="The ip-address of the NOVA-DB server"
+    "--db_port", type=int, help="The ip-address of the NOVA-DB server"
 )
 nova_db_parser.add_argument(
     "--db_user",
     type=str,
-    required=True,
     help="The user to authenticate at the NOVA-DB server",
 )
 nova_db_parser.add_argument(
     "--db_password",
     type=str,
-    required=True,
     help="The password for the NOVA-DB server user",
 )
 nova_db_parser.add_argument(
     "--data_dir",
     type=str,
-    required=True,
     help="Path to the NOVA data directory using Windows UNC-Style",
+)
+
+# Parser for request handling
+request_parser = argparse.ArgumentParser(
+    description="Parse Information required for the caller of the module to retrieve processed information", add_help=False
+)
+request_parser.add_argument(
+    "--shared_dir",
+    type=str,
+    help="Path to a directory that is also accessible by the caller",
+)
+request_parser.add_argument(
+    "--job_id",
+    type=str,
+    help="Unique ID. Output data will be written to a folder with this name in the shared directory",
 )
 
 # Parser for DatasetManager
@@ -48,15 +61,14 @@ dm_parser = argparse.ArgumentParser(
 dm_parser.add_argument(
     "--dataset",
     type=str,
-    required=True,
     help="Name of the dataset. Must match entries in NOVA-DB",
 )
 
 dm_parser.add_argument(
     "--sessions",
     type=json.loads,
-    required=True,
     help="Json formatted List of sessions to apply the iterator to",
+    default=['dummy_session']
 )
 dm_parser.add_argument(
     "--data",
@@ -127,3 +139,4 @@ nova_server_module_parser.add_argument(
     type=str,
     help="Json formatted String containing dictionaries with key value pairs, setting the options for a NOVA-Server module",
 )
+

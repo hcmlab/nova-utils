@@ -3,7 +3,7 @@ Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 25.10.2023
 """
 from pathlib import Path
-from enum import Enum
+from nova_utils.utils.request_utils import Source, DType, parse_src, dtype_from_desc, data_description_to_string
 from nova_utils.data.stream import Stream
 from nova_utils.data.data import Data
 from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme
@@ -11,23 +11,8 @@ from nova_utils.data.handler import (
     file_handler,
     nova_db_handler,
     url_handler,
-    input_handler,
+    request_handler,
 )
-
-
-class Source(Enum):
-    DB = "db"  # data.handler.NovaDBHandler
-    FILE = "file"  # data.handler.FileHandler
-    URL = "url"  # data.handler.UrlHandler
-    USER = "user"
-
-
-class DType(Enum):
-    STREAM = "stream"
-    ANNO = "annotation"#"anno"
-    TEXT = "text"
-    IMAGE = "image"
-    TABLE = "table"
 
 
 class SessionManager:
@@ -114,53 +99,11 @@ class SessionManager:
         """Add all parameters that are necessary to initialize source specific data handler for reading and writing data objects."""
         self.source_context[source] = context
 
-    def _data_description_to_string(self, data_desc: dict) -> str:
-        """
-        Convert data description to a string representation.
-
-        Args:
-            data_desc (dict): Data description dictionary.
-
-        Returns:
-            str: String representation of the data description.
-        """
-
-        id = data_desc.get("id")
-        if id is not None:
-            return id
-
-        src, type_ = data_desc["src"].split(":")
-        delim = "_"
-        if src == "db":
-            if type_ == "anno":
-                return delim.join(
-                    [data_desc["scheme"], data_desc["annotator"], data_desc["role"]]
-                )
-            elif type_ == "stream":
-                return delim.join([data_desc["name"], data_desc["role"]])
-            else:
-                raise ValueError(f"Unknown data type {type_} for data.")
-        elif src == "file":
-            return delim.join([data_desc["fp"]])
-        else:
-            raise ValueError(f"Unknown source type {src} for data.")
 
     def _update_data_description(self, data_description=None):
         if data_description is not None:
             self.data_description = data_description
         return self.data_description
-
-    def _parse_src(self, desc):
-        try:
-            src, dtype = desc["src"].split(":", 1)
-            src = Source(src)
-            dtype_specific = None
-            if ':' in dtype:
-                dtype, dtype_specific = dtype.split(':', 1)
-            dtype = DType(dtype)
-        except:
-            raise ValueError(f'Invalid value for data source {desc["src"]}')
-        return src, dtype_specific, dtype
 
 
     def load(self, data_description=None):
@@ -201,7 +144,7 @@ class SessionManager:
             )
 
         for desc in data_description:
-            src, dtype_specific, dtype = self._parse_src(desc)
+            src, dtype, dtype_specific = parse_src(desc)
 
             header_only = False
             if desc.get("type") == "input":
@@ -212,7 +155,7 @@ class SessionManager:
             else:
                 io_dst = self.extra_data
 
-            data_id = self._data_description_to_string(desc)
+            data_id = data_description_to_string(desc)
             data = None
 
             if src in [Source.DB] and not src in self.source_context.keys():
@@ -258,9 +201,11 @@ class SessionManager:
                 elif src == Source.URL:
                     handler = url_handler.URLHandler()
                     data = handler.load(uri=Path(desc["uri"]))
-                elif src == Source.USER:
-                    handler = input_handler.InputHandler()
-                    data = handler.load(input_str=desc["prompt"])
+                # REQUEST
+                elif src == Source.REQUEST:
+                    target_dtype = dtype_from_desc(desc)
+                    handler = request_handler.RequestHandler()
+                    data = handler.load(data=desc["data"], dtype=target_dtype)
 
             except FileNotFoundError as e:
                 # Only raise file not found error if stream is requested as input
@@ -322,12 +267,12 @@ class SessionManager:
             )
 
         for desc in data_description:
-            src, dtype_specific, dtype = self._parse_src(desc)
+            src, dtype_specific, dtype = parse_src(desc)
 
             if not desc.get("type") == "output":
                 continue
 
-            data_id = self._data_description_to_string(desc)
+            data_id = data_description_to_string(desc)
 
             if src in [Source.DB] and not src in self.source_context.keys():
                 raise ValueError(
@@ -349,8 +294,12 @@ class SessionManager:
                 success = handler.save(data=data, fp=Path(desc["uri"]))
             elif src == Source.URL:
                 raise NotImplementedError
-            elif src == Source.USER:
-                raise NotImplementedError
+            elif src == Source.REQUEST:
+                rq = self.source_context.get('request')
+                shared_dir = rq.get('shared_dir')
+                job_id = rq.get('job_id')
+                handler = request_handler.RequestHandler()
+                handler.save(data=data, shared_dir=shared_dir, job_id=job_id)
 
             return success
 

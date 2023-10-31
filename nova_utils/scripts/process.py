@@ -29,6 +29,7 @@ from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
 from nova_utils.scripts.parsers import (
     dm_parser,
     nova_db_parser,
+    request_parser,
     nova_iterator_parser,
     nova_server_module_parser,
 )
@@ -59,6 +60,7 @@ def _main():
 
     # Create argument groups
     db_args, _ = nova_db_parser.parse_known_args()
+    req_args, _ = request_parser.parse_known_args()
     dm_args, _ = dm_parser.parse_known_args()
     iter_args, _ = nova_iterator_parser.parse_known_args()
     module_args, _ = nova_server_module_parser.parse_known_args()
@@ -104,11 +106,15 @@ def _main():
     ctx = {
         'db' : {
             **vars(db_args)
+        },
+        'request' : {
+            **vars(req_args)
         }
     }
 
     single_session_datasets = []
     is_iterable = string_to_bool(trainer.meta_is_iterable)
+
     for session in dm_args.sessions:
         if is_iterable:
             dataset_manager = NovaDatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
