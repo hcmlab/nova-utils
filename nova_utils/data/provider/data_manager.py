@@ -205,7 +205,7 @@ class SessionManager:
                 elif src == Source.REQUEST:
                     target_dtype = dtype_from_desc(desc)
                     handler = request_handler.RequestHandler()
-                    data = handler.load(data=desc["data"], dtype=target_dtype)
+                    data = handler.load(data=desc["data"], dtype=target_dtype, header_only=header_only)
 
             except FileNotFoundError as e:
                 # Only raise file not found error if stream is requested as input

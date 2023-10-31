@@ -17,13 +17,14 @@ from nova_utils.data.annotation import Annotation
 from nova_utils.data.handler.ihandler import IHandler
 from nova_utils.data.data import Data
 from nova_utils.utils.request_utils import DType
+from typing import Union
 
 class RequestHandler(IHandler):
     """Class for handling user input"""
 
     def load(
-        self, data, dtype, dataset: str = None, role: str = None, session: str = None
-    ) -> Text:
+        self, data, dtype, dataset: str = None, role: str = None, session: str = None, header_only = False
+    ) -> Union[Text, Image]:
         """
         Decode data received from server.
 
@@ -32,10 +33,14 @@ class RequestHandler(IHandler):
             Data: The loaded data.
         """
         if dtype == Text:
+            if header_only:
+                return Text(data=None)
             if isinstance(data, str):
                 data = [data]
             return Text(np.asarray(data))
         elif dtype == Image:
+            if header_only:
+                return Image(data=None)
             # TODO know decoding
             print("Don't know decoding. Lol!")
         else:

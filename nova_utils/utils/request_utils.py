@@ -46,7 +46,7 @@ def data_description_to_string(data_desc: dict) -> str:
     elif src == "file":
         return delim.join([data_desc["fp"]])
     else:
-        raise ValueError(f"Unknown source type {src} for data.")
+        raise ValueError(f"Unsupported source type {src} for generating ")
 
 
 def parse_src(desc):
