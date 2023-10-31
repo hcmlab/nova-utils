@@ -21,6 +21,7 @@ Example:
 
 import argparse
 import os
+import shutil
 from typing import Union, Type
 from pathlib import Path, PureWindowsPath
 from nova_utils.utils import ssi_xml_utils, string_utils
@@ -111,6 +112,17 @@ def _main():
             **vars(req_args)
         }
     }
+
+    # Clear output for job id
+    shared_dir = ctx['request'].get('shared_dir')
+    job_id = ctx['request'].get('job_id')
+    if shared_dir and job_id:
+        output_dir = Path(shared_dir) / job_id
+        if output_dir.exists():
+            if output_dir.is_dir():
+                shutil.rmtree(output_dir)
+        if output_dir.is_file():
+            output_dir.unlink()
 
     single_session_datasets = []
     is_iterable = string_to_bool(trainer.meta_is_iterable)
