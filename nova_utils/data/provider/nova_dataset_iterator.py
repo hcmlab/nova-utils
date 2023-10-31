@@ -6,24 +6,25 @@ Date:
     18.8.2023
 
 """
-import numpy as np
-import sys
 import os
+import sys
 import warnings
-
-from typing import Union
-from nova_utils.data.data import Data
-from nova_utils.data.stream import Stream, StreamMetaData, Audio
-from nova_utils.data.provider.data_manager import NovaDatasetManager, SessionManager
 from pathlib import Path
+from typing import Union
+
+import numpy as np
+
 # from nova_utils.data.handler.mongo_handler import (
 #     AnnotationHandler,
 #     StreamHandler,
 #     SessionHandler,
 # )
 from nova_utils.data.handler.nova_db_handler import NovaSession
+from nova_utils.data.provider.data_manager import NovaDatasetManager, SessionManager
+from nova_utils.data.stream import Stream, Audio
 from nova_utils.utils import string_utils
 from nova_utils.utils.anno_utils import data_contains_garbage
+
 
 class NovaDatasetIterator(NovaDatasetManager):
     """Iterator class for processing data samples from the Nova dataset.

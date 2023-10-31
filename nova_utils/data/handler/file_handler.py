@@ -7,20 +7,22 @@ Date:
 
 """
 
-import xml.etree.ElementTree as Et
-import numpy as np
 import csv
-import decord
-import subprocess
 import json
 import math
-from PIL import Image as PILImage
-from typing import Union
-from decord import cpu
-from struct import *
-from nova_utils.data.data import Data
+import mmap
+import subprocess
+import xml.etree.ElementTree as Et
 from pathlib import Path
-from nova_utils.data.handler.ihandler import IHandler
+from struct import *
+from typing import Union
+
+import decord
+import ffmpegio
+import numpy as np
+from PIL import Image as PILImage
+from decord import cpu
+
 from nova_utils.data.annotation import (
     SchemeType,
     Annotation,
@@ -31,6 +33,9 @@ from nova_utils.data.annotation import (
     FreeAnnotation,
     FreeAnnotationScheme,
 )
+from nova_utils.data.data import Data
+from nova_utils.data.handler.ihandler import IHandler
+from nova_utils.data.static import Image, Text
 from nova_utils.data.stream import (
     Video,
     Audio,
@@ -39,19 +44,17 @@ from nova_utils.data.stream import (
     StreamMetaData,
     SSIStreamMetaData,
 )
-from nova_utils.data.static import Image, Text
-import mmap
-import ffmpegio
-from nova_utils.utils.type_definitions import (
-    SSILabelDType,
-    SSIFileType,
-    SSINPDataType,
-)
 from nova_utils.utils.anno_utils import (
     convert_label_to_ssi_dtype,
     convert_ssi_to_label_dtype,
 )
 from nova_utils.utils.string_utils import string_to_enum
+from nova_utils.utils.type_definitions import (
+    SSILabelDType,
+    SSIFileType,
+    SSINPDataType,
+)
+
 
 # METADATA
 class FileMetaData:
@@ -1050,7 +1053,6 @@ if __name__ == "__main__":
 
     """TESTCASE FOR STATIC DATA"""
     if test_static:
-        from matplotlib import pyplot as plt
         image = fh.load(base_dir / "test_image.png")
         image.data = image.data[..., [2,1,0]]
         fh.save(image, fp=(base_dir / "test_image_bgr.png"))

@@ -7,9 +7,10 @@ Date:
 
 """
 
-from nova_utils.data.data import Data
 from abc import ABC, abstractmethod
 from typing import Union
+
+from nova_utils.data.data import Data
 
 
 class IHandler(ABC):

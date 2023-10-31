@@ -4,10 +4,8 @@ Date: 18.8.2023
 """
 
 import numpy as np
-from typing import Union
+
 from nova_utils.data.data import StaticData
-from nova_utils.utils.type_definitions import SSINPDataType
-from nova_utils.utils.stream_utils import time_to_sample_interval
 
 
 class StaticMetaData:

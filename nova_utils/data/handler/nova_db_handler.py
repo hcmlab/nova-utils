@@ -6,16 +6,16 @@ Date:
     18.8.2023
 """
 
-import numpy as np
 import warnings
 from datetime import datetime
+from pathlib import Path
+from typing import Union
+
+import numpy as np
+from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult, UpdateResult
-from typing import Union
-from nova_utils.data.handler.file_handler import FileHandler
-from bson.objectid import ObjectId
-from pathlib import Path
-from nova_utils.data.handler.ihandler import IHandler
+
 from nova_utils.data.annotation import (
     Annotation,
     DiscreteAnnotation,
@@ -25,11 +25,13 @@ from nova_utils.data.annotation import (
     FreeAnnotation,
     FreeAnnotationScheme,
 )
+from nova_utils.data.handler.file_handler import FileHandler
+from nova_utils.data.handler.ihandler import IHandler
+from nova_utils.data.stream import Stream, SSIStream, StreamMetaData
 from nova_utils.utils.anno_utils import (
     convert_ssi_to_label_dtype,
     convert_label_to_ssi_dtype,
 )
-from nova_utils.data.stream import Stream, SSIStream, StreamMetaData
 from nova_utils.utils.type_definitions import SSILabelDType, SchemeType
 
 ANNOTATOR_COLLECTION = "Annotators"

@@ -1,5 +1,7 @@
-import numpy as np
 from enum import Enum
+
+import numpy as np
+
 
 class LabelDType(Enum):
     """Enum representing predefined label types for different annotation schemes.

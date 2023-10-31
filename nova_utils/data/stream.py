@@ -3,11 +3,13 @@ Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 18.8.2023
 """
 
-import numpy as np
 from typing import Union
+
+import numpy as np
+
 from nova_utils.data.data import DynamicData
-from nova_utils.utils.type_definitions import SSINPDataType
 from nova_utils.utils.stream_utils import time_to_sample_interval
+from nova_utils.utils.type_definitions import SSINPDataType
 
 
 class StreamMetaData:

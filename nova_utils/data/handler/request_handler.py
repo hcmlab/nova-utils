@@ -6,18 +6,18 @@ Date:
     24.10.2023
 
 """
-import numpy as np
-from pathlib import Path
-import string
 import random
-from nova_utils.data.handler.file_handler import FileHandler
-from nova_utils.data.static import StaticData, Text, Image
-from nova_utils.data.stream import Stream
-from nova_utils.data.annotation import Annotation
-from nova_utils.data.handler.ihandler import IHandler
-from nova_utils.data.data import Data
-from nova_utils.utils.request_utils import DType
+import string
+from pathlib import Path
 from typing import Union
+
+import numpy as np
+
+from nova_utils.data.data import Data
+from nova_utils.data.handler.file_handler import FileHandler
+from nova_utils.data.handler.ihandler import IHandler
+from nova_utils.data.static import Text, Image
+
 
 class RequestHandler(IHandler):
     """Class for handling user input"""

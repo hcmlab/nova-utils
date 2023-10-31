@@ -5,8 +5,9 @@ Date:
     14.9.2023
 
 """
-from typing import Union
 from enum import Enum
+from typing import Union
+
 
 def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
     """

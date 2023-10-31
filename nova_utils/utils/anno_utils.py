@@ -7,11 +7,13 @@ Date:
 
 """
 
+from typing import Union
+
 import numpy as np
 from numba import njit
+
 from nova_utils.utils.type_definitions import SSILabelDType, LabelDType
 from nova_utils.utils.type_definitions import SchemeType
-from typing import Union
 
 
 # TODO: Currently we do not take the rest class into account when calculating the label for the frame. Maybe we should do this

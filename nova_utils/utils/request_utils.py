@@ -1,8 +1,11 @@
 from enum import Enum
-from nova_utils.data.data import Data
-from nova_utils.data.stream import SSIStream, Audio, Video
-from nova_utils.data.static import Text, Image
+
 from nova_utils.data.annotation import DiscreteAnnotation, FreeAnnotation, ContinuousAnnotation
+from nova_utils.data.data import Data
+from nova_utils.data.static import Text, Image
+from nova_utils.data.stream import SSIStream, Audio, Video
+
+
 class Source(Enum):
     DB = "db"  # data.handler.NovaDBHandler
     FILE = "file"  # data.handler.FileHandler

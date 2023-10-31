@@ -3,6 +3,7 @@ Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 18.8.2023
 """
 from abc import ABC, abstractmethod
+
 import numpy as np
 
 

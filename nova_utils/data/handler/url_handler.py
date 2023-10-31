@@ -6,14 +6,17 @@ Date:
     24.10.2023
 
 """
-import numpy as np
-from nova_utils.data.data import Data
 from pathlib import Path
+
+import numpy as np
+
+from nova_utils.data.data import Data
 from nova_utils.data.handler.ihandler import IHandler
+from nova_utils.utils.cache_utils import retreive_from_url
 from nova_utils.utils.type_definitions import (
     SSIFileType,
 )
-from nova_utils.utils.cache_utils import retreive_from_url
+
 
 class URLHandler(IHandler):
     """Class for handling different types of data files."""

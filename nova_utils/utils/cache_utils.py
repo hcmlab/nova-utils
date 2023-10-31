@@ -2,18 +2,15 @@
 import hashlib
 import os
 import shutil
-import sys
 import tarfile
 import urllib
 import zipfile
-import tempfile
-import shutil
-from urllib import request, error
-
-from zipfile import ZipFile
-import requests
-import shutil
 from pathlib import Path
+from urllib import request, error
+from zipfile import ZipFile
+
+import requests
+
 
 def retreive_from_url(url, fp):
 

@@ -2,10 +2,12 @@
 Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 18.8.2023
 """
-import numpy as np
 import sys
 from abc import ABC, abstractmethod
+
+import numpy as np
 from numpy import dtype
+
 from nova_utils.data.data import DynamicData
 from nova_utils.utils.anno_utils import get_overlap, label_is_garbage
 from nova_utils.utils.type_definitions import LabelDType, SchemeType

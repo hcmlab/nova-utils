@@ -1,14 +1,11 @@
 from abc import ABC, abstractmethod
+from time import perf_counter
 
-import numpy as np
-
-from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
-from nova_utils.data.provider.data_manager import DatasetManager
 from nova_utils.data.annotation import Annotation
+from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
 from nova_utils.data.stream import Stream
 from nova_utils.utils.log_utils import log
 from nova_utils.utils.ssi_xml_utils import ModelIO, Trainer
-from time import perf_counter
 
 
 class Processor(ABC):
