@@ -14,6 +14,7 @@ import decord
 import subprocess
 import json
 import math
+from PIL import Image as PILImage
 from typing import Union
 from decord import cpu
 from struct import *
@@ -38,10 +39,10 @@ from nova_utils.data.stream import (
     StreamMetaData,
     SSIStreamMetaData,
 )
+from nova_utils.data.static import Image, Text
 import mmap
 import ffmpegio
 from nova_utils.utils.type_definitions import (
-    LabelDType,
     SSILabelDType,
     SSIFileType,
     SSINPDataType,
@@ -96,6 +97,8 @@ class FileSSIStreamMetaData:
 
 class _AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
+
+    default_ext = '.annotation'
 
     @staticmethod
     def _load_data_discrete(path: Path, ftype: str):
@@ -344,7 +347,7 @@ class _AnnotationFileHandler(IHandler):
             )
             for class_id, class_name in data.annotation_scheme.classes.items():
                 Et.SubElement(
-                    scheme, "item", attrib={"name": class_name, "id": class_id}
+                    scheme, "item", attrib={"name": class_name, "id": str(class_id)}
                 )
 
         elif scheme_type == SchemeType.CONTINUOUS:
@@ -387,9 +390,44 @@ class _AnnotationFileHandler(IHandler):
             data.data.tofile(data_path, sep="")
 
 
+# Text
+class _TextFileHandler(IHandler):
+
+    default_ext = '.txt'
+
+    def load(self, fp, header_only=False) -> Union[Data, None]:
+        text = np.loadtxt(fp)
+        text = Text(data=text)
+        return text
+
+    def save(self, data, fp, header_only=False):
+       with open(fp, 'w') as f:
+           f.write(' '.join(data.data))
+
+
+# Image
+class _ImageFileHandler(IHandler):
+
+    default_ext = '.jpg'
+
+    def load(self, fp, header_only=False) -> Union[Data, None]:
+        pil_img = PILImage.open(fp)
+        pil_img = pil_img.convert('RGB')
+        np_img = np.array(pil_img)
+        img = Image(data=np_img)
+        return img
+
+    def save(self, data, fp, header_only=False):
+        np_img = data.data
+        pil_img = PILImage.fromarray(np_img, mode="RGB")
+        pil_img.save(fp)
+
+
 # SSI STREAMS
 class _SSIStreamFileHandler(IHandler):
     """Class for handling the loading and saving of SSIStreams."""
+
+    default_ext = '.stream'
 
     def _load_header(self, fp: Path) -> dict:
         """
@@ -627,6 +665,8 @@ class _LazyArray(np.ndarray):
 class _VideoFileHandler(IHandler):
     """Class for handling the loading and saving of video data."""
 
+    default_ext = '.mp4'
+
     def _get_video_meta(self, fp) -> dict:
         """
         Get video metadata using ffprobe.
@@ -726,6 +766,8 @@ class _VideoFileHandler(IHandler):
 class _AudioFileHandler(IHandler):
     """Class for handling the loading and saving of audio data."""
 
+    default_ext = '.wav'
+
     def _get_audio_meta(self, fp: Path) -> dict:
         """
         Get audio metadata using ffprobe.
@@ -817,14 +859,9 @@ class _AudioFileHandler(IHandler):
 class FileHandler(IHandler):
     """Class for handling different types of data files."""
 
-    def _get_handler_for_file(
+    def _get_handler_for_fp(
         self, fp
-    ) -> Union[
-        _AnnotationFileHandler,
-        _SSIStreamFileHandler,
-        _AudioFileHandler,
-        _VideoFileHandler,
-    ]:
+    ) -> Union[_AnnotationFileHandler , _SSIStreamFileHandler , _AudioFileHandler , _VideoFileHandler , _ImageFileHandler , _TextFileHandler]:
         """
         Get the appropriate handler for a given file.
 
@@ -844,16 +881,44 @@ class FileHandler(IHandler):
                 return _AudioFileHandler()
             elif ext in ["mp4"]:
                 return _VideoFileHandler()
+            elif ext in [x[1:] for x in PILImage.registered_extensions()]:
+                return _ImageFileHandler()
+            elif ext in ['txt']:
+                return _TextFileHandler()
             else:
                 raise ValueError(f"Unsupported file extension {fp.suffix}")
         else:
             # TODO provide option to load data with unknown extensions by specifying the datatype
             raise NotImplementedError
 
+    def _get_handler_for_dtype(self, dtype):
+        if dtype == Text:
+            return _TextFileHandler()
+        elif dtype == Image:
+            return _ImageFileHandler()
+        elif dtype == Video:
+            return  _VideoFileHandler()
+        elif dtype == SSIStream:
+            return  _SSIStreamFileHandler()
+        elif dtype == Audio:
+            return  _AudioFileHandler()
+        elif dtype == DiscreteAnnotation or dtype == ContinuousAnnotation or dtype == FreeAnnotation:
+            return  _AnnotationFileHandler()
+        raise NotImplementedError
+
+    def _get_handler(self, fp=None, dtype=None):
+        # Prefer dtype if passed
+        if dtype:
+            return self._get_handler_for_dtype(dtype)
+        # Try to infer handler form extension
+        elif fp:
+            return self._get_handler_for_fp(fp)
+        return None
+
     def __init__(self, data_type: int = None):
         self.data_type = data_type
 
-    def load(self, fp: Path, header_only: bool = False) -> Data:
+    def load(self, fp: Path, header_only: bool = False, dtype = None) -> Data:
         """
         Load data from a file.
 
@@ -864,12 +929,13 @@ class FileHandler(IHandler):
         Returns:
             Data: The loaded data.
         """
-        handler = self._get_handler_for_file(fp)
+        handler = self._get_handler(fp, dtype)
         data = handler.load(fp, header_only=header_only)
+        data.meta_data.name = Path(fp).name
         data.meta_data.expand(FileMetaData(fp))
         return data
 
-    def save(self, data: Stream, fp: Path, overwrite=True, *args, **kwargs):
+    def save(self, data: Stream, fp: Path, overwrite: bool = True, dtype = None, *args, **kwargs):
         """
         Save data to a file.
 
@@ -883,16 +949,20 @@ class FileHandler(IHandler):
         Raises:
             FileExistsError: If the file already exists and overwrite is not allowed.
         """
+        handler = self._get_handler(fp, dtype)
+
+        if not fp.suffix:
+            fp = fp.parent / (fp.name + handler.default_ext)
         if fp.exists() and not overwrite:
             raise FileExistsError(f"Cannot write {fp} because file already exists")
-        handler = self._get_handler_for_file(fp)
-        return handler.save(data, fp, *args, **kwargs)
+        return handler.save(data, fp)
 
 
 if __name__ == "__main__":
     # Test cases...
     test_annotations = False
-    test_streams = True
+    test_streams = False
+    test_static = True
     base_dir = Path("../../../test_files/")
     fh = FileHandler()
 
@@ -977,3 +1047,10 @@ if __name__ == "__main__":
 
         assert new_video.data[0:30].all() == video.data[0:30].all()
         breakpoint()
+
+    """TESTCASE FOR STATIC DATA"""
+    if test_static:
+        from matplotlib import pyplot as plt
+        image = fh.load(base_dir / "test_image.png")
+        image.data = image.data[..., [2,1,0]]
+        fh.save(image, fp=(base_dir / "test_image_bgr.png"))

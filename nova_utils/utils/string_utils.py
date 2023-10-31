@@ -104,10 +104,13 @@ def string_to_bool(string:str) -> bool:
     Returns:
         bool: The boolean value of the string
     '''
-    if string in ['True', 'true', '1']:
-        return True
-    else:
-        return False
+    if isinstance(string, str):
+        if string in ['True', 'true', '1']:
+            return True
+        else:
+            return False
+    elif isinstance(string, bool):
+        return string
 
 def parse_nova_option_string(option_string: str) -> dict:
     """
@@ -143,3 +146,4 @@ def parse_nova_option_string(option_string: str) -> dict:
             print('\t' + k + "=" + v)
     print('...done')
     return options
+

@@ -5,14 +5,13 @@ Author:
 Date:
     18.8.2023
 """
-import sys
 
 import numpy as np
 import warnings
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult, UpdateResult
-
+from typing import Union
 from nova_utils.data.handler.file_handler import FileHandler
 from bson.objectid import ObjectId
 from pathlib import Path
@@ -30,9 +29,8 @@ from nova_utils.utils.anno_utils import (
     convert_ssi_to_label_dtype,
     convert_label_to_ssi_dtype,
 )
-from nova_utils.data.stream import Stream, SSIStream, Video, Audio, StreamMetaData
+from nova_utils.data.stream import Stream, SSIStream, StreamMetaData
 from nova_utils.utils.type_definitions import SSILabelDType, SchemeType
-from nova_utils.data.session import Session
 
 ANNOTATOR_COLLECTION = "Annotators"
 SCHEME_COLLECTION = "Schemes"
@@ -43,7 +41,7 @@ SESSION_COLLECTION = "Sessions"
 ANNOTATION_DATA_COLLECTION = "AnnotationData"
 
 # METADATA
-class MongoMetaData:
+class NovaDBMetaData:
     """
     Metadata for MongoDB connection.
 
@@ -63,7 +61,7 @@ class MongoMetaData:
         self.dataset = dataset
 
 
-class MongoAnnotationMetaData(MongoMetaData):
+class NovaDBAnnotationMetaData(NovaDBMetaData):
     """
     Metadata for MongoDB annotations.
 
@@ -93,7 +91,7 @@ class MongoAnnotationMetaData(MongoMetaData):
         self.data_document_id = data_document_id
 
 
-class MongoStreamMetaData(MongoMetaData):
+class NovaDBStreamMetaData(NovaDBMetaData):
     """
     Metadata for MongoDB streams.
 
@@ -130,7 +128,7 @@ class MongoStreamMetaData(MongoMetaData):
 
 
 # DATA
-class MongoHandler:
+class NovaDBHandler:
     """
     Base class for handling MongoDB connections.
 
@@ -139,6 +137,7 @@ class MongoHandler:
         db_port (int, optional): Port number of the MongoDB server.
         db_user (str, optional): Username for authentication.
         db_password (str, optional): Password for authentication.
+        data_dir (str, optional): Datadir to load streams from
 
     Attributes:
         data_dir (Path, optional): Path to the data directory for stream files
@@ -150,11 +149,13 @@ class MongoHandler:
         db_port: int = None,
         db_user: str = None,
         db_password: str = None,
+        data_dir: str = None
     ):
         self._client = None
         self._ip = None
         self._port = None
         self._user = None
+        self.data_dir = None if data_dir is None else Path(data_dir)
         if db_host and db_port and db_user and db_password:
             self.connect(db_host, db_port, db_user, db_password)
 
@@ -182,8 +183,39 @@ class MongoHandler:
         """
         return self._client
 
+class NovaSession:
+    """
+    Class to stores all information belonging to a specific session during processing
 
-class SessionHandler(MongoHandler):
+    Attributes:
+        input_data (dict, optional):  Annotation or Stream data that can be processed by a module.
+        dataset (str, optional): The dataset or category the session belongs to.
+        name (str, optional): The name or title of the session.
+        duration (int, optional): The duration of the session in minutes.
+        location (str, optional): The location or venue of the session.
+        language (str, optional): The language used in the session.
+        date (datetime, optional): The date and time of the session.
+
+
+    Args:
+        dataset (str, optional): The dataset or category the session belongs to.
+        name (str, optional): The name or title of the session.
+        duration (int, optional): The duration of the session in milliseconds.
+        location (str, optional): The location or venue of the session.
+        language (str, optional): The language used in the session.
+        date (datetime, optional): The date and time of the session.
+        is_valid (bool, optional): Whether the session is considered valid.
+    """
+    def __init__(self, input_data: dict = None, dataset: str = None, name: str = None, duration: int = None, location: str = None, language: str = None, date: datetime = None, is_valid: bool = True, extra_data: dict = None, output_data_templates: dict = None):
+        self.input_data = input_data
+        self.dataset = dataset
+        self.name = name
+        self.duration = duration
+        self.location = location
+        self.language = language
+        self.date = date
+
+class SessionHandler(NovaDBHandler):
     """
     Handler for loading session data from a MongoDB database.
 
@@ -202,41 +234,51 @@ class SessionHandler(MongoHandler):
 
     """
 
-    def load(self, dataset: str, session: str) -> Session:
+    def load(self, dataset: str, session: Union[str, list, None] = None) -> list[NovaSession]:
         """
         Load session data from the specified dataset and session name.
 
         Args:
             dataset (str): The dataset name as specified in the mongo database
-            session (str): The session name as specified in the mongo database
+            session (str, list, None): The session name as specified in the mongo database. Can be also a list of session names. If no session name is provided, all sessions are loaded instead.
 
         Returns:
-            Session: A Session object containing loaded session information.
+            NovaSession: A Session object containing loaded session information.
             If the session does not exist, an empty Session object is returned.
         """
-        result = self.client[dataset][SESSION_COLLECTION].find_one({"name": session})
-        if not result:
-            return Session()
+        if isinstance(session, str):
+            session = [session]
 
-        # get duration of session in milliseconds
-        dur_ms = result.get("duration")
-        if dur_ms == 0:
-            dur_ms = None
-        else:
-            dur_ms *= 1000
+        ret = []
+        result = self.client[dataset][SESSION_COLLECTION].find({})
 
-        return Session(
-            dataset=dataset,
-            name=result["name"],
-            location=result["location"],
-            language=result["language"],
-            date=result["date"],
-            duration=dur_ms,
-            is_valid=result["isValid"],
-        )
+        for s in result:
+            if session is not None and s['name'] not in session:
+                continue
+            # get duration of session in milliseconds
+            dur_ms = s.get("duration")
+            if dur_ms == 0:
+                dur_ms = None
+            else:
+                dur_ms *= 1000
+
+            ret.append(
+                NovaSession(
+                    dataset=dataset,
+                    name=s["name"],
+                    location=s["location"],
+                    language=s["language"],
+                    date=s["date"],
+                    duration=dur_ms,
+                    is_valid=s["isValid"],
+                )
+            )
+
+        return ret
 
 
-class AnnotationHandler(IHandler, MongoHandler):
+
+class AnnotationHandler(IHandler, NovaDBHandler):
     """
     Class for handling download of annotation data from Mongo db.
     """
@@ -585,14 +627,14 @@ class AnnotationHandler(IHandler, MongoHandler):
 
         # setting meta data
         if header_only:
-            handler_meta_data = MongoAnnotationMetaData(
+            handler_meta_data = NovaDBAnnotationMetaData(
                 ip=self._ip,
                 port=self._port,
                 user=self._user,
                 dataset=dataset
             )
         else:
-            handler_meta_data = MongoAnnotationMetaData(
+            handler_meta_data = NovaDBAnnotationMetaData(
                 ip=self._ip,
                 port=self._port,
                 user=self._user,
@@ -720,28 +762,11 @@ class AnnotationHandler(IHandler, MongoHandler):
         # TODO success error handling
 
 
-class StreamHandler(IHandler, MongoHandler):
+class StreamHandler(IHandler, NovaDBHandler):
     """
     Class for handling download and upload of stream data from MongoDB.
     """
 
-    def __init__(self, *args, data_dir: Path = None, **kwargs):
-        """
-        Base class for handling MongoDB connections.
-
-         Args:
-            ip (str, optional): IP address of the MongoDB server.
-            port (int, optional): Port number of the MongoDB server.
-            user (str, optional): Username for authentication.
-            password (str, optional): Password for authentication.
-            data_dir (Path, optional): Path to the data directory for stream files
-
-        Attributes:
-            data_dir (Path, optional): Path to the data directory for stream files
-            client (MongoClient): The MongoDB client connected to the database. Readonly
-        """
-        super().__init__(*args, **kwargs)
-        self.data_dir = Path(data_dir)
 
     def _load_stream(
         self,
@@ -806,7 +831,7 @@ class StreamHandler(IHandler, MongoHandler):
         data.meta_data.name = name
         data.meta_data.session = session
 
-        handler_meta_data = MongoStreamMetaData(
+        handler_meta_data = NovaDBStreamMetaData(
             ip=self._ip,
             port=self._port,
             user=self._user,
