@@ -17,6 +17,7 @@ from nova_utils.data.data import Data
 from nova_utils.data.handler.file_handler import FileHandler
 from nova_utils.data.handler.ihandler import IHandler
 from nova_utils.data.static import Text, Image
+from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme
 
 
 class RequestHandler(IHandler):
@@ -43,6 +44,9 @@ class RequestHandler(IHandler):
                 return Image(data=None)
             # TODO know decoding
             print("Don't know decoding. Lol!")
+        elif dtype == FreeAnnotation:
+            if header_only:
+                return FreeAnnotation(data=None, scheme=FreeAnnotationScheme(name='default_scheme'))
         else:
             raise ValueError(
                 f"Data with unsupported dtype {dtype} received in request form."

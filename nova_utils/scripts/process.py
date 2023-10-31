@@ -20,6 +20,7 @@ Example:
 """
 
 import argparse
+import sys
 import os
 import shutil
 from importlib.machinery import SourceFileLoader
@@ -55,16 +56,16 @@ parser.add_argument(
 )
 
 
-def _main():
+def _main(args):
 
-    args, _ = parser.parse_known_args()
+    process_args, _ = parser.parse_known_args(args)
 
     # Create argument groups
-    db_args, _ = nova_db_parser.parse_known_args()
-    req_args, _ = request_parser.parse_known_args()
-    dm_args, _ = dm_parser.parse_known_args()
-    iter_args, _ = nova_iterator_parser.parse_known_args()
-    module_args, _ = nova_server_module_parser.parse_known_args()
+    db_args, _ = nova_db_parser.parse_known_args(args)
+    req_args, _ = request_parser.parse_known_args(args)
+    dm_args, _ = dm_parser.parse_known_args(args)
+    iter_args, _ = nova_iterator_parser.parse_known_args(args)
+    module_args, _ = nova_server_module_parser.parse_known_args(args)
 
     # Set environment variables
     os.environ['CACHE_DIR'] = module_args.cache_dir
@@ -75,7 +76,7 @@ def _main():
     # Load trainer
     trainer = ssi_xml_utils.Trainer()
     trainer_file_path = Path(module_args.cml_dir).joinpath(
-        PureWindowsPath(args.trainer_file_path)
+        PureWindowsPath(process_args.trainer_file_path)
     )
     if not trainer_file_path.is_file():
         raise FileNotFoundError(f"Trainer file not available: {trainer_file_path}")
@@ -94,7 +95,7 @@ def _main():
         "ns_cl_" + model_script_path.stem, str(model_script_path)
     ).load_module()
     print(f"Trainer module {Path(model_script_path).name} loaded")
-    opts = string_utils.parse_nova_option_string(args.opt_str)
+    opts = string_utils.parse_nova_option_string(process_args.opt_str)
     processor_class: Union[Type[Predictor], Type[Extractor]] = getattr(
         source, trainer.model_create
     )
@@ -209,4 +210,4 @@ def _main():
 
 
 if __name__ == "__main__":
-    _main()
+    _main(sys.argv[1:])
