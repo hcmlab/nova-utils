@@ -21,20 +21,24 @@ class MetaData:
         dataset (str): Name of the dataset.
         role (str): Role of the data (e.g., training, testing).
         session (str): Session identifier.
+        name (str): Unique name to identify the data
 
     Args:
         dataset (str, optional): Name of the dataset the data belongs to.
         role (str, optional): Role of the data (e.g., training, testing).
         session (str, optional): Session identifier for the data.
+        name (str, optional): Unique name to identify the data
+
     """
 
-    def __init__(self, dataset: str = None, role: str = None, session: str = None):
+    def __init__(self, dataset: str = None, role: str = None, session: str = None, name: str = None):
         """
         Initialize a MetaData instance with dataset, role, and session information.
         """
         self.dataset = dataset
         self.role = role
         self.session = session
+        self.name = name
 
     def expand(self, obj_instance):
         """
@@ -72,13 +76,14 @@ class Data:
         dataset: str = None,
         role: str = None,
         session: str = None,
+        name: str = None,
         **kwargs
     ):
         """
         Initialize a Data instance with data and metadata.
         """
         self._data = data
-        self.meta_data = MetaData(dataset, role, session)
+        self.meta_data = MetaData(dataset, role, session, name)
 
     @property
     def data(self) -> np.ndarray:
