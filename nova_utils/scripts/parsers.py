@@ -62,6 +62,7 @@ dm_parser.add_argument(
     "--dataset",
     type=str,
     help="Name of the dataset. Must match entries in NOVA-DB",
+    default='dummy_dataset'
 )
 
 dm_parser.add_argument(

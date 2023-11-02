@@ -300,7 +300,7 @@ class SessionManager:
                 shared_dir = rq.get('shared_dir')
                 job_id = rq.get('job_id')
                 handler = request_handler.RequestHandler()
-                handler.save(data=data, shared_dir=shared_dir, job_id=job_id)
+                handler.save(data=data, shared_dir=shared_dir, job_id=job_id, dataset=self.dataset, session=self.session)
 
             return success
 

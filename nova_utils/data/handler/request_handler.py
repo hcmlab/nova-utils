@@ -24,7 +24,7 @@ class RequestHandler(IHandler):
     """Class for handling user input"""
 
     def load(
-        self, data, dtype, dataset: str = None, role: str = None, session: str = None, header_only = False
+            self, data, dtype, dataset: str = None, role: str = None, session: str = None, header_only=False
     ) -> Union[Text, Image]:
         """
         Decode data received from server.
@@ -52,24 +52,29 @@ class RequestHandler(IHandler):
                 f"Data with unsupported dtype {dtype} received in request form."
             )
 
-    def save(self, data: Data, shared_dir, job_id):
+    def save(self, data: Data, shared_dir, job_id, dataset=None, session=None):
         """
         Save data to filesystem using the shared directory as well the current job id
         """
 
         # Create output folder for job
         output_dir = Path(shared_dir) / job_id
+        if dataset:
+            output_dir /= dataset
+        if session:
+            output_dir /= session
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        try:
+        if data.meta_data.name:
             output_name = data.meta_data.name
-        except:
+        else:
             output_name = "".join(
                 random.choices(string.ascii_uppercase + string.digits, k=6)
             )
 
         handler = FileHandler()
         handler.save(data, output_dir / output_name, dtype=type(data))
+
 
 if __name__ == "__main__":
     text = "this is a test text"
