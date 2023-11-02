@@ -7,7 +7,8 @@ Date:
 """
 from enum import Enum
 from typing import Union
-
+from typing import Type
+from nova_utils.data.data import Data
 
 def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
     """
@@ -147,4 +148,3 @@ def parse_nova_option_string(option_string: str) -> dict:
             print('\t' + k + "=" + v)
     print('...done')
     return options
-

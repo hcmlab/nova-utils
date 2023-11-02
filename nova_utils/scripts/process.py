@@ -171,7 +171,7 @@ def _main(args):
         if isinstance(data_output, list):
             # Init data handler
             annotation_handler = db_handler.AnnotationHandler(**vars(db_args))
-            stream_handler = db_handler.StreamHandler(**vars(db_args), data_dir=iter_args.data_dir)
+            stream_handler = db_handler.StreamHandler(**vars(db_args), data_dir=process_args.data_dir)
             for out in data_output:
 
                 if isinstance(out, Annotation):
