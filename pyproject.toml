@@ -45,9 +45,7 @@ Documentation = "https://hcmlab.github.io/nova-utils/docbuild/"
 Repository = "https://github.com/hcmlab/nova-utils"
 
 [project.scripts]
-nu-predict = "nova_utils.scripts.predict:_main"
-nu-extract = "nova_utils.scripts.extract:_main"
-nu-train = "nova_utils.scripts.train:_main"
-nu-process = "nova_utils.scripts.process:_main"
+nu-train = "nova_utils.scripts.train:cl_main"
+nu-process = "nova_utils.scripts.process:cl_main"
 
 

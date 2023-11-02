@@ -17,7 +17,6 @@ class StreamMetaData:
     Metadata for a data stream, providing information about the stream properties.
 
     Attributes:
-        name (str): Name of the stream.
         ext (str): File extension of the stream including the leading '.'
         duration (float): Duration of the stream in seconds.
         sample_shape (tuple): Shape of individual samples in the stream.
@@ -29,7 +28,6 @@ class StreamMetaData:
 
 
     Args:
-        name (str): Name of the stream.
         ext (str): File extension of the stream including the leading '.'
         duration (float, optional): Duration of the stream in seconds.
         sample_shape (tuple, optional): Shape of individual samples in the stream.
@@ -42,7 +40,6 @@ class StreamMetaData:
 
     def __init__(
         self,
-        name: str = None,
         ext: str = None,
         duration: float = None,
         sample_shape: tuple = None,
@@ -55,7 +52,6 @@ class StreamMetaData:
         """
         Initialize a StreamMetaData instance with stream properties.
         """
-        self.name = name
         self.ext = ext
         self.duration = duration
         self.sample_shape = sample_shape
@@ -126,7 +122,6 @@ class Stream(DynamicData):
         self,
         data: Union[np.ndarray, None],
         sample_rate: float,
-        name: str = None,
         ext: str = None,
         duration: float = None,
         sample_shape: tuple = None,
@@ -151,7 +146,7 @@ class Stream(DynamicData):
                 ext = '.wav'
 
         stream_meta_data = StreamMetaData(
-            name, ext, duration, sample_shape, num_samples, sample_rate, dtype, media_type, custom_meta
+            ext, duration, sample_shape, num_samples, sample_rate, dtype, media_type, custom_meta
         )
         self.meta_data.expand(stream_meta_data)
 

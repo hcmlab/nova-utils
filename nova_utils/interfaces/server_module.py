@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from time import perf_counter
-
+from typing import Type
 from nova_utils.data.annotation import Annotation
 from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
+from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
 from nova_utils.data.stream import Stream
 from nova_utils.utils.log_utils import log
 from nova_utils.utils.ssi_xml_utils import ModelIO, Trainer
@@ -31,6 +32,26 @@ class Processor(ABC):
         self.model_io = model_io
         self.trainer = trainer
 
+    def get_session_manager(self, dataset_manager: DatasetManager, session_name: str = None, ignore_ambiguity: bool = False) -> SessionManager:
+        """Returns a session manager that matches the provides session name. If no session name is provided the first
+
+        Args:
+            dataset_manager (DatasetManager): The dataset manager that holds all sessions
+            session_name (str, Optional): The name of a specific session to retrieve. Defaults to None.
+            ignore_ambiguity (bool, Optional): If set to False and no session name is specified and more than one session exists the function throws an error. Else the first session in the dictionary will be returned.
+
+        Raises:
+            ValueError: If session to return cannot be identified
+        """
+        current_session_name = session_name
+        if current_session_name is None:
+            if len(dataset_manager.session_names) == 1 or ignore_ambiguity:
+                current_session_name = dataset_manager.session_names[0]
+            else:
+                raise ValueError('')
+
+        return dataset_manager.sessions[current_session_name]['manager']
+
     def preprocess_sample(self, sample: dict):
         """Preprocess data to convert between nova-server dataset iterator item to the raw model input as required in process_sample.
 
@@ -47,16 +68,17 @@ class Processor(ABC):
         """Apply any optional postprocessing to the data (e.g. scaling, mapping etc...)"""
         return sample
 
-    def process_data(self, ds_iter: NovaDatasetIterator) -> list:
-        """Returning a dictionary that contains the original keys from the dataset iterator and a list of processed samples as value. Can be overwritten to customize the processing"""
-        self.ds_iter = ds_iter
+    def process_data(self, ds_manager: Type[DatasetManager]) -> dict:
+        """Returning a dictionary that contains the original keys from the dataset iterator and a list of processed
+        samples as value. Can be overwritten to customize the processing"""
+        ds_manager: NovaDatasetIterator
 
         # Start the stopwatch / counter
         pc_start = perf_counter()
         output_list = []
-        for i, sample in enumerate(ds_iter):
+        for i, sample in enumerate(ds_manager):
             if i % 100 == 0:
-                log(f'Processing sample {i}. {i / (perf_counter() - pc_start)} samples / s. Processed {i * ds_iter.stride / 1000} Seconds of data.')
+                log(f'Processing sample {i}. {i / (perf_counter() - pc_start)} samples / s. Processed {i * ds_manager.stride / 1000} Seconds of data.')
             # for id, output_list in processed.items():
             #     data_for_id = {id: sample[id]}
             out = self.preprocess_sample(sample)
@@ -64,6 +86,8 @@ class Processor(ABC):
             out = self.postprocess_sample(out)
             output_list.append(out)
 
+
+        # TODO convert output to dict
         return output_list
 
     def to_output(self, data):
