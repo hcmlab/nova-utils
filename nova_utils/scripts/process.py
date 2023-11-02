@@ -56,7 +56,7 @@ parser.add_argument(
 )
 
 
-def _main(args):
+def main(args):
 
     process_args, _ = parser.parse_known_args(args)
 
@@ -208,6 +208,10 @@ def _main(args):
         )
         exit(1)
 
+# Entry point for nu-process
+def cl_main():
+    main(sys.argv[1:])
 
+# Entry point for python
 if __name__ == "__main__":
-    _main(sys.argv[1:])
+    main(sys.argv[1:])
