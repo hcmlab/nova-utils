@@ -219,8 +219,8 @@ class SessionManager:
                         data = Stream(
                             None,
                             -1,
-                            name=desc["name"],
-                            role=desc["role"],
+                            name=desc.get("name"),
+                            role=desc.get("role"),
                             dataset=self.dataset,
                             session=self.session,
                         )

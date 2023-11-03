@@ -568,17 +568,18 @@ class _SSIStreamFileHandler(IHandler):
         )
 
         # chunks
-        for chunk in meta_data.chunks:
-            Et.SubElement(
-                root,
-                "chunk",
-                attrib={
-                    "from": f"{chunk['from']:.3f}",
-                    "to": f"{chunk['to']:.3f}",
-                    "byte": str(chunk["byte"]),
-                    "num": str(chunk["num"]),
-                },
-            )
+        if meta_data.chunks is not None:
+            for chunk in meta_data.chunks:
+                Et.SubElement(
+                    root,
+                    "chunk",
+                    attrib={
+                        "from": f"{chunk['from']:.3f}",
+                        "to": f"{chunk['to']:.3f}",
+                        "byte": str(chunk["byte"]),
+                        "num": str(chunk["num"]),
+                    },
+                )
 
         # saving
         root = Et.ElementTree(root)
