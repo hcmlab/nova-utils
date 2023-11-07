@@ -1,3 +1,4 @@
+import typing
 from abc import ABC, abstractmethod
 from time import perf_counter
 from typing import Type
@@ -6,7 +7,8 @@ from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
 from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
 from nova_utils.data.stream import Stream
 from nova_utils.utils.log_utils import log
-from nova_utils.utils.ssi_xml_utils import ModelIO, Trainer
+from nova_utils.utils.ssi_xml_utils import ModelIO
+from nova_utils.utils.ssi_xml_utils import Trainer as SSITrainer
 
 
 class Processor(ABC):
@@ -24,7 +26,7 @@ class Processor(ABC):
     UNKNOWN_ID = '<unk>_'
 
     # TODO read trainer or chain file for default options
-    def __init__(self, model_io: list[ModelIO], opts: dict, trainer: Trainer = None):
+    def __init__(self, model_io: list[ModelIO], opts: dict, trainer: SSITrainer = None):
         self.model = None
         self.data = None
         self.output = None
@@ -96,7 +98,7 @@ class Processor(ABC):
         elif isinstance(self, Extractor):
             return self.to_stream(data)
 
-class Trainer(Processor):
+class Trainer(ABC):
     """
     Base class of a Trainer. Implement this interface in your own class to build a model that is trainable from within nova
     """
@@ -118,6 +120,13 @@ class Trainer(Processor):
         """Loads a model with the given path. Returns this model."""
         raise NotImplemented
 
+class Explainer(ABC):
+    @abstractmethod
+    def get_explainable_model(self) -> typing.Any:
+        raise NotImplemented
+    @abstractmethod
+    def get_predict_function(self) -> typing.Callable:
+        raise NotImplemented
 
 class Predictor(Processor):
     """
