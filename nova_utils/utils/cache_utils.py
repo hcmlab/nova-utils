@@ -3,23 +3,29 @@ import hashlib
 import os
 import shutil
 import tarfile
+import tempfile
 import urllib
 import zipfile
+import requests
+import mimetypes
+from tempfile import NamedTemporaryFile
 from pathlib import Path
 from urllib import request, error
 from zipfile import ZipFile
 
-import requests
-
-
-def retreive_from_url(url, fp):
+def retreive_from_url(url, fp=None):
 
     with requests.get(url, stream=True, headers={'Accept-Encoding': None}) as r:
 
+        if fp is None:
+            suffix = mimetypes.guess_extension(r.headers.get('content-type'))
+            tmp_file = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+            fp = Path(tmp_file.name)
         # save the output to a file
         with open(fp, 'wb')as output:
             shutil.copyfileobj(r.raw, output)
 
+        return fp, r.headers
 def _resolve_hasher(algorithm, file_hash=None):
     """Returns hash algorithm as hashlib function."""
     if algorithm == "sha256":

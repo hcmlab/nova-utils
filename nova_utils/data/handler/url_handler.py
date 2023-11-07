@@ -7,16 +7,10 @@ Date:
 
 """
 from pathlib import Path
-
-import numpy as np
-
 from nova_utils.data.data import Data
 from nova_utils.data.handler.ihandler import IHandler
+from nova_utils.data.handler.file_handler import FileHandler
 from nova_utils.utils.cache_utils import retreive_from_url
-from nova_utils.utils.type_definitions import (
-    SSIFileType,
-)
-
 
 class URLHandler(IHandler):
     """Class for handling different types of data files."""
@@ -26,8 +20,7 @@ class URLHandler(IHandler):
 
     def load(self, url: str) -> Data:
         """
-        Load data from a file.
-
+        Load data from a url.
         Args:
             fp (Path): The file path.
             header_only (bool): If true only the stream header will be loaded.
@@ -35,8 +28,16 @@ class URLHandler(IHandler):
         Returns:
             Data: The loaded data.
         """
-        raise NotImplementedError
+        fp, _ = retreive_from_url(url)
+        fh = FileHandler()
+        data = fh.load(Path(fp))
+        return data
 
     def save(self, *args, **kwargs):
         raise NotImplementedError
 
+
+if __name__ == '__main__':
+    uh = URLHandler()
+    data = uh.load('https://download.samplelib.com/mp4/sample-5s.mp4')
+    breakpoint()
