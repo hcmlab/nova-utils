@@ -201,7 +201,7 @@ class SessionManager:
                 # URL
                 elif src == Source.URL:
                     handler = url_handler.URLHandler()
-                    data = handler.load(uri=Path(desc["uri"]))
+                    data = handler.load(url=desc["uri"])
                 # REQUEST
                 elif src == Source.REQUEST:
                     target_dtype = dtype_from_desc(desc)
