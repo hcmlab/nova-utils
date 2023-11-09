@@ -47,5 +47,6 @@ Repository = "https://github.com/hcmlab/nova-utils"
 [project.scripts]
 nu-train = "nova_utils.scripts.train:cl_main"
 nu-process = "nova_utils.scripts.process:cl_main"
+nu-explain = "nova_utils.scripts.explain:cl_main"
 
 

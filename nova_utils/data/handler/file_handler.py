@@ -399,7 +399,9 @@ class _TextFileHandler(IHandler):
     default_ext = '.txt'
 
     def load(self, fp, header_only=False) -> Union[Data, None]:
-        text = np.loadtxt(fp)
+        # text = np.loadtxt(fp)
+        with open(fp, "r") as f:
+            text = f.read()
         text = Text(data=text)
         return text
 
