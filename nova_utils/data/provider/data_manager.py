@@ -13,7 +13,7 @@ from nova_utils.data.handler import (
     request_handler,
 )
 from nova_utils.data.stream import Stream
-from nova_utils.utils.request_utils import Source, DType, parse_src, dtype_from_desc, data_description_to_string
+from nova_utils.utils.request_utils import Source, SuperType, SubType, parse_src_tag, data_description_to_string, infere_dtype
 
 
 class SessionManager:
@@ -92,9 +92,10 @@ class SessionManager:
         )
 
         self.source_context = {}
-        for src, context in source_context.items():
-            src_ = Source(src)
-            self.add_source_context(src_, context)
+        if source_context is not None:
+            for src, context in source_context.items():
+                src_ = Source(src)
+                self.add_source_context(src_, context)
 
     def add_source_context(self, source: Source, context: dict):
         """Add all parameters that are necessary to initialize source specific data handler for reading and writing data objects."""
@@ -145,7 +146,7 @@ class SessionManager:
             )
 
         for desc in data_description:
-            src, dtype, dtype_specific = parse_src(desc)
+            src, super_dtype, sub_dtype, specific_dtype = parse_src_tag(desc)
 
             header_only = False
             if desc.get("type") == "input":
@@ -167,7 +168,7 @@ class SessionManager:
                 # DATABASE
                 if src == Source.DB:
                     ctx = self.source_context[src]
-                    if dtype == DType.ANNO:
+                    if super_dtype == SuperType.ANNO:
                         handler = nova_db_handler.AnnotationHandler(**ctx)
                         data = handler.load(
                             dataset=self.dataset,
@@ -177,7 +178,7 @@ class SessionManager:
                             role=desc["role"],
                             header_only=header_only,
                         )
-                    elif dtype == DType.STREAM:
+                    elif super_dtype == SuperType.STREAM:
                         handler = nova_db_handler.StreamHandler(**ctx)
                         data = handler.load(
                             dataset=self.dataset,
@@ -189,8 +190,8 @@ class SessionManager:
                 # FILE
                 elif src == Source.FILE:
                     # Need to set the file handler specifically because we don't know the scheme
-                    if dtype == DType.ANNO:
-                        if dtype_specific is None or dtype_specific == 'free':
+                    if super_dtype == SuperType.ANNO:
+                        if specific_dtype is None or specific_dtype == 'free':
                             data = FreeAnnotation(scheme=FreeAnnotationScheme(name='generic'), data=None)
                         else:
                             raise ValueError(f"Can\'t create template for {desc} because no scheme information is available.")
@@ -204,7 +205,7 @@ class SessionManager:
                     data = handler.load(url=desc["uri"])
                 # REQUEST
                 elif src == Source.REQUEST:
-                    target_dtype = dtype_from_desc(desc)
+                    target_dtype = infere_dtype(super_dtype, sub_dtype)
                     handler = request_handler.RequestHandler()
                     data = handler.load(data=desc.get("data"), dtype=target_dtype, header_only=header_only)
 
@@ -214,7 +215,7 @@ class SessionManager:
                     raise e
                 # Create empty data objects with known params
                 else:
-                    if dtype == DType.STREAM:
+                    if super_dtype == SuperType.STREAM:
                         # Todo differentiate types
                         data = Stream(
                             None,
@@ -268,7 +269,7 @@ class SessionManager:
             )
 
         for desc in data_description:
-            src, dtype_specific, dtype = parse_src(desc)
+            src, super_dtype, sub_dtype, specific_dtype = parse_src_tag(desc)
 
             if not desc.get("type") == "output":
                 continue
@@ -284,10 +285,10 @@ class SessionManager:
             data = self.output_data_templates[data_id]
             if src == Source.DB:
                 ctx = self.source_context[src]
-                if dtype == DType.ANNO:
+                if super_dtype == SuperType.ANNO:
                     handler = nova_db_handler.AnnotationHandler(**ctx)
                     success = handler.save(annotation=data)
-                elif dtype == DType.STREAM:
+                elif super_dtype == SuperType.STREAM:
                     handler = nova_db_handler.StreamHandler(**ctx)
                     success = handler.save(stream=data)
             elif src == Source.FILE:
@@ -296,7 +297,7 @@ class SessionManager:
             elif src == Source.URL:
                 raise NotImplementedError
             elif src == Source.REQUEST:
-                rq = self.source_context.get(Source.REQUEST)
+                rq = self.source_context.get(Source.REQUEST.value)
                 shared_dir = rq.get('shared_dir')
                 job_id = rq.get('job_id')
                 handler = request_handler.RequestHandler()
@@ -307,7 +308,7 @@ class SessionManager:
 
 class DatasetManager:
     def __init__(
-        self, dataset, data_description, source_context, session_names: list = None
+        self, data_description: list[dict[str, str]], source_context: dict = None, dataset: str = None, session_names: list = None
     ):
         self.dataset = dataset
         self.data_description = data_description
@@ -317,12 +318,17 @@ class DatasetManager:
         self._init_sessions()
 
     def _init_sessions(self):
-        if self.session_names is not None:
-            for session in self.session_names:
-                sm = SessionManager(
-                    self.dataset, self.data_description, session, self.source_ctx
-                )
-                self.sessions[session] = {"manager": sm}
+        if self.session_names is None:
+            self.session_names = ['dummy_session']
+
+        if self.dataset is None:
+            self.dataset = 'dummy_dataset'
+
+        for session in self.session_names:
+            sm = SessionManager(
+                self.dataset, self.data_description, session, self.source_ctx
+            )
+            self.sessions[session] = {"manager": sm}
 
     def load_session(self, session_name):
         self.sessions[session_name]["manager"].load(self.data_description)
@@ -340,6 +346,7 @@ class DatasetManager:
 
 
 class NovaDatasetManager(DatasetManager):
+
     def _init_sessions(self):
         sh = nova_db_handler.SessionHandler(**self.source_ctx["db"])
         sessions = sh.load(self.dataset, self.session_names)
@@ -348,7 +355,6 @@ class NovaDatasetManager(DatasetManager):
                 self.dataset, self.data_description, session_info.name, self.source_ctx
             )
             self.sessions[session_info.name] = {"manager": sm, "info": session_info}
-
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
@@ -388,6 +394,13 @@ if __name__ == "__main__":
         "uri": "/Users/dominikschiller/Work/local_nova_dir/test_files/new_test_video_25.mp4",
     }
 
+    request = {
+        "src": "request:text:video:dum:dum:dum",
+        "type": "input",
+        "id": "reqeust_test",
+        "data": "this is some input"
+    }
+
     ctx = {
         "db": {
             "db_host": IP,
@@ -411,14 +424,14 @@ if __name__ == "__main__":
     #     source_context=ctx,
     # )
 
-    data_aggregator_in = NovaDatasetManager(
-        dataset=dataset, data_description=[annotation], **ctx["db"]
-    )
+    dsm = DatasetManager(
+        dataset=dataset, data_description=[request], source_context=ctx )
 
-    data_aggregator_in.load(data_description=[annotation, annotation_out])
-    data_aggregator_in.output_data_templates[
-        "annotation_out"
-    ] = data_aggregator_in.input_data["annotation"]
-    data_aggregator_in.save(data_description=[annotation, annotation_out])
+    dsm.load()
+
+    # dsm.output_data_templates[
+    #     "annotation_out"
+    # ] = dsm.input_data["annotation"]
+    # dsm.save(data_description=[annotation, annotation_out])
 
     breakpoint()
