@@ -70,7 +70,7 @@ class Processor(ABC):
         """Apply any optional postprocessing to the data (e.g. scaling, mapping etc...)"""
         return sample
 
-    def process_data(self, ds_manager: Type[DatasetManager]) -> dict:
+    def process_data(self, ds_manager: DatasetManager) -> dict:
         """Returning a dictionary that contains the original keys from the dataset iterator and a list of processed
         samples as value. Can be overwritten to customize the processing"""
         ds_manager: NovaDatasetIterator
