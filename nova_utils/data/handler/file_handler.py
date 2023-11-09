@@ -117,7 +117,7 @@ class _AnnotationFileHandler(IHandler):
         """
 
         if ftype == SSIFileType.ASCII.name:
-            data = np.loadtxt(path, dtype=SSILabelDType.DISCRETE.value, delimiter=";")
+            data = np.loadtxt(path, dtype=SSILabelDType.DISCRETE.value, delimiter=";", encoding='UTF-8')
         elif ftype == SSIFileType.BINARY.name:
             data = np.fromfile(path, dtype=SSILabelDType.DISCRETE.value)
         else:
@@ -138,7 +138,7 @@ class _AnnotationFileHandler(IHandler):
             np.ndarray: The loaded continuous annotation data as a NumPy array.
         """
         if ftype == SSIFileType.ASCII.name:
-            data = np.loadtxt(path, dtype=SSILabelDType.CONTINUOUS.value, delimiter=";")
+            data = np.loadtxt(path, dtype=SSILabelDType.CONTINUOUS.value, delimiter=";", encoding='UTF-8')
         elif ftype == SSIFileType.BINARY.name:
             data = np.fromfile(path, dtype=SSILabelDType.CONTINUOUS.value)
         else:
@@ -162,7 +162,7 @@ class _AnnotationFileHandler(IHandler):
         data = []
         if ftype == SSIFileType.ASCII.name:
             with open(path, "r") as ascii_file:
-                ascii_file_reader = csv.reader(ascii_file, delimiter=";", quotechar='"')
+                ascii_file_reader = csv.reader(ascii_file, delimiter=";", quotechar='"', encoding='UTF-8')
                 for row in ascii_file_reader:
                     f = float(row[0])
                     t = float(row[1])
@@ -388,7 +388,7 @@ class _AnnotationFileHandler(IHandler):
         # save data
         if ftype == SSIFileType.ASCII:
             fmt = self._str_format_from_dtype(anno_data.dtype)
-            np.savetxt(data_path, anno_data, fmt=fmt, delimiter=";")
+            np.savetxt(data_path, anno_data, fmt=fmt, delimiter=";", encoding='UTF-8')
         if ftype == SSIFileType.BINARY:
             data.data.tofile(data_path, sep="")
 
@@ -417,7 +417,8 @@ class _ImageFileHandler(IHandler):
         pil_img = PILImage.open(fp)
         pil_img = pil_img.convert('RGB')
         np_img = np.array(pil_img)
-        img = Image(data=np_img)
+
+        img = Image(data=np_img, ext=pil_img.format, sample_shape=np_img.shape, dtype=np_img.dtype)
         return img
 
     def save(self, data, fp, header_only=False):
@@ -511,7 +512,10 @@ class _SSIStreamFileHandler(IHandler):
         if ftype == SSIFileType.ASCII:
             return np.loadtxt(fp, dtype=dtype, delimiter=delim)
         elif ftype == SSIFileType.BINARY:
-            return np.fromfile(fp, dtype=dtype).reshape(size, dim)
+            stream = np.fromfile(fp, dtype=dtype).reshape(-1, dim)
+            if size is not None and size != 0:
+                assert stream.shape[0] == size
+            return stream
         else:
             raise ValueError("FileType {} not supported".format(self))
 
@@ -704,11 +708,15 @@ class _VideoFileHandler(IHandler):
             fp (Path): The file path of the video.
             header_only (bool): If true only the stream header will be loaded.
 
-
         Returns:
             Data: The loaded video data.
-        """
 
+        Raises:
+            FileNotFoundError: Error if the file does not exist
+
+        """
+        if not fp.exists():
+            raise FileNotFoundError(fp)
         # meta information
         metadata = self._get_video_meta(fp)
         metadata = metadata["streams"][0]
@@ -864,7 +872,7 @@ class FileHandler(IHandler):
     """Class for handling different types of data files."""
 
     def _get_handler_for_fp(
-        self, fp
+        self, fp: Path
     ) -> Union[_AnnotationFileHandler , _SSIStreamFileHandler , _AudioFileHandler , _VideoFileHandler , _ImageFileHandler , _TextFileHandler]:
         """
         Get the appropriate handler for a given file.
@@ -875,6 +883,9 @@ class FileHandler(IHandler):
         Returns:
             IHandler: An instance of the appropriate data handler.
         """
+
+
+
         if not self.data_type:
             ext = fp.suffix[1:]
             if ext in ["annotation"]:
@@ -910,7 +921,8 @@ class FileHandler(IHandler):
             return  _AnnotationFileHandler()
         raise NotImplementedError
 
-    def _get_handler(self, fp=None, dtype=None):
+    def _get_handler(self, fp: Path =None, dtype=None):
+
         # Prefer dtype if passed
         if dtype:
             return self._get_handler_for_dtype(dtype)
@@ -922,7 +934,7 @@ class FileHandler(IHandler):
     def __init__(self, data_type: int = None):
         self.data_type = data_type
 
-    def load(self, fp: Path, header_only: bool = False, dtype = None) -> Data:
+    def load(self, fp: Union[Path, str], header_only: bool = False, dtype = None) -> Data:
         """
         Load data from a file.
 
@@ -933,13 +945,15 @@ class FileHandler(IHandler):
         Returns:
             Data: The loaded data.
         """
+        if isinstance(fp, str):
+            fp = Path(fp)
         handler = self._get_handler(fp, dtype)
         data = handler.load(fp, header_only=header_only)
         data.meta_data.name = Path(fp).name
         data.meta_data.expand(FileMetaData(fp))
         return data
 
-    def save(self, data: Stream, fp: Path, overwrite: bool = True, dtype = None, *args, **kwargs):
+    def save(self, data: Stream, fp: Union[Path, str], overwrite: bool = True, dtype = None, *args, **kwargs):
         """
         Save data to a file.
 
@@ -953,6 +967,8 @@ class FileHandler(IHandler):
         Raises:
             FileExistsError: If the file already exists and overwrite is not allowed.
         """
+        if isinstance(fp, str):
+            fp = Path(fp)
         handler = self._get_handler(fp, dtype)
 
         if not fp.suffix:
