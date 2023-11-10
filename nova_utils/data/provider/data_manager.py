@@ -298,7 +298,7 @@ class SessionManager:
             elif src == Origin.URL:
                 raise NotImplementedError
             elif src == Origin.REQUEST:
-                rq = self.source_context.get(Origin.REQUEST.value)
+                rq = self.source_context.get(Origin.REQUEST)
                 shared_dir = rq.get('shared_dir')
                 job_id = rq.get('job_id')
                 handler = request_handler.RequestHandler()
