@@ -4,10 +4,11 @@ Date: 18.8.2023
 """
 
 import numpy as np
+from typing import Union
+from nova_utils.data.data import Data
 
-from nova_utils.data.data import StaticData
 
-
+# TODO Refactoring: StaticMetaData is currently a subset of StreamMetaData. This common properties should be moved to a parent class
 class StaticMetaData:
     """
     Metadata for a data stream, providing information about the stream properties.
@@ -40,12 +41,8 @@ class StaticMetaData:
             self,
             name: str = None,
             ext: str = None,
-            duration: float = None,
             sample_shape: tuple = None,
-            num_samples: int = None,
-            sample_rate: float = None,
             dtype: np.dtype = None,
-            media_type: str = 'feature',
             custom_meta: dict = None
     ):
         """
@@ -53,13 +50,36 @@ class StaticMetaData:
         """
         self.name = name
         self.ext = ext
-        self.duration = duration
         self.sample_shape = sample_shape
-        self.num_samples = num_samples
-        self.sample_rate = sample_rate
         self.dtype = dtype
-        self.media_type = media_type
         self.custom_meta = custom_meta if custom_meta is not None else {}
+
+class StaticData(Data):
+    """
+    A subclass of Data representing static data.
+    (No additional methods or attributes specified in the provided code. At the moment this is just a placeholder class.)
+    """
+    def __init__(
+            self,
+            data: Union[np.ndarray, None],
+            name: str = None,
+            ext: str = None,
+            sample_shape: tuple = None,
+            dtype: np.dtype = None,
+            custom_meta: dict = None,
+            **kwargs
+    ):
+        super().__init__(data=data, **kwargs)
+        # Add Metadata
+        if ext is None:
+            if isinstance(self, Image):
+                ext = '.jpg'
+            if isinstance(self, Text):
+                ext = '.text'
+
+        static_meta_data = StaticMetaData(name, ext, sample_shape, dtype, custom_meta)
+        self.meta_data.expand(static_meta_data)
+
 
 class Image(StaticData):
     """

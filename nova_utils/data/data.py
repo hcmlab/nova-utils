@@ -106,16 +106,6 @@ class Data:
         """
         self._data = value
 
-
-class StaticData(Data):
-    """
-    A subclass of Data representing static data.
-    (No additional methods or attributes specified in the provided code. At the moment this is just a placeholder class.)
-    """
-
-    pass
-
-
 class DynamicData(ABC, Data):
     """
     An abstract subclass of Data representing dynamic data.

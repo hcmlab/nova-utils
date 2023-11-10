@@ -6,19 +6,26 @@ from nova_utils.data.static import Text, Image
 from nova_utils.data.stream import SSIStream, Audio, Video
 
 
-class Source(Enum):
+class Origin(Enum):
     DB = "db"  # data.handler.NovaDBHandler
     FILE = "file"  # data.handler.FileHandler
     URL = "url"  # data.handler.UrlHandler
     REQUEST = "request"
 
-
-class DType(Enum):
+class SuperType(Enum):
     STREAM = "stream"
     ANNO = "annotation"#"anno"
     TEXT = "text"
     IMAGE = "image"
     TABLE = "table"
+
+class SubType(Enum):
+    AUDIO = "audio"
+    VIDEO = "video"
+    SSIStream = "ssistream"
+    DISCRETE = "discrete"
+    CONTINUOUS = "continuous"
+    FREE = "free"
 
 def data_description_to_string(data_desc: dict) -> str:
     """
@@ -52,51 +59,93 @@ def data_description_to_string(data_desc: dict) -> str:
         raise ValueError(f"Unsupported source type {src} for generating data description ids")
 
 
-def parse_src(desc):
+def parse_cml_filter(filter: str):
+    sub_type, specific_type = None, None
+    parsed = filter.split(":",2)
+    super_type = SuperType(parsed[0].lower())
+    if len(parsed) > 1:
+        sub_type = SubType(parsed[1].lower())
+    if len(parsed) > 2:
+        specific_type = parsed[2].lower()
+    return super_type, sub_type, specific_type
+
+def parse_src_tag(desc):
     try:
-        src, dtype = desc["src"].split(":", 1)
-        src = Source(src)
-        dtype_specific = None
-        if ':' in dtype:
-            dtype, dtype_specific = dtype.split(':', 1)
-        dtype = DType(dtype)
+        sub_type, specific_type = None, None
+        parsed = desc["src"].split(":",3)
+
+        if len(parsed) < 2:
+            raise ValueError()
+        origin = Origin(parsed[0])
+        super_type = SuperType(parsed[1].lower())
+        if len(parsed) > 2:
+            sub_type = SubType(parsed[2].lower())
+        if len(parsed) > 3:
+            specific_type = parsed[3].lower()
     except:
         raise ValueError(f'Invalid value for data source {desc["src"]}')
-    return src, dtype, dtype_specific
+    return origin, super_type, sub_type, specific_type
 
-def dtype_from_desc(desc: str):
-    try:
-        _, dtype = desc["src"].split(":", 1)
-        dtype_specific = None
-        if ':' in dtype:
-            dtype, dtype_specific = dtype.split(':', 1)
-        dtype = DType(dtype)
-
-        if dtype == DType.STREAM:
-            if dtype_specific == 'audio':
-                return Audio
-            elif dtype_specific == 'video':
-                return  Video
-            elif dtype_specific == 'ssistream':
-                return SSIStream
-            else:
-                raise ValueError(f'Unknown annotation type {dtype_specific}')
-        elif dtype == DType.ANNO:
-            if dtype_specific == 'free':
-                return FreeAnnotation
-            elif dtype_specific == 'discrete':
-                return  DiscreteAnnotation
-            elif dtype_specific == 'continuous':
-                return ContinuousAnnotation
-            else:
-                raise ValueError(f'Unknown annotation type {dtype_specific}')
-        elif dtype == DType.TEXT:
-            return Text
-        elif dtype == DType.IMAGE:
-            return Image
-        else:
-            raise ValueError(f'Unknown dtype {dtype}')
-
-    except Exception as e:
-        print(e)
+def infere_dtype(super_type: SuperType, sub_type: SubType):
+    """Infers data type as specified in nova_utils.data from super_type and sub_type"""
+    if super_type == SuperType.TEXT:
+        return Text
+    if super_type == SuperType.IMAGE:
+        return Image
+    if super_type == SuperType.STREAM:
+        if sub_type == SubType.SSIStream:
+            return SSIStream
+        if super_type == SubType.AUDIO:
+            return Audio
+        if sub_type == SubType.VIDEO:
+            return Video
+    if super_type == SuperType.ANNO:
+        if sub_type == SubType.DISCRETE:
+            return  DiscreteAnnotation
+        if sub_type == SubType.CONTINUOUS:
+            return  ContinuousAnnotation
+        if sub_type == SubType.FREE:
+            return FreeAnnotation
     return Data
+
+# def data_class_from_desc(desc: dict):
+#     try:
+#         src, dtype, dtype_specific = parse_src
+#
+#         #dtype_super, dtype_sub,  = desc_string.split(":", 1)
+#         #dtype_specific = None
+#         #if ':' in dtype_sub:
+#         #    dtype_sub, dtype_specific = dtype_sub.split(':', 1)
+#         #dtype_super = DType(dtype_super.lower())
+#         #dtype_sub = dtype_sub.lower()
+#         if dtype_super == DType.STREAM:
+#             if dtype_sub == 'audio':
+#                 return Audio
+#             elif dtype_sub == 'video':
+#                 return  Video
+#             elif dtype_sub == 'ssistream':
+#                 return SSIStream
+#             else:
+#                 raise ValueError(f'Unknown annotation type {dtype_sub}')
+#         elif dtype_super == DType.ANNO:
+#             if dtype_sub == 'free':
+#                 return FreeAnnotation
+#             elif dtype_sub == 'discrete':
+#                 return  DiscreteAnnotation
+#             elif dtype_sub == 'continuous':
+#                 return ContinuousAnnotation
+#             else:
+#                 raise ValueError(f'Unknown annotation type {dtype_specific}')
+#         elif dtype_super == DType.TEXT:
+#             return Text
+#         elif dtype_super == DType.IMAGE:
+#             return Image
+#         else:
+#             raise ValueError(f'Unknown dtype {dtype_super}')
+#
+#     except Exception as e:
+#     print(e)
+#     return Data
+#
+#
+# return dtype_from_desc_string(dtype_desc)

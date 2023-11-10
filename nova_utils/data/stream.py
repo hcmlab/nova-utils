@@ -127,7 +127,7 @@ class Stream(DynamicData):
         sample_shape: tuple = None,
         num_samples: int = None,
         dtype: np.dtype = SSINPDataType.FLOAT.value,
-        media_type: str = 'feature',
+        media_type: str = '',
         custom_meta: dict = None,
         **kwargs
     ):
