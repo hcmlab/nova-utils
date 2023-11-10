@@ -13,7 +13,7 @@ from nova_utils.data.handler import (
     request_handler,
 )
 from nova_utils.data.stream import Stream
-from nova_utils.utils.request_utils import Source, SuperType, SubType, parse_src_tag, data_description_to_string, infere_dtype
+from nova_utils.utils.request_utils import Origin, SuperType, SubType, parse_src_tag, data_description_to_string, infere_dtype
 
 
 class SessionManager:
@@ -44,8 +44,8 @@ class SessionManager:
             ``"type"``:
                 IO type of the data. Either "input" or "output"
             ``"src"``
-                The source and datatype to load the data from separated by ':' . Source is of typ Source.value and datatype of type DType.value
-                E.g. 'db:anno'
+                The source and datatype to load the data from separated by ':' . Source corresponds to any Origin.value and datatype has the format '<SuperType.value>:<SubType.value>:str'
+                E.g. 'db:stream:video:specification'
 
             In addition, each entry should provide the information that is need to identify the exact input and output targets.
             Must match the input parameters of the respective data handlers save and load function (dataset and session are already specified as properties).
@@ -94,10 +94,10 @@ class SessionManager:
         self.source_context = {}
         if source_context is not None:
             for src, context in source_context.items():
-                src_ = Source(src)
+                src_ = Origin(src)
                 self.add_source_context(src_, context)
 
-    def add_source_context(self, source: Source, context: dict):
+    def add_source_context(self, source: Origin, context: dict):
         """Add all parameters that are necessary to initialize source specific data handler for reading and writing data objects."""
         self.source_context[source] = context
 
@@ -119,8 +119,8 @@ class SessionManager:
             ``"type"``:
                 IO type of the data. Either "input" or "output"
             ``"src"``
-                The source and datatype to load the data from separated by ':' . Source is of typ Source.value and datatype of type DType.value
-                E.g. 'db:anno'
+                The source and datatype to load the data from separated by ':' . Source corresponds to any Origin.value and datatype has the format '<SuperType.value>:<SubType.value>:str'
+                E.g. 'db:stream:video:specification'
 
             In addition, each entry should provide the information that is need to identify the exact input and output targets.
             Must match the input parameters of the respective data handlers save and load function (dataset and session are already specified as properties).
@@ -160,13 +160,13 @@ class SessionManager:
             data_id = data_description_to_string(desc)
             data = None
 
-            if src in [Source.DB] and not src in self.source_context.keys():
+            if src in [Origin.DB] and not src in self.source_context.keys():
                 raise ValueError(
                     f"Missing context information source {src}. Call add_source_context() first."
                 )
             try:
                 # DATABASE
-                if src == Source.DB:
+                if src == Origin.DB:
                     ctx = self.source_context[src]
                     if super_dtype == SuperType.ANNO:
                         handler = nova_db_handler.AnnotationHandler(**ctx)
@@ -188,7 +188,7 @@ class SessionManager:
                             header_only=header_only,
                         )
                 # FILE
-                elif src == Source.FILE:
+                elif src == Origin.FILE:
                     # Need to set the file handler specifically because we don't know the scheme
                     if super_dtype == SuperType.ANNO:
                         if specific_dtype is None or specific_dtype == 'free':
@@ -200,11 +200,11 @@ class SessionManager:
                         handler = file_handler.FileHandler()
                         data = handler.load(fp=Path(desc["uri"]), header_only=header_only)
                 # URL
-                elif src == Source.URL:
+                elif src == Origin.URL:
                     handler = url_handler.URLHandler()
                     data = handler.load(url=desc["uri"])
                 # REQUEST
-                elif src == Source.REQUEST:
+                elif src == Origin.REQUEST:
                     target_dtype = infere_dtype(super_dtype, sub_dtype)
                     handler = request_handler.RequestHandler()
                     data = handler.load(data=desc.get("data"), dtype=target_dtype, header_only=header_only)
@@ -232,7 +232,7 @@ class SessionManager:
 
             io_dst[data_id] = data
 
-    def save(self, data_description=None):
+    def save(self, data_description=None, overwrite=True):
         """
         Args:
           data_description (list[dict[str, str]], optional): List of data descriptions. Defaults to None. The dictionary should have the following mandatory fields:
@@ -276,28 +276,28 @@ class SessionManager:
 
             data_id = data_description_to_string(desc)
 
-            if src in [Source.DB] and not src in self.source_context.keys():
+            if src in [Origin.DB] and not src in self.source_context.keys():
                 raise ValueError(
                     f"Missing context information source {src}. Call add_source_context() first."
                 )
 
             success = False
             data = self.output_data_templates[data_id]
-            if src == Source.DB:
+            if src == Origin.DB:
                 ctx = self.source_context[src]
                 if super_dtype == SuperType.ANNO:
                     handler = nova_db_handler.AnnotationHandler(**ctx)
-                    success = handler.save(annotation=data)
+                    success = handler.save(annotation=data, overwrite=overwrite)
                 elif super_dtype == SuperType.STREAM:
                     handler = nova_db_handler.StreamHandler(**ctx)
                     success = handler.save(stream=data)
-            elif src == Source.FILE:
+            elif src == Origin.FILE:
                 handler = file_handler.FileHandler()
                 success = handler.save(data=data, fp=Path(desc["uri"]))
-            elif src == Source.URL:
+            elif src == Origin.URL:
                 raise NotImplementedError
-            elif src == Source.REQUEST:
-                rq = self.source_context.get(Source.REQUEST.value)
+            elif src == Origin.REQUEST:
+                rq = self.source_context.get(Origin.REQUEST.value)
                 shared_dir = rq.get('shared_dir')
                 job_id = rq.get('job_id')
                 handler = request_handler.RequestHandler()

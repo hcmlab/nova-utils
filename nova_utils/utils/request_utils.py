@@ -6,7 +6,7 @@ from nova_utils.data.static import Text, Image
 from nova_utils.data.stream import SSIStream, Audio, Video
 
 
-class Source(Enum):
+class Origin(Enum):
     DB = "db"  # data.handler.NovaDBHandler
     FILE = "file"  # data.handler.FileHandler
     URL = "url"  # data.handler.UrlHandler
@@ -76,7 +76,7 @@ def parse_src_tag(desc):
 
         if len(parsed) < 2:
             raise ValueError()
-        origin = Source(parsed[0])
+        origin = Origin(parsed[0])
         super_type = SuperType(parsed[1].lower())
         if len(parsed) > 2:
             sub_type = SubType(parsed[2].lower())
