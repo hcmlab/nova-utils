@@ -268,6 +268,8 @@ class SessionManager:
                 "Data description is empty. Either pass a data description to save() or set it as class attribute."
             )
 
+        success = False
+
         for desc in data_description:
             src, super_dtype, sub_dtype, specific_dtype = parse_src_tag(desc)
 
@@ -281,7 +283,6 @@ class SessionManager:
                     f"Missing context information source {src}. Call add_source_context() first."
                 )
 
-            success = False
             data = self.output_data_templates[data_id]
             if src == Origin.DB:
                 ctx = self.source_context[src]
@@ -303,7 +304,7 @@ class SessionManager:
                 handler = request_handler.RequestHandler()
                 handler.save(data=data, shared_dir=shared_dir, job_id=job_id, dataset=self.dataset, session=self.session)
 
-            return success
+        return success
 
 
 class DatasetManager:
