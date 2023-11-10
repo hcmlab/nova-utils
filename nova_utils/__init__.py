@@ -8,8 +8,8 @@ Date:
 """
 
 _MAJOR_VERSION = '1'
-_MINOR_VERSION = '3'
-_PATCH_VERSION = '1'
+_MINOR_VERSION = '4'
+_PATCH_VERSION = '0'
 
 __version__ = '.'.join([
     _MAJOR_VERSION,
