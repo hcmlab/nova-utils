@@ -86,7 +86,7 @@ def lime_tabular(stream_data, frame_id, top_class, num_features, model):
     sample = stream_data[frame_id]
     top_class = getTopXpredictions(model.predict_proba([sample]), 1)
     explainer = LimeTabularExplainer(
-        stream_data, mode="classification", discretize_continuous=True
+        np.asarray(stream_data), mode="classification", discretize_continuous=True
     )
     exp = explainer.explain_instance(
         np.asarray(sample),

@@ -64,6 +64,11 @@ def dice_explain(stream_data, anno, frame, dim, anno_scheme, ml_backend, class_c
         for id, feat in enumerate(counterfactual):
             explanation_dictionary[id] = feat
 
+        original_data_dictionary = {}
+
+        for id, feat in enumerate(sample):
+            original_data_dictionary[id] = float(feat)
+
         imp = {}
 
         if num_counterfactuals >= 10:
@@ -76,6 +81,7 @@ def dice_explain(stream_data, anno, frame, dim, anno_scheme, ml_backend, class_c
 
         data = {"success": "true",
                 "explanation": explanation_dictionary,
+                "original_data": original_data_dictionary,
                 "local_importance": imp.local_importance[0],
                 "global_importance": global_imp.summary_importance}
     except:

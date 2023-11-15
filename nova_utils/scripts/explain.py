@@ -121,21 +121,21 @@ parser.add_argument(
 
 parser.add_argument(
     "--hide_color",
-    type=int,
+    type=bool,
     required=False,
     help="LIME: hide color",
 )
 
 parser.add_argument(
     "--hide_rest",
-    type=int,
+    type=bool,
     required=False,
     help="LIME: hide rest",
 )
 
 parser.add_argument(
     "--positive_only",
-    type=int,
+    type=bool,
     required=False,
     help="LIME: positive only",
 )
@@ -184,11 +184,12 @@ def main(args):
     processor_class: Union[Type[Predictor], Type[Extractor]] = getattr(
         source, trainer.model_create
     )
-    processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
-    print(f"Model {trainer.model_create} created")
-
-    # Build data loaders
-    #args = {**vars(db_args), **vars(dm_args)}
+    if trainer.meta_backend == "TENSORFLOW":
+        # if ml backend is tensorflow postpone model initialization as tensorflow allocates all available gpu memory
+        pass
+    else:
+        processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
+        print(f"Model {trainer.model_create} created")
 
     ctx = {
         'db' : {
@@ -221,13 +222,6 @@ def main(args):
 
         single_session_datasets.append(dataset_manager)
 
-    # iterators = []
-    # sessions = iter_args.sessions
-    # for session in sessions:
-    #     print(session)
-    #     args["sessions"] = [session]
-    #     ni = NovaIterator(**args)
-    #     iterators.append(ni)
     print("Data managers initialized")
 
     # Iterate over all sessions
@@ -240,10 +234,7 @@ def main(args):
         # Data processing
         print(f"Process session {session}...")
         try:
-            # Todo add iterator option
-            model = processor.get_explainable_model()
-            expl_func = processor.get_predict_function()
-            
+
             sm = ss_dataset.sessions[session]["manager"]
             stream_data = []
             anno_data = []
@@ -254,6 +245,15 @@ def main(args):
                 stream_data.append(v["explanation_stream"][0])
                 anno_data.append(v["explanation_anno"])
 
+            if trainer.meta_backend == "TENSORFLOW":
+                # if ml backend is tensorflow postpone model initialization after creating data streams as tensorflow allocates all available memory
+                processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
+                print(f"Model {trainer.model_create} created")
+
+            # Todo add iterator option
+            model = processor.get_explainable_model()
+            expl_func = processor.get_predict_function()
+            
             if explainer_args.explainer == "LIME_IMAGE":
                 data_output = lime_image(stream_data, explainer_args.frame_id, explainer_args.num_features, explainer_args.top_labels, explainer_args.num_samples, explainer_args.hide_color, explainer_args.hide_rest, explainer_args.positive_only, model)
             elif explainer_args.explainer == "LIME_TABULAR":
