@@ -251,7 +251,7 @@ def get_file(
     if fpath.exists():
         # File found; verify integrity if a hash was provided.
         if file_hash:
-            if not validate_file(fpath, file_hash, algorithm=hash_algorithm):
+            if not validate_file(fpath, file_hash.lower(), algorithm=hash_algorithm):
                 print(
                     "A local file was found, but it seems to be "
                     "incomplete or outdated because the "
