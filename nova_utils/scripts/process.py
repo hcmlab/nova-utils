@@ -23,6 +23,7 @@ import argparse
 import sys
 import os
 import shutil
+import traceback
 from importlib.machinery import SourceFileLoader
 from pathlib import Path, PureWindowsPath
 from typing import Union, Type
@@ -149,49 +150,17 @@ def main(args):
     for ss_dataset in single_session_datasets:
         session = ss_dataset.session_names[0]
 
-        if not is_iterable:
-            ss_dataset.load()
-
-        # Data processing
-        print(f"Process session {session}...")
         try:
+            if not is_iterable:
+                ss_dataset.load()
+
+            # Data processing
+            print(f"Process session {session}...")
+
             # Todo add iterator option
             data_processed = processor.process_data(dataset_manager)
             data_output = processor.to_output(data_processed)
-        except FileNotFoundError as e:
-            print(
-                f"\tProcessor exited with error: '{str(e)}'. Continuing with next session."
-            )
-            caught_ex = True
-            continue
-        finally:
-            print("...done")
 
-        # TODO deprecation warning
-        if isinstance(data_output, list):
-            # Init data handler
-            annotation_handler = db_handler.AnnotationHandler(**vars(db_args))
-            stream_handler = db_handler.StreamHandler(**vars(db_args), data_dir=process_args.data_dir)
-            for out in data_output:
-
-                if isinstance(out, Annotation):
-                    print("Saving annotation to database...")
-                    try:
-                        annotation_handler.save(out, overwrite=True)
-                    except FileExistsError as e:
-                        print(f"\tCould not save annotation: '{str(e)}' ")
-                        caught_ex = True
-                    print("...done")
-
-                elif isinstance(out, Stream):
-                    print("Saving stream to disk...")
-                    try:
-                        stream_handler.save(out)
-                    except FileExistsError as e:
-                        print(f"\tCould not save stream: '{str(e)}'")
-                        caught_ex = True
-                    print("...done")
-        else:
             # Data Saving
             if isinstance(data_output, dict):
                 session_manager : SessionManager
@@ -200,6 +169,14 @@ def main(args):
                     session_manager.output_data_templates[io_id] = data_object
 
             ss_dataset.save()
+
+        except Exception as e:
+            traceback.print_exc()
+            print(
+                f"\tProcessor exited with error: '{str(e)}'. Continuing with next session."
+            )
+            caught_ex = True
+            continue
 
     print("Processing completed!")
     if caught_ex:
