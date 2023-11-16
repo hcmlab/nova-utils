@@ -191,7 +191,7 @@ class SessionManager:
                 elif src == Origin.FILE:
                     # Need to set the file handler specifically because we don't know the scheme
                     if super_dtype == SuperType.ANNO:
-                        if specific_dtype is None or specific_dtype == 'free':
+                        if sub_dtype is None or sub_dtype == SubType.FREE:
                             data = FreeAnnotation(scheme=FreeAnnotationScheme(name='generic'), data=None)
                         else:
                             raise ValueError(f"Can\'t create template for {desc} because no scheme information is available.")
