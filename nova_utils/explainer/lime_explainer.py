@@ -35,10 +35,8 @@ def getTopXpredictions(prediction, topLabels):
 
     return prediction_class[:topLabels]
 
-def lime_image(stream_data, frame_id, num_features, top_labels, num_samples, hide_color, hide_rest, positive_only, model):
+def lime_image(sample, num_features, top_labels, num_samples, hide_color, hide_rest, positive_only, model):
     data = {"success": "failed"}
-
-    sample = stream_data[frame_id]
 
     img = prepare_image(Image.fromarray(sample), (224, 224))
     img = img * (1.0 / 255)

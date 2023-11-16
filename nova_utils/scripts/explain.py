@@ -47,6 +47,7 @@ from nova_utils.utils.string_utils import string_to_bool
 from nova_utils.explainer.dice import dice_explain
 from nova_utils.explainer.lime_explainer import lime_image
 from nova_utils.explainer.lime_explainer import lime_tabular
+from nova_utils.explainer.tf_explainer import tf_explainer
 
 from nova_utils.data.static import Image, Text
 
@@ -140,6 +141,13 @@ parser.add_argument(
     help="LIME: positive only",
 )
 
+parser.add_argument(
+    "--tf_explainer",
+    type=str,
+    required=False,
+    help="Tf_explain: Explainer",
+)
+
 def main(args):
 
     explainer_args, _ = parser.parse_known_args(args)
@@ -184,12 +192,6 @@ def main(args):
     processor_class: Union[Type[Predictor], Type[Extractor]] = getattr(
         source, trainer.model_create
     )
-    if trainer.meta_backend == "TENSORFLOW":
-        # if ml backend is tensorflow postpone model initialization as tensorflow allocates all available gpu memory
-        pass
-    else:
-        processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
-        print(f"Model {trainer.model_create} created")
 
     ctx = {
         'db' : {
@@ -236,31 +238,36 @@ def main(args):
         try:
 
             sm = ss_dataset.sessions[session]["manager"]
-            stream_data = []
-            anno_data = []
 
-            for v in ss_dataset:
-                if v["explanation_stream"].shape[0] == 0:
-                    continue
-                stream_data.append(v["explanation_stream"][0])
-                anno_data.append(v["explanation_anno"])
+            if is_iterable:
+                stream_data = []
+                anno_data = []
 
-            if trainer.meta_backend == "TENSORFLOW":
-                # if ml backend is tensorflow postpone model initialization after creating data streams as tensorflow allocates all available memory
-                processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
-                print(f"Model {trainer.model_create} created")
+                for v in ss_dataset:
+                    if v["explanation_stream"].shape[0] == 0:
+                        continue
+                    stream_data.append(v["explanation_stream"][0])
+                    anno_data.append(v["explanation_anno"])
+            else:
+                single_frame = sm.input_data["explanation_stream"].data[explainer_args.frame_id]
+
+
+            # if ml backend is tensorflow postpone model initialization after creating data streams as tensorflow allocates all available memory
+            processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
+            print(f"Model {trainer.model_create} created")
 
             # Todo add iterator option
             model = processor.get_explainable_model()
             expl_func = processor.get_predict_function()
             
             if explainer_args.explainer == "LIME_IMAGE":
-                data_output = lime_image(stream_data, explainer_args.frame_id, explainer_args.num_features, explainer_args.top_labels, explainer_args.num_samples, explainer_args.hide_color, explainer_args.hide_rest, explainer_args.positive_only, model)
+                data_output = lime_image(single_frame, explainer_args.num_features, explainer_args.top_labels, explainer_args.num_samples, explainer_args.hide_color, explainer_args.hide_rest, explainer_args.positive_only, model)
             elif explainer_args.explainer == "LIME_TABULAR":
                 data_output = lime_tabular(stream_data, explainer_args.frame_id, explainer_args.top_class, explainer_args.num_features, model)
             elif explainer_args.explainer == "DICE":
                 data_output = dice_explain(stream_data, anno_data, explainer_args.frame_id, sm.input_data["explanation_stream"].meta_data.sample_shape[0], sm.input_data["explanation_anno"].annotation_scheme, trainer.meta_backend, explainer_args.class_counterfactual, explainer_args.num_counterfactuals, model)
             elif explainer_args.explainer == "TF_EXPLAIN":
+                data_output = tf_explainer(single_frame, explainer_args.tf_explainer, model)
                 pass
 
             
