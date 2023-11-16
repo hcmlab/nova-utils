@@ -12,7 +12,7 @@ from nova_utils.data.handler import (
     url_handler,
     request_handler,
 )
-from nova_utils.data.stream import Stream
+from nova_utils.data.stream import Stream, SSIStream, Video, Audio
 from nova_utils.utils.request_utils import Origin, SuperType, SubType, parse_src_tag, data_description_to_string, infere_dtype
 
 
@@ -216,8 +216,17 @@ class SessionManager:
                 # Create empty data objects with known params
                 else:
                     if super_dtype == SuperType.STREAM:
-                        # Todo differentiate types
-                        data = Stream(
+                        if sub_dtype == SubType.SSIStream:
+                            data_cls = SSIStream
+                        elif sub_dtype == SubType.VIDEO:
+                            data_cls = Video
+                        elif sub_dtype == SubType.AUDIO:
+                            data_cls = Audio
+                        else:
+                            data_cls = Data
+
+                        data : Video
+                        data = data_cls(
                             None,
                             -1,
                             name=desc.get("name"),
