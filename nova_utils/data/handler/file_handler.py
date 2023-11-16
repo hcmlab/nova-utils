@@ -652,14 +652,22 @@ class _SSIStreamFileHandler(IHandler):
 class _LazyArray(np.ndarray):
     """LazyArray class extending numpy.ndarray for video and audio loading."""
 
-    def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
-        buffer = mmap.mmap(
-            -1, dtype.itemsize * math.prod(shape), access=mmap.ACCESS_READ
-        )
-        obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
+    # Rewrite as np array container instead of subclass https://numpy.org/devdocs/user/basics.dispatch.html
+    # def __array__(self, dtype=None):
+    #    return self.decord_reader.get_batch(range(self._num_samples)).asnumpy()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+    def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
+        # Removed due to issues with low memory systems
+        #buffer = mmap.mmap(
+        #    -1, dtype.itemsize * math.prod(shape), access=mmap.ACCESS_READ
+        #)
+        buffer = None
+        obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
         obj.decord_reader = decord_reader
         obj.start_idx = 0
+        obj._num_samples = shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
         return obj
 
     def __getitem__(self, index):
@@ -981,9 +989,9 @@ class FileHandler(IHandler):
 if __name__ == "__main__":
     # Test cases...
     test_annotations = False
-    test_streams = False
-    test_static = True
-    base_dir = Path("../../../test_files/")
+    test_streams = True
+    test_static = False
+    base_dir = Path(r'/Users/dominikschiller/Work/local_nova_dir/test_files')#Path("../../../test_files/")
     fh = FileHandler()
 
     """TESTCASE FOR ANNOTATIONS"""
@@ -1051,6 +1059,9 @@ if __name__ == "__main__":
 
         # audio
         audio = fh.load(base_dir / "test_audio.wav")
+        a = np.asarray(audio.data)
+        #b = np.array([1,2,3])
+        a = a.__array__()
 
         fh.save(audio, base_dir / "new_test_audio.wav")
 
@@ -1060,7 +1071,7 @@ if __name__ == "__main__":
 
         # video
         video = fh.load(base_dir / "test_video.mp4")
-
+        a = video.data.array
         fh.save(video, base_dir / "new_test_video.mp4")
 
         new_video = fh.load(base_dir / "new_test_video.mp4")
