@@ -21,6 +21,7 @@ import decord
 import ffmpegio
 import numpy as np
 from PIL import Image as PILImage
+PILImage.init()
 from decord import cpu
 
 from nova_utils.data.annotation import (
