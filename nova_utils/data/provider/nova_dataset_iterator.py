@@ -20,13 +20,15 @@ import numpy as np
 #     SessionHandler,
 # )
 from nova_utils.data.handler.nova_db_handler import NovaSession
-from nova_utils.data.provider.data_manager import NovaDatasetManager, SessionManager
+from nova_utils.data.provider.data_manager import NovaDatasetManager, SessionManager, DatasetManager
 from nova_utils.data.stream import Stream, Audio
+from nova_utils.data.annotation import FreeAnnotation, DiscreteAnnotation, ContinuousAnnotation
 from nova_utils.utils import string_utils
 from nova_utils.utils.anno_utils import data_contains_garbage
 
 
-class NovaDatasetIterator(NovaDatasetManager):
+#class NovaDatasetIterator(NovaDatasetManager):
+class NovaDatasetIterator(DatasetManager):
     """Iterator class for processing data samples from the Nova dataset.
 
     The NovaIterator takes all information about what data should be loaded and how it should be processed. The class itself then takes care of loading all data and provides an iterator to directly apply a sliding window to the requested data.
@@ -182,6 +184,25 @@ class NovaDatasetIterator(NovaDatasetManager):
 
         self._iterable = self._yield_sample()
 
+    def _guess_session_length(self, session):
+
+        annotation_duration = -1
+        stream_duration = sys.maxsize
+        for id, data in session.input_data.items():
+            # Discrete and free annotations do not need to be present at the end of a session. So we consider the maximum length.
+            if isinstance(data, FreeAnnotation) or isinstance(data, DiscreteAnnotation):
+                if data.meta_data.duration is not None and data.meta_data.duration > annotation_duration:
+                    annotation_duration = data.meta_data.duration
+            # Streams and continuous annotations do need to cover the whole session. Consider the minimum length.
+            elif isinstance(data, Stream) or isinstance(data, ContinuousAnnotation):
+                if data.meta_data.duration is not None and data.meta_data.duration < stream_duration:
+                    stream_duration = data.meta_data.duration
+
+        # If a datastream is present we use it to determine the length
+        if stream_duration < sys.maxsize:
+            return stream_duration
+        else:
+            return annotation_duration
 
     def _yield_sample(self) -> dict[str, np.ndarray]:
         """
@@ -204,9 +225,15 @@ class NovaDatasetIterator(NovaDatasetManager):
             # Init all data objects for the session and get necessary meta information
             self.session_manager : SessionManager
             self.session_info : NovaSession
-            self.current_session = session['manager']
-            self.current_session_info = session['info']
+            self.current_session = session.get('manager')
+            self.current_session_info = session.get('info')
             self.current_session.load()
+
+            # TODO: Check if we run into duration errros
+            if self.current_session_info is None:
+                self.current_session_info = NovaSession()
+            if self.current_session_info.duration is None:
+                self.current_session_info.duration = self._guess_session_length(self.current_session)
 
             # If frame size is zero or less we return the whole data from the whole session in one sample
             if self.frame_size <= 0:

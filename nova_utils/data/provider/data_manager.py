@@ -15,7 +15,6 @@ from nova_utils.data.handler import (
 from nova_utils.data.stream import SSIStream, Video, Audio
 from nova_utils.utils.request_utils import Origin, SuperType, SubType, parse_src_tag, data_description_to_string, infere_dtype
 
-
 class SessionManager:
     """
     Class to aggregate and manage interrelated incoming and outgoing datastreams belonging to a single session (e.g multimodal data from the same recording).
@@ -176,7 +175,7 @@ class SessionManager:
                             scheme=desc["scheme"],
                             annotator=desc["annotator"],
                             role=desc["role"],
-                            header_only=header_only,
+                            header_only=header_only
                         )
                     elif super_dtype == SuperType.STREAM:
                         handler = nova_db_handler.StreamHandler(**ctx)
@@ -185,7 +184,7 @@ class SessionManager:
                             session=self.session,
                             name=desc["name"],
                             role=desc["role"],
-                            header_only=header_only,
+                            header_only=header_only
                         )
                 # FILE
                 elif src == Origin.FILE:
@@ -224,11 +223,8 @@ class SessionManager:
                             data_cls = Audio
                         else:
                             data_cls = Data
-
-                        data : Video
                         data = data_cls(
                             None,
-                            -1,
                             name=desc.get("name"),
                             role=desc.get("role"),
                             dataset=self.dataset,
@@ -240,6 +236,8 @@ class SessionManager:
                         data = Data()
 
             io_dst[data_id] = data
+
+
 
     def save(self, data_description=None, overwrite=True):
         """
