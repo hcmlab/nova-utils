@@ -27,12 +27,8 @@ import traceback
 from importlib.machinery import SourceFileLoader
 from pathlib import Path, PureWindowsPath
 from typing import Union, Type
-
-from nova_utils.data.annotation import Annotation
-from nova_utils.data.handler import nova_db_handler as db_handler
-from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
-from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
-from nova_utils.data.stream import Stream
+from nova_utils.data.provider.data_manager import DatasetManager, NovaDatasetManager, SessionManager
+from nova_utils.data.provider.nova_dataset_iterator import DatasetIterator
 from nova_utils.interfaces.server_module import Predictor, Extractor
 from nova_utils.scripts.parsers import (
     dm_parser,
@@ -41,7 +37,7 @@ from nova_utils.scripts.parsers import (
     nova_iterator_parser,
     nova_server_module_parser,
 )
-from nova_utils.utils import ssi_xml_utils, string_utils
+from nova_utils.utils import ssi_xml_utils, string_utils, request_utils
 from nova_utils.utils.string_utils import string_to_bool
 
 # Main parser for predict specific options
@@ -96,16 +92,21 @@ def main(args):
         "ns_cl_" + model_script_path.stem, str(model_script_path)
     ).load_module()
     print(f"Trainer module {Path(model_script_path).name} loaded")
-    opts = string_utils.parse_nova_option_string(process_args.opt_str)
+
+    opts = module_args.options
+    if module_args.options is None:
+        opts = string_utils.parse_nova_option_string(process_args.opt_str)
+        print('Option --opt_str is deprecated. Use --options in the future.')
+
     processor_class: Union[Type[Predictor], Type[Extractor]] = getattr(
         source, trainer.model_create
     )
     processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
     print(f"Model {trainer.model_create} created")
 
-    # Build data loaders
-    #args = {**vars(db_args), **vars(dm_args)}
+    #TODO use active flag. default = true
 
+    # Build data loaders
     ctx = {
         'db' : {
             **vars(db_args)
@@ -115,7 +116,7 @@ def main(args):
         }
     }
 
-    # Clear output for job id
+    # Clear output directory for job id
     shared_dir = ctx['request'].get('shared_dir')
     job_id = ctx['request'].get('job_id')
     if shared_dir and job_id:
@@ -129,21 +130,17 @@ def main(args):
     single_session_datasets = []
     is_iterable = string_to_bool(trainer.meta_is_iterable)
 
+    # Create one dataset per session
     for session in dm_args.sessions:
+        requires_db = any([request_utils.parse_src_tag(dd)[0] == request_utils.Origin.DB.value for dd in dm_args.data])
+        data_provider_cls = NovaDatasetManager if requires_db else DatasetManager
+        data_provider = data_provider_cls(
+            dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session]
+        )
         if is_iterable:
-            dataset_manager = NovaDatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
-        else:
-            dataset_manager = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])
+            data_provider = DatasetIterator(data_provider, **vars(iter_args))
 
-        single_session_datasets.append(dataset_manager)
-
-    # iterators = []
-    # sessions = iter_args.sessions
-    # for session in sessions:
-    #     print(session)
-    #     args["sessions"] = [session]
-    #     ni = NovaIterator(**args)
-    #     iterators.append(ni)
+        single_session_datasets.append(data_provider)
     print("Data managers initialized")
 
     # Iterate over all sessions
@@ -157,16 +154,14 @@ def main(args):
             # Data processing
             print(f"Process session {session}...")
 
-            # Todo add iterator option
-            data_processed = processor.process_data(dataset_manager)
+            data_processed = processor.process_data(ss_dataset)
             data_output = processor.to_output(data_processed)
 
             # Data Saving
-            if isinstance(data_output, dict):
-                session_manager : SessionManager
-                session_manager = ss_dataset.sessions[session]['manager']
-                for io_id, data_object in data_output.items():
-                    session_manager.output_data_templates[io_id] = data_object
+            session_manager : SessionManager
+            session_manager = ss_dataset.sessions[session]['manager']
+            for io_id, data_object in data_output.items():
+                session_manager.output_data_templates[io_id] = data_object
 
             ss_dataset.save()
 
