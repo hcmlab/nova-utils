@@ -255,12 +255,16 @@ class _AnnotationFileHandler(IHandler):
         size = int(info.get("size", 0))
 
         # meta
-        meta = tree.find("meta", {})
+        meta = tree.find("meta")
+        if meta is None:
+            meta = {}
         role = meta.get("role")
         annotator = meta.get("annotator")
 
         # scheme
-        scheme = tree.find("scheme", {})
+        scheme = tree.find("scheme")
+        if scheme is None:
+            scheme = {}
         scheme_name = scheme.get("name")
         scheme_type = scheme.get("type")
 
@@ -1040,9 +1044,8 @@ if __name__ == "__main__":
     test_annotations = True
     test_streams = False
     test_static = False
-    base_dir = Path(
-        r"/Users/dominikschiller/Work/local_nova_dir/test_files"
-    )  # Path("../../../test_files/")
+    #base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
+    base_dir = Path("../../../test_files/")
     fh = FileHandler()
 
     """TESTCASE FOR ANNOTATIONS"""
@@ -1073,6 +1076,17 @@ if __name__ == "__main__":
             base_dir / "new_continuous_binary.annotation",
             ftype=SSIFileType.BINARY,
         )
+
+        from nova_utils.utils.anno_utils import resample
+        sr = 10
+        resampled = resample(continuous_anno_ascii.data, continuous_anno_ascii.annotation_scheme.sample_rate, sr)
+        continuous_anno_binary.data = resampled
+        continuous_anno_binary.annotation_scheme.sample_rate = sr
+        fh.save(
+            continuous_anno_binary,
+            base_dir / "resampled_continuous_binary.annotation",
+            ftype=SSIFileType.BINARY,
+            )
 
         # verify
         discrete_anno_ascii_new = fh.load(base_dir / "new_discrete_ascii.annotation")
