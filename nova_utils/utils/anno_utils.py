@@ -261,3 +261,36 @@ def pack_remove(data : np.ndarray[LabelDType.DISCRETE], min_gap: int = 0, min_du
         return np.array([])
 
     return data_copy
+
+def resample(data: np.ndarray[LabelDType.CONTINUOUS], src_sr: float, trgt_sr: float):
+    dur = len(data) / float(src_sr)
+    n_samples_new = int(dur * trgt_sr)
+    x = np.arange(0, len(data))
+    xvals = np.linspace(0, len(data)-1, n_samples_new)
+    score = np.interp(xvals, x, data['score'])
+    conf = np.interp(xvals, x, data['conf'])
+
+    # Alternative resampling method
+    #import scipy
+    #yinterp = scipy.signal.resample(y, n_samples_new)
+    #import matplotlib.pyplot as plt
+    #plt.plot(x, y, 'o')
+    #plt.plot(xvals, yinterp, '-x')
+    #plt.show()
+
+    out = np.array( [(x,y) for x,y in zip(score, conf)], dtype=LabelDType.CONTINUOUS.value)
+    return out
+
+if __name__ == '__main__':
+
+    from nova_utils.data.handler.file_handler import FileHandler
+    from pathlib import Path
+    base_dir = Path(r'C:\Users\schildom\Desktop')
+    fh = FileHandler()
+    anno = fh.load(base_dir / 'expert.arousal_audio.system.annotation')
+    trgt_sr = 0.1
+    data_rsmp = resample(anno.data, anno.annotation_scheme.sample_rate, trgt_sr)
+
+    anno.data = data_rsmp
+    anno.annotation_scheme.sample_rate = trgt_sr
+    fh.save(anno, base_dir / 'resampled.annotation')
