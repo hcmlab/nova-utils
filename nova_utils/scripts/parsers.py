@@ -138,6 +138,12 @@ nova_server_module_parser.add_argument(
 nova_server_module_parser.add_argument(
     "--opt_str",
     type=str,
+    help="String containing dictionaries with key value pairs, setting the options for a NOVA-Server module",
+)
+
+nova_server_module_parser.add_argument(
+    "--options",
+    type=json.loads,
     help="Json formatted String containing dictionaries with key value pairs, setting the options for a NOVA-Server module",
 )
 
