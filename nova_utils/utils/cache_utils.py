@@ -243,7 +243,7 @@ def get_file(
 
     if untar:
         untar_fpath = data_dir / fname
-        fpath = untar_fpath.parent / (untar_fpath.name  + '.tar.gz')
+        fpath = untar_fpath.parent / (untar_fpath.name + '.tar.gz')
     else:
         fpath = data_dir / fname
 
