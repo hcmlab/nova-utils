@@ -21,6 +21,7 @@ import decord
 import ffmpegio
 import numpy as np
 from PIL import Image as PILImage
+
 PILImage.init()
 from decord import cpu
 
@@ -102,7 +103,7 @@ class FileSSIStreamMetaData:
 class _AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
 
-    default_ext = '.annotation'
+    default_ext = ".annotation"
 
     @staticmethod
     def _load_data_discrete(path: Path, ftype: str):
@@ -118,7 +119,12 @@ class _AnnotationFileHandler(IHandler):
         """
 
         if ftype == SSIFileType.ASCII.name:
-            data = np.loadtxt(path, dtype=SSILabelDType.DISCRETE.value, delimiter=";", encoding='UTF-8')
+            data = np.loadtxt(
+                path,
+                dtype=SSILabelDType.DISCRETE.value,
+                delimiter=";",
+                encoding="UTF-8",
+            )
         elif ftype == SSIFileType.BINARY.name:
             data = np.fromfile(path, dtype=SSILabelDType.DISCRETE.value)
         else:
@@ -139,7 +145,12 @@ class _AnnotationFileHandler(IHandler):
             np.ndarray: The loaded continuous annotation data as a NumPy array.
         """
         if ftype == SSIFileType.ASCII.name:
-            data = np.loadtxt(path, dtype=SSILabelDType.CONTINUOUS.value, delimiter=";", encoding='UTF-8')
+            data = np.loadtxt(
+                path,
+                dtype=SSILabelDType.CONTINUOUS.value,
+                delimiter=";",
+                encoding="UTF-8",
+            )
         elif ftype == SSIFileType.BINARY.name:
             data = np.fromfile(path, dtype=SSILabelDType.CONTINUOUS.value)
         else:
@@ -163,7 +174,7 @@ class _AnnotationFileHandler(IHandler):
         data = []
         if ftype == SSIFileType.ASCII.name:
             with open(path, "r") as ascii_file:
-                ascii_file_reader = csv.reader(ascii_file, delimiter=";", quotechar='"', encoding='UTF-8')
+                ascii_file_reader = csv.reader(ascii_file, delimiter=";", quotechar='"')
                 for row in ascii_file_reader:
                     f = float(row[0])
                     t = float(row[1])
@@ -244,12 +255,16 @@ class _AnnotationFileHandler(IHandler):
         size = int(info.get("size", 0))
 
         # meta
-        meta = tree.find("meta", {})
+        meta = tree.find("meta")
+        if meta is None:
+            meta = {}
         role = meta.get("role")
         annotator = meta.get("annotator")
 
         # scheme
-        scheme = tree.find("scheme", {})
+        scheme = tree.find("scheme")
+        if scheme is None:
+            scheme = {}
         scheme_name = scheme.get("name")
         scheme_type = scheme.get("type")
 
@@ -262,9 +277,12 @@ class _AnnotationFileHandler(IHandler):
                 scheme_classes[item.get("id")] = item.get("name")
 
             anno_data = None
+            duration = None
             if not header_only:
                 anno_data = self._load_data_discrete(data_path, ftype)
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
+                if anno_data.size:
+                    duration = anno_data[-1][1]
 
             anno_scheme = DiscreteAnnotationScheme(
                 name=scheme_name, classes=scheme_classes
@@ -274,6 +292,7 @@ class _AnnotationFileHandler(IHandler):
                 scheme=anno_scheme,
                 role=role,
                 annotator=annotator,
+                duration=duration,
             )
 
         # continuous scheme
@@ -283,9 +302,14 @@ class _AnnotationFileHandler(IHandler):
             max_val = float(scheme.get("max"))
 
             anno_data = None
+            duration = None
+
             if not header_only:
                 anno_data = self._load_data_continuous(data_path, ftype)
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.CONTINUOUS)
+                if anno_data.size:
+                    duration = len(anno_data) / sr * 1000
+
             anno_scheme = ContinuousAnnotationScheme(
                 name=scheme_name, sample_rate=sr, min_val=min_val, max_val=max_val
             )
@@ -294,6 +318,7 @@ class _AnnotationFileHandler(IHandler):
                 data=anno_data,
                 role=role,
                 annotator=annotator,
+                duration=duration,
             )
 
         # free scheme
@@ -302,12 +327,16 @@ class _AnnotationFileHandler(IHandler):
             if not header_only:
                 anno_data = self._load_data_free(data_path, ftype, size)
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
+                if anno_data.size:
+                    duration = anno_data[-1][1]
+
             anno_scheme = FreeAnnotationScheme(name=scheme_name)
             annotation = FreeAnnotation(
                 scheme=anno_scheme,
                 data=anno_data,
                 role=role,
                 annotator=annotator,
+                duration=duration,
             )
         else:
             raise TypeError(f"Unknown scheme type {type}")
@@ -389,7 +418,7 @@ class _AnnotationFileHandler(IHandler):
         # save data
         if ftype == SSIFileType.ASCII:
             fmt = self._str_format_from_dtype(anno_data.dtype)
-            np.savetxt(data_path, anno_data, fmt=fmt, delimiter=";", encoding='UTF-8')
+            np.savetxt(data_path, anno_data, fmt=fmt, delimiter=";", encoding="UTF-8")
         if ftype == SSIFileType.BINARY:
             data.data.tofile(data_path, sep="")
 
@@ -397,7 +426,7 @@ class _AnnotationFileHandler(IHandler):
 # Text
 class _TextFileHandler(IHandler):
 
-    default_ext = '.txt'
+    default_ext = ".txt"
 
     def load(self, fp, header_only=False) -> Union[Data, None]:
         text = np.loadtxt(fp)
@@ -405,21 +434,26 @@ class _TextFileHandler(IHandler):
         return text
 
     def save(self, data, fp, header_only=False):
-       with open(fp, 'w') as f:
-           f.write(' '.join(data.data))
+        with open(fp, "w") as f:
+            f.write(" ".join(data.data))
 
 
 # Image
 class _ImageFileHandler(IHandler):
 
-    default_ext = '.jpg'
+    default_ext = ".jpg"
 
     def load(self, fp, header_only=False) -> Union[Data, None]:
         pil_img = PILImage.open(fp)
-        pil_img = pil_img.convert('RGB')
+        pil_img = pil_img.convert("RGB")
         np_img = np.array(pil_img)
 
-        img = Image(data=np_img, ext=pil_img.format, sample_shape=np_img.shape, dtype=np_img.dtype)
+        img = Image(
+            data=np_img,
+            ext=pil_img.format,
+            sample_shape=np_img.shape,
+            dtype=np_img.dtype,
+        )
         return img
 
     def save(self, data, fp, header_only=False):
@@ -432,7 +466,7 @@ class _ImageFileHandler(IHandler):
 class _SSIStreamFileHandler(IHandler):
     """Class for handling the loading and saving of SSIStreams."""
 
-    default_ext = '.stream'
+    default_ext = ".stream"
 
     def _load_header(self, fp: Path) -> dict:
         """
@@ -567,9 +601,7 @@ class _SSIStreamFileHandler(IHandler):
 
         # meta
         Et.SubElement(
-            root,
-            "meta",
-            attrib={"type": meta_data.media_type, **meta_data.custom_meta}
+            root, "meta", attrib={"type": meta_data.media_type, **meta_data.custom_meta}
         )
 
         # chunks
@@ -659,16 +691,19 @@ class _LazyArray(np.ndarray):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
+
     def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
         # Removed due to issues with low memory systems
-        #buffer = mmap.mmap(
+        # buffer = mmap.mmap(
         #    -1, dtype.itemsize * math.prod(shape), access=mmap.ACCESS_READ
-        #)
+        # )
         buffer = None
         obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
         obj.decord_reader = decord_reader
         obj.start_idx = 0
-        obj._num_samples = shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
+        obj._num_samples = (
+            shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
+        )
         return obj
 
     def __getitem__(self, index):
@@ -682,7 +717,7 @@ class _LazyArray(np.ndarray):
 class _VideoFileHandler(IHandler):
     """Class for handling the loading and saving of video data."""
 
-    default_ext = '.mp4'
+    default_ext = ".mp4"
 
     def _get_video_meta(self, fp) -> dict:
         """
@@ -787,7 +822,7 @@ class _VideoFileHandler(IHandler):
 class _AudioFileHandler(IHandler):
     """Class for handling the loading and saving of audio data."""
 
-    default_ext = '.wav'
+    default_ext = ".wav"
 
     def _get_audio_meta(self, fp: Path) -> dict:
         """
@@ -882,7 +917,14 @@ class FileHandler(IHandler):
 
     def _get_handler_for_fp(
         self, fp: Path
-    ) -> Union[_AnnotationFileHandler , _SSIStreamFileHandler , _AudioFileHandler , _VideoFileHandler , _ImageFileHandler , _TextFileHandler]:
+    ) -> Union[
+        _AnnotationFileHandler,
+        _SSIStreamFileHandler,
+        _AudioFileHandler,
+        _VideoFileHandler,
+        _ImageFileHandler,
+        _TextFileHandler,
+    ]:
         """
         Get the appropriate handler for a given file.
 
@@ -892,8 +934,6 @@ class FileHandler(IHandler):
         Returns:
             IHandler: An instance of the appropriate data handler.
         """
-
-
 
         if not self.data_type:
             ext = fp.suffix[1:]
@@ -907,7 +947,7 @@ class FileHandler(IHandler):
                 return _VideoFileHandler()
             elif ext in [x[1:] for x in PILImage.registered_extensions()]:
                 return _ImageFileHandler()
-            elif ext in ['txt']:
+            elif ext in ["txt"]:
                 return _TextFileHandler()
             else:
                 raise ValueError(f"Unsupported file extension {fp.suffix}")
@@ -921,16 +961,20 @@ class FileHandler(IHandler):
         elif dtype == Image:
             return _ImageFileHandler()
         elif dtype == Video:
-            return  _VideoFileHandler()
+            return _VideoFileHandler()
         elif dtype == SSIStream:
-            return  _SSIStreamFileHandler()
+            return _SSIStreamFileHandler()
         elif dtype == Audio:
-            return  _AudioFileHandler()
-        elif dtype == DiscreteAnnotation or dtype == ContinuousAnnotation or dtype == FreeAnnotation:
-            return  _AnnotationFileHandler()
+            return _AudioFileHandler()
+        elif (
+            dtype == DiscreteAnnotation
+            or dtype == ContinuousAnnotation
+            or dtype == FreeAnnotation
+        ):
+            return _AnnotationFileHandler()
         raise NotImplementedError
 
-    def _get_handler(self, fp: Path =None, dtype=None):
+    def _get_handler(self, fp: Path = None, dtype=None):
 
         # Prefer dtype if passed
         if dtype:
@@ -943,7 +987,7 @@ class FileHandler(IHandler):
     def __init__(self, data_type: int = None):
         self.data_type = data_type
 
-    def load(self, fp: Union[Path, str], header_only: bool = False, dtype = None) -> Data:
+    def load(self, fp: Union[Path, str], header_only: bool = False, dtype=None) -> Data:
         """
         Load data from a file.
 
@@ -962,7 +1006,15 @@ class FileHandler(IHandler):
         data.meta_data.expand(FileMetaData(fp))
         return data
 
-    def save(self, data: Stream, fp: Union[Path, str], overwrite: bool = True, dtype = None, *args, **kwargs):
+    def save(
+        self,
+        data: Stream,
+        fp: Union[Path, str],
+        overwrite: bool = True,
+        dtype=None,
+        *args,
+        **kwargs,
+    ):
         """
         Save data to a file.
 
@@ -989,10 +1041,11 @@ class FileHandler(IHandler):
 
 if __name__ == "__main__":
     # Test cases...
-    test_annotations = False
-    test_streams = True
+    test_annotations = True
+    test_streams = False
     test_static = False
-    base_dir = Path(r'/Users/dominikschiller/Work/local_nova_dir/test_files')#Path("../../../test_files/")
+    #base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
+    base_dir = Path("../../../test_files/")
     fh = FileHandler()
 
     """TESTCASE FOR ANNOTATIONS"""
@@ -1023,6 +1076,17 @@ if __name__ == "__main__":
             base_dir / "new_continuous_binary.annotation",
             ftype=SSIFileType.BINARY,
         )
+
+        from nova_utils.utils.anno_utils import resample
+        sr = 10
+        resampled = resample(continuous_anno_ascii.data, continuous_anno_ascii.annotation_scheme.sample_rate, sr)
+        continuous_anno_binary.data = resampled
+        continuous_anno_binary.annotation_scheme.sample_rate = sr
+        fh.save(
+            continuous_anno_binary,
+            base_dir / "resampled_continuous_binary.annotation",
+            ftype=SSIFileType.BINARY,
+            )
 
         # verify
         discrete_anno_ascii_new = fh.load(base_dir / "new_discrete_ascii.annotation")
@@ -1061,7 +1125,7 @@ if __name__ == "__main__":
         # audio
         audio = fh.load(base_dir / "test_audio.wav")
         a = np.asarray(audio.data)
-        #b = np.array([1,2,3])
+        # b = np.array([1,2,3])
         a = a.__array__()
 
         fh.save(audio, base_dir / "new_test_audio.wav")
@@ -1083,5 +1147,5 @@ if __name__ == "__main__":
     """TESTCASE FOR STATIC DATA"""
     if test_static:
         image = fh.load(base_dir / "test_image.png")
-        image.data = image.data[..., [2,1,0]]
+        image.data = image.data[..., [2, 1, 0]]
         fh.save(image, fp=(base_dir / "test_image_bgr.png"))

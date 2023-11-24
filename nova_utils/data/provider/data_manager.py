@@ -3,8 +3,8 @@ Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 25.10.2023
 """
 from pathlib import Path
-
 from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme
+from nova_utils.utils import path_utils
 from nova_utils.data.data import Data
 from nova_utils.data.handler import (
     file_handler,
@@ -14,7 +14,6 @@ from nova_utils.data.handler import (
 )
 from nova_utils.data.stream import SSIStream, Video, Audio
 from nova_utils.utils.request_utils import Origin, SuperType, SubType, parse_src_tag, data_description_to_string, infere_dtype
-
 
 class SessionManager:
     """
@@ -176,7 +175,7 @@ class SessionManager:
                             scheme=desc["scheme"],
                             annotator=desc["annotator"],
                             role=desc["role"],
-                            header_only=header_only,
+                            header_only=header_only
                         )
                     elif super_dtype == SuperType.STREAM:
                         handler = nova_db_handler.StreamHandler(**ctx)
@@ -185,20 +184,13 @@ class SessionManager:
                             session=self.session,
                             name=desc["name"],
                             role=desc["role"],
-                            header_only=header_only,
+                            header_only=header_only
                         )
                 # FILE
                 elif src == Origin.FILE:
-                    # Need to set the file handler specifically because we don't know the scheme
-                    if super_dtype == SuperType.ANNO:
-                        if sub_dtype is None or sub_dtype == SubType.FREE:
-                            data = FreeAnnotation(scheme=FreeAnnotationScheme(name='generic'), data=None)
-                        else:
-                            raise ValueError(f"Can\'t create template for {desc} because no scheme information is available.")
-                    # Automatic file handler detection
-                    else:
-                        handler = file_handler.FileHandler()
-                        data = handler.load(fp=Path(desc["uri"]), header_only=header_only)
+                    fp = Path(path_utils.get_tmp_dir()) / desc['uri']
+                    handler = file_handler.FileHandler()
+                    data = handler.load(fp=fp, header_only=header_only)
                 # URL
                 elif src == Origin.URL:
                     handler = url_handler.URLHandler()
@@ -224,22 +216,26 @@ class SessionManager:
                             data_cls = Audio
                         else:
                             data_cls = Data
-
-                        data : Video
                         data = data_cls(
                             None,
-                            -1,
                             name=desc.get("name"),
                             role=desc.get("role"),
                             dataset=self.dataset,
                             session=self.session,
                         )
+                    elif super_dtype == SuperType.ANNO:
+                        if sub_dtype is None or sub_dtype == SubType.FREE:
+                            data = FreeAnnotation(scheme=FreeAnnotationScheme(name='generic'), data=None)
+                        else:
+                            raise ValueError(f"Can\'t create template for {desc} because no scheme information is available.")
 
                     else:
                         # Todo Handle other cases where no header might be loaded
                         data = Data()
 
             io_dst[data_id] = data
+
+
 
     def save(self, data_description=None, overwrite=True):
         """
@@ -328,7 +324,7 @@ class DatasetManager:
         self._init_sessions()
 
     def _init_sessions(self):
-        if self.session_names is None:
+        if not self.session_names:
             self.session_names = ['dummy_session']
 
         if self.dataset is None:
