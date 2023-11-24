@@ -269,15 +269,13 @@ class _AnnotationFileHandler(IHandler):
         scheme_type = scheme.get("type")
 
         # TODO: Nova Annotations do export a 'color' column where ssi annotations do not. Account for this
-        # anno object
-        # discrete scheme
+        anno_data = None
+        duration = None
         if scheme_type == SchemeType.DISCRETE.name:
             scheme_classes = {}
             for item in scheme:
                 scheme_classes[item.get("id")] = item.get("name")
 
-            anno_data = None
-            duration = None
             if not header_only:
                 anno_data = self._load_data_discrete(data_path, ftype)
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
@@ -301,9 +299,6 @@ class _AnnotationFileHandler(IHandler):
             min_val = float(scheme.get("min"))
             max_val = float(scheme.get("max"))
 
-            anno_data = None
-            duration = None
-
             if not header_only:
                 anno_data = self._load_data_continuous(data_path, ftype)
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.CONTINUOUS)
@@ -323,7 +318,6 @@ class _AnnotationFileHandler(IHandler):
 
         # free scheme
         elif scheme_type == SchemeType.FREE.name:
-            anno_data = None
             if not header_only:
                 anno_data = self._load_data_free(data_path, ftype, size)
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
