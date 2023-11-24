@@ -28,7 +28,7 @@ from importlib.machinery import SourceFileLoader
 from pathlib import Path, PureWindowsPath
 from typing import Union, Type
 from nova_utils.data.provider.data_manager import DatasetManager, NovaDatasetManager, SessionManager
-from nova_utils.data.provider.nova_dataset_iterator import DatasetIterator
+from nova_utils.data.provider.dataset_iterator import DatasetIterator
 from nova_utils.interfaces.server_module import Predictor, Extractor
 from nova_utils.scripts.parsers import (
     dm_parser,
