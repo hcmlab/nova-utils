@@ -12,7 +12,7 @@ from nova_utils.data.handler import (
     url_handler,
     request_handler,
 )
-from nova_utils.data.stream import SSIStream, Video, Audio
+from nova_utils.data.stream import SSIStream, Video, Audio, Stream
 from nova_utils.utils.request_utils import Origin, SuperType, SubType, parse_src_tag, data_description_to_string, infere_dtype
 
 class SessionManager:
@@ -215,11 +215,12 @@ class SessionManager:
                         elif sub_dtype == SubType.AUDIO:
                             data_cls = Audio
                         else:
-                            data_cls = Data
+                            data_cls = Stream
                         data = data_cls(
                             None,
                             name=desc.get("name"),
                             role=desc.get("role"),
+                            sample_rate=1,
                             dataset=self.dataset,
                             session=self.session,
                         )
