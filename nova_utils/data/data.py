@@ -5,6 +5,7 @@ Date: 18.8.2023
 from abc import ABC, abstractmethod
 
 import numpy as np
+from typing import Union
 
 
 class MetaData:
@@ -72,7 +73,7 @@ class Data:
 
     def __init__(
         self,
-        data: np.ndarray = None,
+        data: Union[np.ndarray, None] = None,
         dataset: str = None,
         role: str = None,
         session: str = None,

@@ -8,11 +8,13 @@ Date:
 """
 import random
 import string
+import io
+import base64
 from pathlib import Path
 from typing import Union
 
 import numpy as np
-
+from PIL import Image as PILImage
 from nova_utils.data.data import Data
 from nova_utils.data.handler.file_handler import FileHandler
 from nova_utils.data.handler.ihandler import IHandler
@@ -43,7 +45,10 @@ class RequestHandler(IHandler):
             if header_only:
                 return Image(data=None)
             # TODO know decoding
-            print("Don't know decoding. Lol!")
+            bytes_img = io.BytesIO(base64.b64decode(data))
+            pil_img = PILImage.open(bytes_img)
+            data = np.array(pil_img)
+            return Image(data=data)
         elif dtype == FreeAnnotation:
             if header_only:
                 return FreeAnnotation(data=None, scheme=FreeAnnotationScheme(name='default_scheme'))

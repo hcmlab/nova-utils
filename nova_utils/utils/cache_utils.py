@@ -243,7 +243,7 @@ def get_file(
 
     if untar:
         untar_fpath = data_dir / fname
-        fpath = untar_fpath.parent / (untar_fpath.name  + '.tar.gz')
+        fpath = untar_fpath.parent / (untar_fpath.name + '.tar.gz')
     else:
         fpath = data_dir / fname
 
@@ -251,7 +251,7 @@ def get_file(
     if fpath.exists():
         # File found; verify integrity if a hash was provided.
         if file_hash:
-            if not validate_file(fpath, file_hash, algorithm=hash_algorithm):
+            if not validate_file(fpath, file_hash.lower(), algorithm=hash_algorithm):
                 print(
                     "A local file was found, but it seems to be "
                     "incomplete or outdated because the "
@@ -271,7 +271,8 @@ def get_file(
         try:
             try:
                 tmp_path = tmp_dir / fname
-                request.urlretrieve(origin, tmp_path)
+                #request.urlretrieve(origin, tmp_path)
+                retreive_from_url(origin, fp=tmp_path)
                 shutil.move(tmp_path, fpath)
             except urllib.error.HTTPError as e:
                 raise Exception(error_msg.format(origin, e.code, str(e)))
@@ -295,7 +296,7 @@ def get_file(
 
 
 if __name__ == '__main__':
-    #retreive_from_url("https://github.com/saveli/syncpy/archive/refs/heads/master.zip",'blub.zip')
+    get_file(fname='test.safetensor', origin='https://civitai.com/api/download/models/175257')
     cache_dir = '/Users/dominikschiller/Work/github/nova-server/cache'
     tmp_dir = '/Users/dominikschiller/Work/github/nova-server/tmp'
     url = 'https://hcm-lab.de/cloud/s/FNiyD76YAs33D3D/download?path=%2Fblazeface&files=blazeface.pth'

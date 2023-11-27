@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from time import perf_counter
 from typing import Type
 from nova_utils.data.annotation import Annotation
-from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
+from nova_utils.data.provider.dataset_iterator import DatasetIterator
 from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
 from nova_utils.data.stream import Stream
 from nova_utils.utils.log_utils import log
@@ -73,7 +73,7 @@ class Processor(ABC):
     def process_data(self, ds_manager: DatasetManager) -> dict:
         """Returning a dictionary that contains the original keys from the dataset iterator and a list of processed
         samples as value. Can be overwritten to customize the processing"""
-        ds_manager: NovaDatasetIterator
+        ds_manager: DatasetIterator
 
         # Start the stopwatch / counter
         pc_start = perf_counter()

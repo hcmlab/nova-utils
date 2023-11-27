@@ -8,7 +8,7 @@ Date:
 """
 
 _MAJOR_VERSION = '1'
-_MINOR_VERSION = '4'
+_MINOR_VERSION = '5'
 _PATCH_VERSION = '0'
 
 __version__ = '.'.join([

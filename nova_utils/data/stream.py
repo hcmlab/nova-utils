@@ -195,7 +195,7 @@ class SSIStream(Stream):
         ]
     )
 
-    def __init__(self, data: np.ndarray, sample_rate: float, chunks: np.ndarray = None, dim_labels: list = None, **kwargs):
+    def __init__(self, data: Union[np.ndarray,None], sample_rate: float, chunks: np.ndarray = None, dim_labels: list = None, **kwargs):
         """
         Initialize an SSIStream instance with SSI stream data and metadata.
         """
@@ -222,7 +222,7 @@ class Audio(Stream):
 
     """
 
-    def __init__(self, data: np.ndarray, sample_rate: float, **kwargs):
+    def __init__(self, data: Union[np.ndarray,None], sample_rate: float, **kwargs):
         super().__init__(data=data, sample_rate=sample_rate, **kwargs)
 
 
@@ -239,7 +239,7 @@ class Video(Stream):
 
     """
 
-    def __init__(self, data: np.ndarray, sample_rate: float, **kwargs):
+    def __init__(self, data: Union[np.ndarray,None], sample_rate: float, **kwargs):
         super().__init__(data=data, sample_rate=sample_rate, **kwargs)
 
 
