@@ -571,9 +571,8 @@ class _SSIStreamFileHandler(IHandler):
 
         # header
         root = Et.Element("annotation", attrib={"ssi-v ": "2"})
-
         # info
-        meta_data: StreamMetaData | SSIStreamMetaData = data.meta_data
+        meta_data: Union(StreamMetaData, SSIStreamMetaData) = data.meta_data
         sr = meta_data.sample_rate
         dim = (
             meta_data.sample_shape[0]
