@@ -32,7 +32,8 @@ import numpy as np
 from nova_utils.data.annotation import Annotation
 from nova_utils.data.handler import nova_db_handler as db_handler
 from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
-from nova_utils.data.provider.nova_dataset_iterator import NovaDatasetIterator
+from nova_utils.data.provider.data_manager import DatasetManager, NovaDatasetManager, SessionManager
+from nova_utils.data.provider.dataset_iterator import DatasetIterator
 from nova_utils.data.stream import Stream
 from nova_utils.interfaces.server_module import Predictor, Extractor
 from nova_utils.scripts.parsers import (
@@ -42,7 +43,7 @@ from nova_utils.scripts.parsers import (
     nova_iterator_parser,
     nova_server_module_parser,
 )
-from nova_utils.utils import ssi_xml_utils, string_utils
+from nova_utils.utils import ssi_xml_utils, string_utils, request_utils
 from nova_utils.utils.string_utils import string_to_bool
 from nova_utils.explainer.dice import dice_explain
 from nova_utils.explainer.lime_explainer import lime_image
@@ -218,43 +219,53 @@ def main(args):
         if output_dir.is_file():
             output_dir.unlink()
 
-    single_session_datasets = []
+    #single_session_datasets = []
+    single_session_data_manager = []
     is_iterable = string_to_bool(trainer.meta_is_iterable)
 
+    #for session in dm_args.sessions:
+    #    if is_iterable:
+    #        dataset_manager = NovaDatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
+    #    else:
+    #        dataset_manager = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])#
+
+     #   single_session_datasets.append(dataset_manager)
+
     for session in dm_args.sessions:
-        if is_iterable:
-            dataset_manager = NovaDatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
-        else:
-            dataset_manager = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])
-
-        single_session_datasets.append(dataset_manager)
-
+        requires_db = any([request_utils.parse_src_tag(dd)[0] == request_utils.Origin.DB.value for dd in dm_args.data])
+        data_provider_cls = NovaDatasetManager if requires_db else DatasetManager
+        data_manager = data_provider_cls(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])
+        single_session_data_manager.append(data_manager)
     print("Data managers initialized")
 
     # Iterate over all sessions
-    for ss_dataset in single_session_datasets:
-        session = ss_dataset.session_names[0]
+    #for ss_dataset in single_session_datasets:
+    #    session = ss_dataset.session_names[0]#
 
-        if not is_iterable:
-            ss_dataset.load()
+    #    if not is_iterable:
+    #        ss_dataset.load()
+    # Iterate over all sessions
+    for ss_dm in single_session_data_manager:
+        session = ss_dm.session_names[0]
+        data_provider = ss_dm
+        sm = data_provider.sessions[session]["manager"]
 
         # Data processing
         print(f"Process session {session}...")
         try:
-
-            sm = ss_dataset.sessions[session]["manager"]
-
-            if is_iterable:
+            if not is_iterable:
+                data_provider.load()
+                single_frame = sm.input_data["explanation_stream"].data[explainer_args.frame_id]
+            else:
+                data_provider = DatasetIterator(ss_dm, **vars(iter_args))
                 stream_data = []
                 anno_data = []
 
-                for v in ss_dataset:
+                for v in data_provider:
                     if v["explanation_stream"].shape[0] == 0:
                         continue
                     stream_data.append(v["explanation_stream"][0])
                     anno_data.append(v["explanation_anno"])
-            else:
-                single_frame = sm.input_data["explanation_stream"].data[explainer_args.frame_id]
 
 
             # if ml backend is tensorflow postpone model initialization after creating data streams as tensorflow allocates all available memory
@@ -292,10 +303,11 @@ def main(args):
         text = Text(data=np.array([json.dumps(data_output)]))
 
         session_manager : SessionManager
-        session_manager = ss_dataset.sessions[session]['manager']
-        session_manager.output_data_templates["output"] = text
+        #session_manager = ss_dataset.sessions[session]['manager']
+        #session_manager.output_data_templates["output"] = text
+        sm.output_data_templates["output"] = text
 
-        ss_dataset.save()
+        ss_dm.save()
 
     print("Processing completed!")
     if caught_ex:
