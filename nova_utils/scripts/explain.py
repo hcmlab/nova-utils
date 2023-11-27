@@ -188,7 +188,11 @@ def main(args):
         "ns_cl_" + model_script_path.stem, str(model_script_path)
     ).load_module()
     print(f"Trainer module {Path(model_script_path).name} loaded")
-    opts = string_utils.parse_nova_option_string(explainer_args.opt_str)
+    opts = module_args.options
+    if module_args.options is None:
+        opts = string_utils.parse_nova_option_string(explainer_args.opt_str)
+        print('Option --opt_str is deprecated. Use --options in the future.')
+
     opts["trainer_module_path"] = trainer_file_path.parent
     processor_class: Union[Type[Predictor], Type[Extractor]] = getattr(
         source, trainer.model_create
