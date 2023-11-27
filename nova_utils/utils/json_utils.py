@@ -9,7 +9,7 @@ Date:
 
 import json
 
-from nova_utils.utils.ssi_xml_utils import Chain, ChainLink, Trainer, ModelIO, URI
+from nova_utils.utils.ssi_xml_utils import Chain, ChainLink, Trainer, Explainer, ModelIO, URI
 
 
 class ModelIOEncoder(json.JSONEncoder):
@@ -202,6 +202,42 @@ class TrainerEncoder(json.JSONEncoder):
                 "meta_is_iterable": obj.meta_is_iterable,
                 "meta_category": obj.meta_category,
                 "ssi_v": obj.ssi_v,
+                "xml_version": obj.xml_version,
+            }
+        return super().default(obj)
+
+class ExplainerEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for Explainer objects.
+
+    This encoder is used to serialize Explainer objects to JSON format.
+
+    Attributes:
+        None
+    """
+
+    def default(self, obj):
+        """
+        Encodes a Explainer object to JSON.
+
+        Args:
+            obj (Explainer): The Explainer object to encode.
+
+        Returns:
+            dict: A dictionary representation of the Explainer object.
+
+        """
+        if isinstance(obj, Explainer):
+            return {
+                "model_script_path": obj.model_script_path,
+                "model_option_path": obj.model_option_path,
+                "model_option_string": obj.model_optstr,
+                "model_create": obj.model_create,
+                "info_trained": obj.info_trained,
+                "frameworks": obj.frameworks,
+                "meta_io": json.dumps(obj.meta_io, cls=ModelIOEncoder),
+                "meta_description": obj.meta_description,
+                "meta_category": obj.meta_category,
                 "xml_version": obj.xml_version,
             }
         return super().default(obj)

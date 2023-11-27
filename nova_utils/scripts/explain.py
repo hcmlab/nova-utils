@@ -48,6 +48,7 @@ from nova_utils.explainer.dice import dice_explain
 from nova_utils.explainer.lime_explainer import lime_image
 from nova_utils.explainer.lime_explainer import lime_tabular
 from nova_utils.explainer.tf_explainer import tf_explainer
+from nova_utils.explainer.cycle_gan_explainer import style_conversion
 
 from nova_utils.data.static import Image, Text
 
@@ -268,6 +269,9 @@ def main(args):
                 data_output = dice_explain(stream_data, anno_data, explainer_args.frame_id, sm.input_data["explanation_stream"].meta_data.sample_shape[0], sm.input_data["explanation_anno"].annotation_scheme, trainer.meta_backend, explainer_args.class_counterfactual, explainer_args.num_counterfactuals, model)
             elif explainer_args.explainer == "TF_EXPLAIN":
                 data_output = tf_explainer(single_frame, explainer_args.tf_explainer, model)
+            elif explainer_args.explainer == "CYCLE_GAN":
+                data_output = style_conversion(single_frame, model)
+            else:
                 pass
 
             

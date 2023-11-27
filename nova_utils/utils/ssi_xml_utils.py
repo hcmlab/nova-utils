@@ -11,7 +11,6 @@ from pathlib import Path
 
 from nova_utils.utils.string_utils import string_to_bool
 
-
 class ModelIO:
     """
      ModelIO defines the inputs and outputs of a model in a chain or trainer file.
@@ -566,6 +565,168 @@ class Chain:
         tree.write(fp)
 
 
+class Explainer:
+    """
+    Class for representing and working with Explainer configuration.
+
+    This class is used to create, load, and write Explainer configurations in XML format.
+
+    Attributes:
+        frameworks (list[item]]): supported frameworks of the explainer.
+        model_id (str, optional): Id of the model.
+        explainer_script_path (str): Path to the explainer script file.
+        explainer_option_string (str, optional): Explainer option string.
+        explainer_create (str, optional): Explainer creation type.
+        info_trained (bool, optional): Indicates if the model is trained.
+        meta_description (str, optional): Description of the trainer.
+        meta_category (str, optional): Category for metadata. Defaults to empty string.
+        meta_is_trainable (str, optional): Bool that indicates if the implements the Trainer interface.
+        meta_io(list[ModelIO]): Description of the inputs and outputs of the explainer.
+        xml_version (str, optional): XML version.
+
+    Args:
+        frameworks (list): supported frameworks of the explainer. E.g. sklearn, pytorch, tensorflow.
+        model_id (str, optional): Id of the model. Defaults to none string.
+        explainer_script_path (str): Path to the explainer script file.
+        explainer_option_string (str, optional): Explainer option string. Defaults to empty string.
+        explainer_create (str, optional): Explainer creation type. Default is "PythonModel".
+        info_trained (bool, optional): Indicates if the model is trained. Default is False.
+        meta_description (str, optional): Description of the trainer. Default is "".
+        meta_category (str, optional): Category for metadata. Defaults to empty string.
+        meta_is_trainable (str, optional): Bool that indicates if the implements the Trainer interface. Defaults to False.
+        meta_io(list[ModelIO]): Description of the inputs and outputs of the explainer.
+        xml_version (str, optional): XML version. Default is "1.0".
+
+    """
+
+    def __init__(
+        self,
+        model_id : str = "",
+        explainer_script_path: str = "",
+        explainer_option_path: str = "",
+        explainer_option_string: str = "",
+        explainer_create: str = "PythonModel",
+        info_trained: bool = False,
+        frameworks: list = None,
+        meta_description: str = "",
+        meta_category: str = "",
+        meta_is_trainable: bool = False,
+        meta_io: list[ModelIO] = None,
+        xml_version="1.0",
+    ):
+        """
+        Initialize a Trainer object with various parameters.
+
+        """
+        self.model_id = model_id
+        self.explainer_script_path = explainer_script_path
+        self.explainer_option_path = explainer_option_path
+        self.explainer_optstr = explainer_option_string
+
+        self.model_create = explainer_create
+        self.info_trained = info_trained
+        self.frameworks = frameworks if frameworks else []
+        self.meta_description = meta_description
+        self.meta_category = meta_category
+        self.meta_is_trainable = meta_is_trainable
+        self.meta_io = meta_io if meta_io is not None else []
+        self.xml_version = xml_version
+
+    def load_from_file(self, fp):
+        """
+        Load Explainer configuration from an XML file.
+
+        Args:
+            fp (str or Path): The file path to the XML file.
+
+        """
+        root = ET.parse(Path(fp))
+        info = root.find("info")
+        meta = root.find("meta")
+        frameworks = root.find("frameworks")
+        model = root.find("model")
+
+        if info is not None:
+            self.info_trained = string_to_bool(info.get("trained", ""))
+        if meta is not None:
+            self.model_id = meta.get("model_id", default=None)
+            self.meta_description = meta.get("description", default="")
+            self.meta_category = meta.get("category", default="")
+            self.meta_is_trainable = meta.get("is_trainable", default="False")
+
+            for io_tag in meta.findall("io"):
+                self.meta_io.append(
+                    ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"), io_tag.get("default_value"))
+                )
+
+        if frameworks is not None:
+            for item_tag in frameworks.findall("item"):
+                self.frameworks.append(item_tag.get("id"))
+        if model is not None:
+            self.model_create = model.get("create", "PythonModel")
+            self.model_option_path = model.get("option", "")
+            self.model_script_path = model.get("script", "")
+            self.model_optstr = model.get("optstr", "")
+
+
+    def write_to_file(self, fp):
+        """
+        Write Trainer configuration to an XML file.
+
+        Args:
+            fp (str or Path): The file path to save the XML file.
+
+        """
+        root = ET.Element("explainer")
+        ET.SubElement(root, "info", trained=str(self.info_trained))
+        meta = ET.SubElement(
+            root,
+            "meta",
+            model_id = self.model_id,
+            category=self.meta_category,
+            description=self.meta_description,
+            meta_is_trainable = str(self.meta_is_trainable)
+        )
+
+        io: ModelIO
+        for io in self.meta_io:
+            ET.SubElement(
+                meta,
+                "io",
+                id=io.io_id,
+                type=io.io_type,
+                data=io.io_data,
+                default_value=io.io_default_value
+            )
+
+        frameworks = ET.SubElement(
+            root,
+            "frameworks"
+        )
+
+        for item in self.frameworks:
+            ET.SubElement(
+                frameworks,
+                "item",
+                id=item,
+            )
+
+        ET.SubElement(
+            root,
+            "model",
+            create=self.model_create,
+            script=self.model_script_path,
+            optstr=self.model_optstr,
+            option=self.model_option_path,
+        )
+
+        tree = ET.ElementTree(root)
+        ET.indent(tree, space="    ", level=0)
+
+        if not fp.suffix:
+            fp = fp.with_suffix(".explainer")
+        tree.write(fp)
+
 if __name__ == "__main__":
 
     trainer_in_fp = Path(
@@ -586,4 +747,12 @@ if __name__ == "__main__":
     chain = Chain()
     chain.load_from_file(chain_in_fp)
     chain.write_to_file(chain_out_fp)
+    
+    explainer_in_fp = Path(r"E:\Nova_dev\test_explainer.explainer")
+    explainer_out_fp = Path(r"E:\Nova_dev\test_out_explainer.explainer")
+
+    explainer = Explainer()
+    explainer.load_from_file(explainer_in_fp)
+    explainer.write_to_file(explainer_out_fp)
+
     breakpoint()
