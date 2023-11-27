@@ -127,43 +127,48 @@ def main(args):
         if output_dir.is_file():
             output_dir.unlink()
 
-    single_session_datasets = []
+    single_session_data_manager = []
     is_iterable = string_to_bool(trainer.meta_is_iterable)
 
     # Create one dataset per session
     for session in dm_args.sessions:
         requires_db = any([request_utils.parse_src_tag(dd)[0] == request_utils.Origin.DB.value for dd in dm_args.data])
         data_provider_cls = NovaDatasetManager if requires_db else DatasetManager
-        data_provider = data_provider_cls(
-            dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session]
-        )
-        if is_iterable:
-            data_provider = DatasetIterator(data_provider, **vars(iter_args))
+        data_manager = data_provider_cls(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])
+        single_session_data_manager.append(data_manager)
+        #data_provider = data_provider_cls(
+        #    dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session]
+        #)
+        #ss_data_manager.append(data_provider)
+        #if is_iterable:
+        #    data_provider = DatasetIterator(data_provider, **vars(iter_args))
 
-        single_session_datasets.append(data_provider)
+        #single_session_datasets.append(data_provider)
     print("Data managers initialized")
 
     # Iterate over all sessions
-    for ss_dataset in single_session_datasets:
-        session = ss_dataset.session_names[0]
-
+    for ss_dm in single_session_data_manager:
+        session = ss_dm.session_names[0]
+        data_provider = ss_dm
         try:
             if not is_iterable:
-                ss_dataset.load()
+                data_provider.load()
+            else:
+                data_provider = DatasetIterator(ss_dm, **vars(iter_args))
 
             # Data processing
             print(f"Process session {session}...")
 
-            data_processed = processor.process_data(ss_dataset)
+            data_processed = processor.process_data(data_provider)
             data_output = processor.to_output(data_processed)
 
             # Data Saving
             session_manager : SessionManager
-            session_manager = ss_dataset.sessions[session]['manager']
+            session_manager = ss_dm.sessions[session]['manager']
             for io_id, data_object in data_output.items():
                 session_manager.output_data_templates[io_id] = data_object
 
-            ss_dataset.save()
+            ss_dm.save()
 
         except Exception as e:
             traceback.print_exc()
