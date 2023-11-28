@@ -1,13 +1,14 @@
 import tensorflow as tf
+import numpy as np
 
 def style_conversion(sample, model):
     data = {"success": "failed"}
 
     counterfactual_dictionary = {}
-    counterfactual = model.predict(sample)
+    counterfactual = model.predict(np.expand_dims(sample, axis=0))
 
-    for id, feat in enumerate(counterfactual):
-        counterfactual_dictionary[id] = feat
+    for id, feat in enumerate(counterfactual[0]):
+        counterfactual_dictionary[id] = float(feat)
 
     original_data_dictionary = {}
 
@@ -18,3 +19,5 @@ def style_conversion(sample, model):
         "counterfactual": counterfactual_dictionary,
         "original_data": original_data_dictionary
         }
+    
+    return data

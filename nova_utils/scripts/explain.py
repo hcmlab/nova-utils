@@ -60,7 +60,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "--explainer",
+    "--explainer_type",
     type=str,
     required=True,
     help="Explainer to be used",
@@ -71,6 +71,13 @@ parser.add_argument(
     type=str,
     required=True,
     help="Path to the trainer file using Windows UNC-Style",
+)
+
+parser.add_argument(
+    "--explainer_file_path",
+    type=str,
+    required=False,
+    help="Path to the explainer file using Windows UNC-Style",
 )
 
 parser.add_argument(
@@ -166,6 +173,39 @@ def main(args):
     os.environ['TMP_DIR'] = module_args.tmp_dir
 
     caught_ex = False
+
+    # Load explainer
+    explainer = ssi_xml_utils.Explainer()
+    explainer_file_path = Path(module_args.cml_dir).joinpath(
+        PureWindowsPath(explainer_args.explainer_file_path)
+    )
+    
+    if not explainer_file_path.is_file():
+        raise FileNotFoundError(f"Explainer file not available: {explainer_file_path}")
+    else:
+        explainer.load_from_file(explainer_file_path)
+        print("Explainer successfully loaded.")
+
+    # Load module
+    if not explainer.model_script_path:
+        raise ValueError('Explainer has no attribute "script" in model tag.')
+
+    model_script_path = (
+            explainer_file_path.parent / PureWindowsPath(explainer.model_script_path)
+    ).resolve()
+    source = SourceFileLoader(
+        "ns_cl_" + model_script_path.stem, str(model_script_path)
+    ).load_module()
+    print(f"Explainer module {Path(model_script_path).name} loaded")
+    opts = module_args.options
+    if module_args.options is None:
+        opts = string_utils.parse_nova_option_string(explainer_args.opt_str)
+        print('Option --opt_str is deprecated. Use --options in the future.')
+
+    opts["explainer_module_path"] = explainer_file_path.parent
+    explainer_class: Union[Type[Predictor], Type[Extractor]] = getattr(
+        source, explainer.model_create
+    )
 
     # Load trainer
     trainer = ssi_xml_utils.Trainer()
@@ -269,25 +309,29 @@ def main(args):
 
 
             # if ml backend is tensorflow postpone model initialization after creating data streams as tensorflow allocates all available memory
-            processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
-            print(f"Model {trainer.model_create} created")
-
-            # Todo add iterator option
-            model = processor.get_explainable_model()
-            expl_func = processor.get_predict_function()
-            
-            if explainer_args.explainer == "LIME_IMAGE":
-                data_output = lime_image(single_frame, explainer_args.num_features, explainer_args.top_labels, explainer_args.num_samples, explainer_args.hide_color, explainer_args.hide_rest, explainer_args.positive_only, model)
-            elif explainer_args.explainer == "LIME_TABULAR":
-                data_output = lime_tabular(stream_data, explainer_args.frame_id, explainer_args.top_class, explainer_args.num_features, model)
-            elif explainer_args.explainer == "DICE":
-                data_output = dice_explain(stream_data, anno_data, explainer_args.frame_id, sm.input_data["explanation_stream"].meta_data.sample_shape[0], sm.input_data["explanation_anno"].annotation_scheme, trainer.meta_backend, explainer_args.class_counterfactual, explainer_args.num_counterfactuals, model)
-            elif explainer_args.explainer == "TF_EXPLAIN":
-                data_output = tf_explainer(single_frame, explainer_args.tf_explainer, model)
-            elif explainer_args.explainer == "CYCLE_GAN":
-                data_output = style_conversion(single_frame, model)
+            if explainer_args.explainer_type == "CYCLE_GAN":
+                explainer = explainer_class(model_io=trainer.meta_io, opts=opts, trainer=explainer)
+                data_output = style_conversion(single_frame, explainer.get_explainable_model())
             else:
-                pass
+                processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
+                print(f"Model {trainer.model_create} created")
+
+
+                # Todo add iterator option
+                model = processor.get_explainable_model()
+                expl_func = processor.get_predict_function()
+
+                
+                if explainer_args.explainer_type == "LIME_IMAGE":
+                    data_output = lime_image(single_frame, explainer_args.num_features, explainer_args.top_labels, explainer_args.num_samples, explainer_args.hide_color, explainer_args.hide_rest, explainer_args.positive_only, model)
+                elif explainer_args.explainer_type == "LIME_TABULAR":
+                    data_output = lime_tabular(stream_data, explainer_args.frame_id, explainer_args.top_class, explainer_args.num_features, model)
+                elif explainer_args.explainer_type == "DICE":
+                    data_output = dice_explain(stream_data, anno_data, explainer_args.frame_id, sm.input_data["explanation_stream"].meta_data.sample_shape[0], sm.input_data["explanation_anno"].annotation_scheme, trainer.meta_backend, explainer_args.class_counterfactual, explainer_args.num_counterfactuals, model)
+                elif explainer_args.explainer_type == "TF_EXPLAIN":
+                    data_output = tf_explainer(single_frame, explainer_args.tf_explainer, model)
+                else:
+                    pass
 
             
         except FileNotFoundError as e:
