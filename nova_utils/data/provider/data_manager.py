@@ -3,7 +3,7 @@ Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 25.10.2023
 """
 from pathlib import Path
-from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme
+from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme, ContinuousAnnotation, ContinuousAnnotationScheme
 from nova_utils.utils import path_utils
 from nova_utils.data.data import Data
 from nova_utils.data.handler import (
@@ -225,8 +225,11 @@ class SessionManager:
                             session=self.session,
                         )
                     elif super_dtype == SuperType.ANNO:
+                        print(f'No predefined scheme available. Creating generic {sub_dtype.value} template annotation for {desc}')
                         if sub_dtype is None or sub_dtype == SubType.FREE:
                             data = FreeAnnotation(scheme=FreeAnnotationScheme(name='generic'), data=None)
+                        elif sub_dtype == SubType.CONTINUOUS:
+                            data = ContinuousAnnotation(scheme=ContinuousAnnotationScheme(name='generic', sample_rate=1, min_val=0, max_val=1), data=None)
                         else:
                             raise ValueError(f"Can\'t create template for {desc} because no scheme information is available.")
 
