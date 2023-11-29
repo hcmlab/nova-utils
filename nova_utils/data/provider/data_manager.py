@@ -3,7 +3,8 @@ Author: Dominik Schiller <dominik.schiller@uni-a.de>
 Date: 25.10.2023
 """
 from pathlib import Path
-from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme, ContinuousAnnotation, ContinuousAnnotationScheme
+from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme, ContinuousAnnotation, \
+    ContinuousAnnotationScheme
 from nova_utils.utils import path_utils
 from nova_utils.data.data import Data
 from nova_utils.data.handler import (
@@ -13,7 +14,9 @@ from nova_utils.data.handler import (
     request_handler,
 )
 from nova_utils.data.stream import SSIStream, Video, Audio, Stream
-from nova_utils.utils.request_utils import Origin, SuperType, SubType, parse_src_tag, data_description_to_string, infere_dtype
+from nova_utils.utils.request_utils import Origin, SuperType, SubType, parse_src_tag, data_description_to_string, \
+    infere_dtype
+
 
 class SessionManager:
     """
@@ -72,14 +75,14 @@ class SessionManager:
     """
 
     def __init__(
-        self,
-        dataset: str = None,
-        data_description: list[dict[str, str]] = None,
-        session: str = None,
-        source_context: dict[str, dict] = None,
-        input_data: dict = None,
-        extra_data: dict = None,
-        output_data_templates: dict = None,
+            self,
+            dataset: str = None,
+            data_description: list[dict[str, str]] = None,
+            session: str = None,
+            source_context: dict[str, dict] = None,
+            input_data: dict = None,
+            extra_data: dict = None,
+            output_data_templates: dict = None,
     ):
         self.dataset = dataset
         self.data_description = data_description
@@ -100,12 +103,10 @@ class SessionManager:
         """Add all parameters that are necessary to initialize source specific data handler for reading and writing data objects."""
         self.source_context[source] = context
 
-
     def _update_data_description(self, data_description=None):
         if data_description is not None:
             self.data_description = data_description
         return self.data_description
-
 
     def load(self, data_description=None):
         """
@@ -205,6 +206,7 @@ class SessionManager:
                 # Only raise file not found error if stream is requested as input
                 if not header_only:
                     raise e
+
                 # Create empty data objects with known params
                 else:
                     if super_dtype == SuperType.STREAM:
@@ -225,21 +227,23 @@ class SessionManager:
                             session=self.session,
                         )
                     elif super_dtype == SuperType.ANNO:
-                        print(f'No predefined scheme available. Creating generic {sub_dtype.value} template annotation for {desc}')
+                        print(
+                            f'No predefined scheme available. Creating generic {sub_dtype.value} template annotation for {desc}')
                         if sub_dtype is None or sub_dtype == SubType.FREE:
                             data = FreeAnnotation(scheme=FreeAnnotationScheme(name='generic'), data=None)
                         elif sub_dtype == SubType.CONTINUOUS:
-                            data = ContinuousAnnotation(scheme=ContinuousAnnotationScheme(name='generic', sample_rate=1, min_val=0, max_val=1), data=None)
+                            data = ContinuousAnnotation(
+                                scheme=ContinuousAnnotationScheme(name='generic', sample_rate=1, min_val=0, max_val=1),
+                                data=None)
                         else:
-                            raise ValueError(f"Can\'t create template for {desc} because no scheme information is available.")
+                            raise ValueError(
+                                f"Can\'t create template for {desc} because no scheme information is available.")
 
                     else:
                         # Todo Handle other cases where no header might be loaded
                         data = Data()
 
             io_dst[data_id] = data
-
-
 
     def save(self, data_description=None, overwrite=True):
         """
@@ -311,14 +315,16 @@ class SessionManager:
                 shared_dir = rq.get('shared_dir')
                 job_id = rq.get('job_id')
                 handler = request_handler.RequestHandler()
-                handler.save(data=data, shared_dir=shared_dir, job_id=job_id, dataset=self.dataset, session=self.session)
+                handler.save(data=data, shared_dir=shared_dir, job_id=job_id, dataset=self.dataset,
+                             session=self.session)
 
         return success
 
 
 class DatasetManager:
     def __init__(
-        self, data_description: list[dict[str, str]], source_context: dict = None, dataset: str = None, session_names: list = None
+            self, data_description: list[dict[str, str]], source_context: dict = None, dataset: str = None,
+            session_names: list = None
     ):
         self.dataset = dataset
         self.data_description = data_description
@@ -328,17 +334,30 @@ class DatasetManager:
         self._init_sessions()
 
     def _init_sessions(self):
-        if not self.session_names:
-            self.session_names = ['dummy_session']
+        db_required = any([parse_src_tag(dd)[0] == Origin.DB.value for dd in self.data_description])
 
-        if self.dataset is None:
-            self.dataset = 'dummy_dataset'
+        # Load session information from database
+        if db_required:
+            sh = nova_db_handler.SessionHandler(**self.source_ctx["db"])
+            sessions = sh.load(self.dataset, self.session_names)
+            for sess in sessions:
+                sm = SessionManager(
+                    self.dataset, self.data_description, sess.name, self.source_ctx
+                )
+                self.sessions[sess.name] = {"manager": sm, "info": sess}
 
-        for session in self.session_names:
-            sm = SessionManager(
-                self.dataset, self.data_description, session, self.source_ctx
-            )
-            self.sessions[session] = {"manager": sm}
+        else:
+            if not self.session_names:
+                self.session_names = ['dummy_session']
+
+            if self.dataset is None:
+                self.dataset = 'dummy_dataset'
+
+            for session in self.session_names:
+                sm = SessionManager(
+                    self.dataset, self.data_description, session, self.source_ctx
+                )
+                self.sessions[session] = {"manager": sm, "info": None}
 
     def load_session(self, session_name):
         self.sessions[session_name]["manager"].load(self.data_description)
@@ -355,16 +374,17 @@ class DatasetManager:
             self.save_session(session)
 
 
-class NovaDatasetManager(DatasetManager):
+# class NovaDatasetManager(DatasetManager):
+#
+#     def _init_sessions(self):
+#         sh = nova_db_handler.SessionHandler(**self.source_ctx["db"])
+#         sessions = sh.load(self.dataset, self.session_names)
+#         for session_info in sessions:
+#             sm = SessionManager(
+#                 self.dataset, self.data_description, session_info.name, self.source_ctx
+#             )
+#             self.sessions[session_info.name] = {"manager": sm, "info": session_info}
 
-    def _init_sessions(self):
-        sh = nova_db_handler.SessionHandler(**self.source_ctx["db"])
-        sessions = sh.load(self.dataset, self.session_names)
-        for session_info in sessions:
-            sm = SessionManager(
-                self.dataset, self.data_description, session_info.name, self.source_ctx
-            )
-            self.sessions[session_info.name] = {"manager": sm, "info": session_info}
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
@@ -435,7 +455,7 @@ if __name__ == "__main__":
     # )
 
     dsm = DatasetManager(
-        dataset=dataset, data_description=[request], source_context=ctx )
+        dataset=dataset, data_description=[request], source_context=ctx)
 
     dsm.load()
 

@@ -27,7 +27,7 @@ import traceback
 from importlib.machinery import SourceFileLoader
 from pathlib import Path, PureWindowsPath
 from typing import Union, Type
-from nova_utils.data.provider.data_manager import DatasetManager, NovaDatasetManager, SessionManager
+from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
 from nova_utils.data.provider.dataset_iterator import DatasetIterator
 from nova_utils.interfaces.server_module import Predictor, Extractor
 from nova_utils.scripts.parsers import (
@@ -127,48 +127,41 @@ def main(args):
         if output_dir.is_file():
             output_dir.unlink()
 
-    single_session_data_manager = []
-    is_iterable = string_to_bool(trainer.meta_is_iterable)
+    single_session_data_provider = []
 
     # Create one dataset per session
     for session in dm_args.sessions:
-        requires_db = any([request_utils.parse_src_tag(dd)[0] == request_utils.Origin.DB.value for dd in dm_args.data])
-        data_provider_cls = NovaDatasetManager if requires_db else DatasetManager
-        data_manager = data_provider_cls(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])
-        single_session_data_manager.append(data_manager)
-        #data_provider = data_provider_cls(
-        #    dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session]
-        #)
-        #ss_data_manager.append(data_provider)
-        #if is_iterable:
-        #    data_provider = DatasetIterator(data_provider, **vars(iter_args))
+        is_iterable = string_to_bool(trainer.meta_is_iterable)
+        if is_iterable:
+            data_provider = DatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
+        else:
+            data_provider = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session],)
 
-        #single_session_datasets.append(data_provider)
+        single_session_data_provider.append(data_provider)
+
     print("Data managers initialized")
 
     # Iterate over all sessions
-    for ss_dm in single_session_data_manager:
-        session = ss_dm.session_names[0]
-        data_provider = ss_dm
+    for provider in single_session_data_provider:
+        session = provider.session_names[0]
+        #data_provider = provider
         try:
-            if not is_iterable:
-                data_provider.load()
-            else:
-                data_provider = DatasetIterator(ss_dm, **vars(iter_args))
+            if isinstance(provider, DatasetManager):
+                provider.load()
 
             # Data processing
             print(f"Process session {session}...")
 
-            data_processed = processor.process_data(data_provider)
+            data_processed = processor.process_data(provider)
             data_output = processor.to_output(data_processed)
 
             # Data Saving
             session_manager : SessionManager
-            session_manager = ss_dm.sessions[session]['manager']
+            session_manager = provider.sessions[session]['manager']
             for io_id, data_object in data_output.items():
                 session_manager.output_data_templates[io_id] = data_object
 
-            ss_dm.save()
+            provider.save()
 
         except Exception as e:
             traceback.print_exc()

@@ -21,7 +21,7 @@ from nova_utils.utils import string_utils
 from nova_utils.utils.anno_utils import data_contains_garbage
 
 
-class DatasetIterator:
+class DatasetIterator(DatasetManager):
     """Iterator class for processing data samples from the Nova dataset.
 
     The NovaIterator takes all information about what data should be loaded and how it should be processed. The class itself then takes care of loading all data and provides an iterator to directly apply a sliding window to the requested data.
@@ -115,7 +115,8 @@ class DatasetIterator:
     def __init__(
             self,
             # Data
-            dataset_manager: DatasetManager,
+            #dataset_manager: DatasetManager,
+            *args,
 
             # Iterator Window
             frame_size: Union[int, float, str] = None,
@@ -128,9 +129,11 @@ class DatasetIterator:
             # Iterator properties
             add_rest_class: bool = True,
             fill_missing_data=True,
-    ):
-        self.dataset_manager = dataset_manager
 
+            **kwargs
+    ):
+        #self.dataset_manager = dataset_manager
+        super().__init__(*args, **kwargs)
         # If stride has not been explicitly set it's the same as the frame size
         if stride is None:
             stride = frame_size
@@ -197,7 +200,7 @@ class DatasetIterator:
         # Needed to sort the samples later and assure that the order is the same as in nova.
         # sample_counter = 1
 
-        for session_name, session in self.dataset_manager.sessions.items():
+        for session_name, session in self.sessions.items():
             # Init all data objects for the session and get necessary meta information
             self.session_manager: SessionManager
             self.session_info: NovaSession
@@ -346,13 +349,10 @@ if __name__ == "__main__":
     }
 
     nova_iterator = DatasetIterator(
-        dataset_manager=NovaDatasetManager(
-            dataset=dataset,
-            data_description=[annotation],
-            session_names=sessions,
-            source_context=ctx
-        ),
-
+        dataset=dataset,
+        data_description=[annotation],
+        session_names=sessions,
+        source_context=ctx,
         frame_size="1s",
         left_context="2s",
         right_context="2s",
