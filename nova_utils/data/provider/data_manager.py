@@ -300,11 +300,16 @@ class SessionManager:
             if src == Origin.DB:
                 ctx = self.source_context[src]
                 if super_dtype == SuperType.ANNO:
+                    role = desc.get('role')
+                    scheme = desc.get('scheme')
+                    annotator = desc.get('annotator')
                     handler = nova_db_handler.AnnotationHandler(**ctx)
-                    success = handler.save(annotation=data, overwrite=overwrite)
+                    success = handler.save(annotation=data, overwrite=overwrite, role=role, annotator=annotator, scheme=scheme)
                 elif super_dtype == SuperType.STREAM:
+                    name = desc.get('name')
+                    role = desc.get('role')
                     handler = nova_db_handler.StreamHandler(**ctx)
-                    success = handler.save(stream=data)
+                    success = handler.save(stream=data, role=role, name=name)
             elif src == Origin.FILE:
                 handler = file_handler.FileHandler()
                 success = handler.save(data=data, fp=Path(desc["uri"]))

@@ -658,6 +658,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
         session: str = None,
         annotator: str = None,
         role: str = None,
+        scheme: str = None,
         is_finished: bool = False,
         is_locked: bool = False,
         overwrite: bool = False,
@@ -671,6 +672,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
             session (str, optional): Name of the session. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
             annotator (str, optional): Name of the annotator. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
             role (str, optional): Name of the role. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
+            scheme (str, optional): Name of the annotation scheme. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
             is_finished (bool, optional): Indicates if the annotation is finished. Defaults to False.
             is_locked (bool, optional): Indicates if the annotation is locked. Defaults to False.
             overwrite (bool, optional): If True, overwrite an existing annotation. Defaults to False.
@@ -686,7 +688,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
         session = session if not session is None else annotation.meta_data.session
         annotator = annotator if not annotator is None else annotation.meta_data.annotator
         role = role if not role is None else annotation.meta_data.role
-        scheme = annotation.annotation_scheme.name
+        scheme = scheme if not scheme is None else annotation.annotation_scheme.name
 
         if isinstance(annotation.data, np.ndarray) and not annotation.data.size == 0:
             anno_data = convert_label_to_ssi_dtype(
