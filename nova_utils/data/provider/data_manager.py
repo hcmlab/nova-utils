@@ -284,6 +284,11 @@ class SessionManager:
         success = False
 
         for desc in data_description:
+
+            # Do not write the output if active flag is not set
+            if not desc.get('active', True):
+                continue
+
             src, super_dtype, sub_dtype, specific_dtype = parse_src_tag(desc)
 
             if not desc.get("type") == "output":
@@ -304,12 +309,12 @@ class SessionManager:
                     scheme = desc.get('scheme')
                     annotator = desc.get('annotator')
                     handler = nova_db_handler.AnnotationHandler(**ctx)
-                    success = handler.save(annotation=data, overwrite=overwrite, role=role, annotator=annotator, scheme=scheme)
+                    success = handler.save(dataset=self.dataset, session=self.session, annotation=data, overwrite=overwrite, role=role, annotator=annotator, scheme=scheme)
                 elif super_dtype == SuperType.STREAM:
                     name = desc.get('name')
                     role = desc.get('role')
                     handler = nova_db_handler.StreamHandler(**ctx)
-                    success = handler.save(stream=data, role=role, name=name)
+                    success = handler.save(dataset=self.dataset, session=self.session, stream=data, role=role, name=name)
             elif src == Origin.FILE:
                 handler = file_handler.FileHandler()
                 success = handler.save(data=data, fp=Path(desc["uri"]))
