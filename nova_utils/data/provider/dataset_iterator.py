@@ -208,7 +208,7 @@ class DatasetIterator(DatasetManager):
             self.current_session_info = session.get('info')
             self.current_session.load()
 
-            # TODO: Check if we run into duration errros
+            # TODO: Check if we run into duration errors
             if self.current_session_info is None:
                 self.current_session_info = NovaSession()
             if self.current_session_info.duration is None:
@@ -262,12 +262,25 @@ class DatasetIterator(DatasetManager):
                         right_pad = int((
                                                     window_end - self.current_session_info.duration) * sr) if window_end > self.current_session_info.duration else 0
 
+                        time_dim_last = isinstance(v, Audio)
+                        # In some cases sample sample_from_interval might return a frame number that is one frame off from what we expect.
+                        # This is due to sampling issues when frame sizes do not match the samplerate. We fix this here.
+                        num_samples_exp = int((abs(window_start) + window_end) * sr)
+                        num_samples = int(left_pad + right_pad + (sample.shape[-1] if isinstance(v, Audio) else sample.shape[0]))
+                        if num_samples > num_samples_exp:
+                            diff = (num_samples - num_samples_exp)
+                            if time_dim_last:
+                                sample = sample[:,:-diff]
+                            else:
+                                sample = sample[:-diff,:]
+
+
                         if left_pad or right_pad:
                             lr_pad = ((left_pad, right_pad),)
                             n_pad = tuple([(0, 0)] * (len(sample.shape) - 1))
 
                             # Num samples last dim
-                            if isinstance(v, Audio):
+                            if time_dim_last:
                                 pad = n_pad + lr_pad
                             # Num samples first dim
                             else:
