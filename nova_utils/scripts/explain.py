@@ -301,7 +301,7 @@ def main(args):
             single_frame = sm.input_data["explanation_stream"].data[explainer_args.frame_id]
 
             if is_iterable:
-                data_provider = DatasetIterator(provider, **vars(iter_args))
+                data_provider = DatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
                 stream_data = []
                 anno_data = []
 
