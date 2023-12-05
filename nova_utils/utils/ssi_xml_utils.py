@@ -9,7 +9,7 @@ Date:
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from nova_utils.utils.string_utils import string_to_bool
+from nova_utils.utils.string_utils import string_to_bool, parse_time_string_to_ms
 
 
 class ModelIO:
@@ -221,6 +221,7 @@ class Trainer:
         self.meta_is_trainable = meta_is_trainable
         self.meta_is_explainable = meta_is_explainable
         self.meta_is_iterable = meta_is_iterable
+        self.meta_is_processable = meta_is_processable
         self.meta_io = meta_io if meta_io is not None else []
         self.meta_uri = meta_uri if meta_uri is not None else []
         self.ssi_v = ssi_v
@@ -247,17 +248,17 @@ class Trainer:
         if info is not None:
             self.info_trained = string_to_bool(info.get("trained", ""))
         if meta is not None:
-            self.meta_left_ctx = meta.get("leftContext", default="0")
-            self.meta_right_ctx = meta.get("rightContext", default="0")
-            self.meta_frame_step = meta.get("frameStep", default="0")
-            self.meta_balance = meta.get("balance", default="none")
-            self.meta_backend = meta.get("backend", default="Python")
-            self.meta_description = meta.get("description", default="")
-            self.meta_category = meta.get("category", default="")
-            self.meta_is_iterable = meta.get("is_iterable", default="True")
-            self.meta_is_processable = meta.get("is_processable", default="True")
-            self.meta_is_trainable = meta.get("is_trainable", default="False")
-            self.meta_is_explainable = meta.get("is_explainable", default="False")
+            self.meta_left_ctx = parse_time_string_to_ms(meta.get("leftContext", default=self.meta_left_ctx))
+            self.meta_right_ctx = parse_time_string_to_ms(meta.get("rightContext", default=self.meta_right_ctx))
+            self.meta_frame_step = parse_time_string_to_ms(meta.get("frameStep", default=self.meta_frame_step))
+            self.meta_balance = meta.get("balance", default=self.meta_balance)
+            self.meta_backend = meta.get("backend", default=self.meta_backend)
+            self.meta_description = meta.get("description", default=self.meta_description)
+            self.meta_category = meta.get("category", default=self.meta_category)
+            self.meta_is_iterable = string_to_bool(meta.get("is_iterable", default=self.meta_is_iterable))
+            self.meta_is_processable = string_to_bool(meta.get("is_processable", default=self.meta_is_processable))
+            self.meta_is_trainable = string_to_bool(meta.get("is_trainable", default=self.meta_is_trainable))
+            self.meta_is_explainable = string_to_bool(meta.get("is_explainable", default=self.meta_is_explainable))
 
             for io_tag in meta.findall("io"):
                 self.meta_io.append(
