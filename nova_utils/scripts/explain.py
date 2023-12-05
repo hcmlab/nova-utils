@@ -174,38 +174,40 @@ def main(args):
 
     caught_ex = False
 
-    # Load explainer
     explainer = ssi_xml_utils.Explainer()
-    explainer_file_path = Path(module_args.cml_dir).joinpath(
-        PureWindowsPath(explainer_args.explainer_file_path)
-    )
-    
-    if not explainer_file_path.is_file():
-        raise FileNotFoundError(f"Explainer file not available: {explainer_file_path}")
-    else:
-        explainer.load_from_file(explainer_file_path)
-        print("Explainer successfully loaded.")
+    if not explainer_args.explainer_file_path is None:
 
-    # Load module
-    if not explainer.model_script_path:
-        raise ValueError('Explainer has no attribute "script" in model tag.')
+        # Load explainer
+        explainer_file_path = Path(module_args.cml_dir).joinpath(
+            PureWindowsPath(explainer_args.explainer_file_path)
+        )
+        
+        if not explainer_file_path.is_file():
+            raise FileNotFoundError(f"Explainer file not available: {explainer_file_path}")
+        else:
+            explainer.load_from_file(explainer_file_path)
+            print("Explainer successfully loaded.")
 
-    model_script_path = (
-            explainer_file_path.parent / PureWindowsPath(explainer.model_script_path)
-    ).resolve()
-    source = SourceFileLoader(
-        "ns_cl_" + model_script_path.stem, str(model_script_path)
-    ).load_module()
-    print(f"Explainer module {Path(model_script_path).name} loaded")
-    opts = module_args.options
-    if module_args.options is None:
-        opts = string_utils.parse_nova_option_string(explainer_args.opt_str)
-        print('Option --opt_str is deprecated. Use --options in the future.')
+        # Load module
+        if not explainer.model_script_path:
+            raise ValueError('Explainer has no attribute "script" in model tag.')
 
-    opts["explainer_module_path"] = explainer_file_path.parent
-    explainer_class: Union[Type[Predictor], Type[Extractor]] = getattr(
-        source, explainer.model_create
-    )
+        model_script_path = (
+                explainer_file_path.parent / PureWindowsPath(explainer.model_script_path)
+        ).resolve()
+        source = SourceFileLoader(
+            "ns_cl_" + model_script_path.stem, str(model_script_path)
+        ).load_module()
+        print(f"Explainer module {Path(model_script_path).name} loaded")
+        opts = module_args.options
+        if module_args.options is None:
+            opts = string_utils.parse_nova_option_string(explainer_args.opt_str)
+            print('Option --opt_str is deprecated. Use --options in the future.')
+
+        opts["explainer_module_path"] = explainer_file_path.parent
+        explainer_class: Union[Type[Predictor], Type[Extractor]] = getattr(
+            source, explainer.model_create
+        )
 
     # Load trainer
     trainer = ssi_xml_utils.Trainer()
@@ -293,10 +295,10 @@ def main(args):
         # Data processing
         print(f"Process session {session}...")
         try:
-            if not is_iterable:
-                data_provider.load()
-                single_frame = sm.input_data["explanation_stream"].data[explainer_args.frame_id]
-            else:
+            data_provider.load()
+            single_frame = sm.input_data["explanation_stream"].data[explainer_args.frame_id]
+            
+            if is_iterable:
                 data_provider = DatasetIterator(ss_dm, **vars(iter_args))
                 stream_data = []
                 anno_data = []
