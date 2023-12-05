@@ -11,7 +11,7 @@ from typing import Type
 from nova_utils.data.data import Data
 
 
-def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
+def parse_time_string_to_ms(frame: Union[str, int, float, None], suppress_warn=False) -> int:
     """
     Parse a time string or value to milliseconds.
 
@@ -21,6 +21,7 @@ def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
 
     Args:
         frame (Union[str, int, float, None]): The frame value to parse.
+        suppress_warn (bool): If true warnings for automatic type inference will be suppressed.
 
     Returns:
         int: The frame value in milliseconds. 0 if frame is None.
@@ -52,11 +53,12 @@ def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
     # if type is float we assume the input will be seconds
     elif isinstance(frame, float) or "." in str(frame):
         try:
-            print(
-                "WARNING: Automatically inferred type for frame {} is float.".format(
-                    frame
+            if not suppress_warn:
+                print(
+                    "WARNING: Automatically inferred type for frame {} is float.".format(
+                        frame
+                    )
                 )
-            )
             return int(1000 * float(frame))
         except ValueError:
             raise ValueError("Invalid input format for frame: {}".format(frame))
@@ -64,11 +66,12 @@ def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
     # if type is int we assume the input will be milliseconds
     elif isinstance(frame, int) or (isinstance(frame, str) and frame.isdigit()):
         try:
-            print(
-                "WARNING: Automatically inferred type for frame {} is int.".format(
-                    frame
+            if not suppress_warn:
+                print(
+                    "WARNING: Automatically inferred type for frame {} is int.".format(
+                        frame
+                    )
                 )
-            )
             return int(frame)
         except ValueError:
             raise ValueError("Invalid input format for frame: {}".format(frame))
