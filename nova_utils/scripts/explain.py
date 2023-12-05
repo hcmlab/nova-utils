@@ -32,7 +32,7 @@ import numpy as np
 from nova_utils.data.annotation import Annotation
 from nova_utils.data.handler import nova_db_handler as db_handler
 from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
-from nova_utils.data.provider.data_manager import DatasetManager, NovaDatasetManager, SessionManager
+from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
 from nova_utils.data.provider.dataset_iterator import DatasetIterator
 from nova_utils.data.stream import Stream
 from nova_utils.interfaces.server_module import Predictor, Extractor
@@ -262,22 +262,22 @@ def main(args):
             output_dir.unlink()
 
     #single_session_datasets = []
-    single_session_data_manager = []
+    single_session_data_provider = []
     is_iterable = string_to_bool(trainer.meta_is_iterable)
 
-    #for session in dm_args.sessions:
-    #    if is_iterable:
-    #        dataset_manager = NovaDatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
-    #    else:
-    #        dataset_manager = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])#
-
-     #   single_session_datasets.append(dataset_manager)
-
     for session in dm_args.sessions:
-        requires_db = any([request_utils.parse_src_tag(dd)[0] == request_utils.Origin.DB.value for dd in dm_args.data])
-        data_provider_cls = NovaDatasetManager if requires_db else DatasetManager
-        data_manager = data_provider_cls(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])
-        single_session_data_manager.append(data_manager)
+       if is_iterable:
+           dataset_manager = DatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
+       else:
+           dataset_manager = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])#
+
+       single_session_data_provider.append(dataset_manager)
+
+    # for session in dm_args.sessions:
+    #     requires_db = any([request_utils.parse_src_tag(dd)[0] == request_utils.Origin.DB.value for dd in dm_args.data])
+    #     data_provider_cls = NovaDatasetManager if requires_db else DatasetManager
+    #     data_manager = data_provider_cls(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session])
+    #     single_session_data_manager.append(data_manager)
     print("Data managers initialized")
 
     # Iterate over all sessions
@@ -287,19 +287,21 @@ def main(args):
     #    if not is_iterable:
     #        ss_dataset.load()
     # Iterate over all sessions
-    for ss_dm in single_session_data_manager:
-        session = ss_dm.session_names[0]
-        data_provider = ss_dm
-        sm = data_provider.sessions[session]["manager"]
+    for provider in single_session_data_provider:
+        session = provider.session_names[0]
+        #data_provider = provider
+        sm = provider.sessions[session]["manager"]
 
-        # Data processing
-        print(f"Process session {session}...")
         try:
-            data_provider.load()
+            if isinstance(provider, DatasetManager):
+                provider.load()
+
+            # Data processing
+            print(f"Process session {session}...")
             single_frame = sm.input_data["explanation_stream"].data[explainer_args.frame_id]
-            
+
             if is_iterable:
-                data_provider = DatasetIterator(ss_dm, **vars(iter_args))
+                data_provider = DatasetIterator(provider, **vars(iter_args))
                 stream_data = []
                 anno_data = []
 
@@ -353,7 +355,7 @@ def main(args):
         #session_manager.output_data_templates["output"] = text
         sm.output_data_templates["output"] = text
 
-        ss_dm.save()
+        provider.save()
 
     print("Processing completed!")
     if caught_ex:
