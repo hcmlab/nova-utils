@@ -10,6 +10,7 @@ from typing import Union
 from typing import Type
 from nova_utils.data.data import Data
 
+
 def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
     """
     Parse a time string or value to milliseconds.
@@ -74,6 +75,7 @@ def parse_time_string_to_ms(frame: Union[str, int, float, None]) -> int:
     else:
         raise ValueError("Invalid input format for frame: {}".format(frame))
 
+
 def string_to_enum(enum: Enum, string: str):
     """
     Convert a string to an enum value.
@@ -97,15 +99,16 @@ def string_to_enum(enum: Enum, string: str):
             return e
     raise ValueError('{} not part of enumeration  {}'.format(string, enum))
 
-def string_to_bool(string:str) -> bool:
-    '''
+
+def string_to_bool(string: Union[str, bool]) -> bool:
+    """
     Parses a given input string to a boolean value
     Args:
         string (str): Input string
 
     Returns:
         bool: The boolean value of the string
-    '''
+    """
     if isinstance(string, str):
         if string in ['True', 'true', '1']:
             return True
@@ -113,6 +116,7 @@ def string_to_bool(string:str) -> bool:
             return False
     elif isinstance(string, bool):
         return string
+
 
 def parse_nova_option_string(option_string: str) -> dict:
     """
@@ -131,7 +135,7 @@ def parse_nova_option_string(option_string: str) -> dict:
     if option_string:
         opts = option_string.split(';')
         for option in opts:
-            k,v = option.split('=')
+            k, v = option.split('=')
             if v in ("True", "False"):
                 options[k] = True if v == "True" else False
 
@@ -144,7 +148,7 @@ def parse_nova_option_string(option_string: str) -> dict:
                     try:
                         options[k] = float(v)
                     except:
-                         options[k] = v
+                        options[k] = v
             print('\t' + k + "=" + v)
     print('...done')
     return options

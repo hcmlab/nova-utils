@@ -31,6 +31,7 @@ from nova_utils.data.stream import Stream, SSIStream, StreamMetaData
 from nova_utils.utils.anno_utils import (
     convert_ssi_to_label_dtype,
     convert_label_to_ssi_dtype,
+    resample
 )
 from nova_utils.utils.type_definitions import SSILabelDType, SchemeType
 
@@ -41,6 +42,7 @@ ROLE_COLLECTION = "Roles"
 ANNOTATION_COLLECTION = "Annotations"
 SESSION_COLLECTION = "Sessions"
 ANNOTATION_DATA_COLLECTION = "AnnotationData"
+
 
 # METADATA
 class NovaDBMetaData:
@@ -55,7 +57,7 @@ class NovaDBMetaData:
     """
 
     def __init__(
-        self, ip: str = None, port: int = None, user: str = None, dataset: str = None
+            self, ip: str = None, port: int = None, user: str = None, dataset: str = None
     ):
         self.ip = ip
         self.port = port
@@ -77,13 +79,13 @@ class NovaDBAnnotationMetaData(NovaDBMetaData):
     """
 
     def __init__(
-        self,
-        is_locked: bool = None,
-        is_finished: bool = None,
-        last_update: bool = None,
-        annotation_document_id: ObjectId = None,
-        data_document_id: ObjectId = None,
-        **kwargs,
+            self,
+            is_locked: bool = None,
+            is_finished: bool = None,
+            last_update: bool = None,
+            annotation_document_id: ObjectId = None,
+            data_document_id: ObjectId = None,
+            **kwargs,
     ):
         super().__init__(**kwargs)
         self.is_locked = is_locked
@@ -109,15 +111,15 @@ class NovaDBStreamMetaData(NovaDBMetaData):
     """
 
     def __init__(
-        self,
-        name: str = None,
-        dim_labels: dict = None,
-        file_ext: str = None,
-        is_valid: bool = None,
-        stream_document_id: ObjectId = None,
-        sr: float = None,
-        type: str = None,
-        **kwargs,
+            self,
+            name: str = None,
+            dim_labels: dict = None,
+            file_ext: str = None,
+            is_valid: bool = None,
+            stream_document_id: ObjectId = None,
+            sr: float = None,
+            type: str = None,
+            **kwargs,
     ):
         super().__init__(**kwargs)
         self.name = name
@@ -146,12 +148,12 @@ class NovaDBHandler:
     """
 
     def __init__(
-        self,
-        db_host: str = None,
-        db_port: int = None,
-        db_user: str = None,
-        db_password: str = None,
-        data_dir: str = None
+            self,
+            db_host: str = None,
+            db_port: int = None,
+            db_user: str = None,
+            db_password: str = None,
+            data_dir: str = None
     ):
         self._client = None
         self._ip = None
@@ -162,7 +164,7 @@ class NovaDBHandler:
             self.connect(db_host, db_port, db_user, db_password)
 
     def connect(
-        self, db_host: str = None, db_port: int = None, db_user: str = None, db_password: str = None
+            self, db_host: str = None, db_port: int = None, db_user: str = None, db_password: str = None
     ):
         """
         Connects to the MongoDB server.
@@ -184,6 +186,7 @@ class NovaDBHandler:
         Returns the MongoDB client instance.
         """
         return self._client
+
 
 class NovaSession:
     """
@@ -208,7 +211,10 @@ class NovaSession:
         date (datetime, optional): The date and time of the session.
         is_valid (bool, optional): Whether the session is considered valid.
     """
-    def __init__(self, input_data: dict = None, dataset: str = None, name: str = None, duration: int = None, location: str = None, language: str = None, date: datetime = None, is_valid: bool = True, extra_data: dict = None, output_data_templates: dict = None):
+
+    def __init__(self, input_data: dict = None, dataset: str = None, name: str = None, duration: int = None,
+                 location: str = None, language: str = None, date: datetime = None, is_valid: bool = True,
+                 extra_data: dict = None, output_data_templates: dict = None):
         self.input_data = input_data
         self.dataset = dataset
         self.name = name
@@ -216,6 +222,7 @@ class NovaSession:
         self.location = location
         self.language = language
         self.date = date
+
 
 class SessionHandler(NovaDBHandler):
     """
@@ -279,20 +286,19 @@ class SessionHandler(NovaDBHandler):
         return ret
 
 
-
 class AnnotationHandler(IHandler, NovaDBHandler):
     """
     Class for handling download of annotation data from Mongo db.
     """
 
     def _load_annotation(
-        self,
-        dataset: str,
-        session: str,
-        annotator: str,
-        role: str,
-        scheme: str,
-        project: dict = None,
+            self,
+            dataset: str,
+            session: str,
+            annotator: str,
+            role: str,
+            scheme: str,
+            project: dict = None,
     ) -> dict:
         """
         Load annotation data from MongoDB.
@@ -370,20 +376,20 @@ class AnnotationHandler(IHandler, NovaDBHandler):
             return {}
         return result[0]
 
-    def _load_scheme(self, dataset:str, scheme:str) -> dict:
+    def _load_scheme(self, dataset: str, scheme: str) -> dict:
         result = self.client[dataset][SCHEME_COLLECTION].find_one({"name": scheme})
         if not result:
             return {}
         return result
 
     def _update_annotation(
-        self,
-        dataset: str,
-        annotation_id: ObjectId,
-        annotation_data_id: ObjectId,
-        annotation_data: list[dict],
-        is_finished: bool,
-        is_locked: bool,
+            self,
+            dataset: str,
+            annotation_id: ObjectId,
+            annotation_data_id: ObjectId,
+            annotation_data: list[dict],
+            is_finished: bool,
+            is_locked: bool,
     ) -> UpdateResult:
         """
         Updates existing annotation the Mongo database
@@ -439,15 +445,15 @@ class AnnotationHandler(IHandler, NovaDBHandler):
         return success
 
     def _insert_annotation(
-        self,
-        dataset: str,
-        session_id: ObjectId,
-        annotator_id: ObjectId,
-        scheme_id: ObjectId,
-        role_id: ObjectId,
-        data: list,
-        is_finished: bool,
-        is_locked: bool,
+            self,
+            dataset: str,
+            session_id: ObjectId,
+            annotator_id: ObjectId,
+            scheme_id: ObjectId,
+            role_id: ObjectId,
+            data: list,
+            is_finished: bool,
+            is_locked: bool,
     ):
         """
         Insert annotation and associated annotation data into the MongoDB database.
@@ -495,9 +501,8 @@ class AnnotationHandler(IHandler, NovaDBHandler):
 
         return success
 
-
     def load(
-        self, dataset: str, scheme: str, session: str, annotator: str, role: str, header_only: bool = False
+            self, dataset: str, scheme: str, session: str, annotator: str, role: str, header_only: bool = False
     ) -> Annotation:
         """
         Load annotation data from MongoDB and create an Annotation object.
@@ -652,15 +657,16 @@ class AnnotationHandler(IHandler, NovaDBHandler):
         return annotation
 
     def save(
-        self,
-        annotation: Annotation,
-        dataset: str = None,
-        session: str = None,
-        annotator: str = None,
-        role: str = None,
-        is_finished: bool = False,
-        is_locked: bool = False,
-        overwrite: bool = False,
+            self,
+            annotation: Annotation,
+            dataset: str = None,
+            session: str = None,
+            annotator: str = None,
+            role: str = None,
+            scheme: str = None,
+            is_finished: bool = False,
+            is_locked: bool = False,
+            overwrite: bool = False,
     ):
         """
         Save an Annotation object to the MongoDB database.
@@ -671,6 +677,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
             session (str, optional): Name of the session. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
             annotator (str, optional): Name of the annotator. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
             role (str, optional): Name of the role. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
+            scheme (str, optional): Name of the annotation scheme. Overwrites the respective attribute from annotation.meta_data if set. Defaults to None.
             is_finished (bool, optional): Indicates if the annotation is finished. Defaults to False.
             is_locked (bool, optional): Indicates if the annotation is locked. Defaults to False.
             overwrite (bool, optional): If True, overwrite an existing annotation. Defaults to False.
@@ -686,9 +693,16 @@ class AnnotationHandler(IHandler, NovaDBHandler):
         session = session if not session is None else annotation.meta_data.session
         annotator = annotator if not annotator is None else annotation.meta_data.annotator
         role = role if not role is None else annotation.meta_data.role
-        scheme = annotation.annotation_scheme.name
+        scheme = scheme if not scheme is None else annotation.annotation_scheme.name
 
         if isinstance(annotation.data, np.ndarray) and not annotation.data.size == 0:
+
+            # Assure samplerates for continuous annotations are matching
+            if isinstance(annotation, ContinuousAnnotation):
+                scheme_doc = self._load_scheme(dataset, scheme)
+                sr = scheme_doc['sr']
+                annotation.data = resample(annotation.data, src_sr=annotation.annotation_scheme.sample_rate, trgt_sr=sr)
+
             anno_data = convert_label_to_ssi_dtype(
                 annotation.data, annotation.annotation_scheme.scheme_type
             )
@@ -769,11 +783,10 @@ class StreamHandler(IHandler, NovaDBHandler):
     Class for handling download and upload of stream data from MongoDB.
     """
 
-
     def _load_stream(
-        self,
-        dataset: str,
-        stream_name: str,
+            self,
+            dataset: str,
+            stream_name: str,
     ) -> dict:
         """
         Load stream data from MongoDB.
@@ -825,7 +838,7 @@ class StreamHandler(IHandler, NovaDBHandler):
             raise FileNotFoundError(f"No such file {file_path}")
 
         # data
-        data = FileHandler().load(file_path, header_only = header_only)
+        data = FileHandler().load(file_path, header_only=header_only)
         assert isinstance(data, Stream)
 
         # meta data
@@ -851,16 +864,16 @@ class StreamHandler(IHandler, NovaDBHandler):
         return data
 
     def save(
-        self,
-        stream: Stream,
-        dataset: str = None,
-        session: str = None,
-        role: str = None,
-        name: str = None,
-        media_type: str = None,
-        file_ext: str = None,
-        dim_labels: list = None,
-        is_valid: bool = True,
+            self,
+            stream: Stream,
+            dataset: str = None,
+            session: str = None,
+            role: str = None,
+            name: str = None,
+            media_type: str = None,
+            file_ext: str = None,
+            dim_labels: list = None,
+            is_valid: bool = True,
     ):
         """
         Save a Stream object to the MongoDB database and store associated file.
@@ -879,7 +892,6 @@ class StreamHandler(IHandler, NovaDBHandler):
         Raises:
             FileNotFoundError: If the data directory is not set.
         """
-
 
         # save file to disk
         dataset = dataset if not dataset is None else stream.meta_data.dataset
@@ -1012,7 +1024,6 @@ if __name__ == "__main__":
         print(fs.format("Free annotation", int((t_stop - t_start) * 1000)))
 
     if test_streams:
-
         smh = StreamHandler(
             db_host=IP, db_port=PORT, db_user=USER, db_password=PASSWORD, data_dir=Path(DATA_DIR)
         )

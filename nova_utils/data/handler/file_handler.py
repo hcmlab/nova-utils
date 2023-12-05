@@ -430,8 +430,8 @@ class _TextFileHandler(IHandler):
         return text
 
     def save(self, data, fp, header_only=False):
-        with open(fp, "w") as f:
-            f.write(" ".join(data.data))
+        with open(fp, "bw") as f:
+            f.write(" ".join(data.data).encode('UTF-8'))
 
 
 # Image

@@ -178,7 +178,7 @@ class SSIStream(Stream):
 
     Args:
         data (np.ndarray): The SSI stream data. Shape is (num_samples,) + (sample_shape,)
-        sample_rate (float): Sampling rate of the SSI stream.
+        sample_rate (float): Sampling rate of the SSI stream in Hz.
         chunks (np.ndarray, optional): Chunks of the SSI stream.
         **kwargs: Additional keyword arguments for Stream.
 

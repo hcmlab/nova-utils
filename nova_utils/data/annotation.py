@@ -108,7 +108,7 @@ class ContinuousAnnotationScheme(IAnnotationScheme):
         max_val (float): Maximum value of the continuous data.
 
     Args:
-        sample_rate (float): Sampling rate of the continuous data.
+        sample_rate (float): Sampling rate of the continuous data in Hz.
         min_val (float): Minimum value of the continuous data.
         max_val (float): Maximum value of the continuous data.
         *args: Variable length argument list.
