@@ -24,7 +24,7 @@ dependencies = [
     "eva-decord >= 0.6.1",
     "ffmpegio >= 0.8.3",
     "numba >= 0.57.1",
-    "numpy >= 1.24.4",
+    "numpy >= 1.24",
     "pymongo == 3.12.2",
     "python-dotenv == 1.0.0",
     "requests",
