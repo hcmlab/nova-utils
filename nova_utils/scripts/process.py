@@ -37,8 +37,10 @@ from nova_utils.scripts.parsers import (
     nova_iterator_parser,
     nova_server_module_parser,
 )
-from nova_utils.utils import ssi_xml_utils, string_utils, request_utils
-from nova_utils.utils.string_utils import string_to_bool
+from nova_utils.utils import ssi_xml_utils, string_utils
+from nova_utils.utils.string_utils import string_to_bool, parse_time_string_to_ms
+from nova_utils.utils.anno_utils import pack_remove
+from nova_utils.data.annotation import DiscreteAnnotation
 
 # Main parser for predict specific options
 parser = argparse.ArgumentParser(
@@ -50,6 +52,22 @@ parser.add_argument(
     type=str,
     required=True,
     help="Path to the trainer file using Windows UNC-Style",
+)
+
+parser.add_argument(
+    "--anno_min_dur",
+    type=str,
+    required=False,
+    default='0',
+    help="Minimum duration for discrete annotations in either seconds (float or 's'-suffix) or milliseconds (int or 'ms'-suffix)",
+)
+
+parser.add_argument(
+    "--anno_min_gap",
+    type=str,
+    required=False,
+    default=f'{sys.maxsize}s',
+    help="Minimum gap between labels of the same class to be considered separate labels. Specified in either seconds (float or 's'-suffix) or milliseconds (int or 'ms'-suffix)",
 )
 
 
@@ -69,6 +87,10 @@ def main(args):
     os.environ['TMP_DIR'] = module_args.tmp_dir
 
     caught_ex = False
+
+    # Preprocess options
+    anno_min_dur = parse_time_string_to_ms(process_args.anno_min_dur)
+    anno_min_gap = parse_time_string_to_ms(process_args.anno_min_gap)
 
     # Load trainer
     trainer = ssi_xml_utils.Trainer()
@@ -104,7 +126,6 @@ def main(args):
     processor = processor_class(model_io=trainer.meta_io, opts=opts, trainer=trainer)
     print(f"Model {trainer.model_create} created")
 
-    #TODO use active flag. default = true
 
     # Build data loaders
     ctx = {
@@ -138,7 +159,6 @@ def main(args):
             data_provider = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session],)
 
         single_session_data_provider.append(data_provider)
-
     print("Data managers initialized")
 
     # Iterate over all sessions
@@ -159,6 +179,8 @@ def main(args):
             session_manager : SessionManager
             session_manager = provider.sessions[session]['manager']
             for io_id, data_object in data_output.items():
+                if isinstance(data_object, DiscreteAnnotation):
+                    data_object.data = pack_remove(data_object.data, min_gap=anno_min_gap, min_dur=anno_min_dur)
                 session_manager.output_data_templates[io_id] = data_object
 
             provider.save()
