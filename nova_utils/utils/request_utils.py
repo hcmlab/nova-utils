@@ -42,18 +42,18 @@ def data_description_to_string(data_desc: dict) -> str:
     if id is not None:
         return id
 
-    src, type_ = data_desc["src"].split(":")
+    origin, super_type, sub_type, specific_type = parse_src_tag(data_desc)
     delim = "_"
-    if src == "db":
-        if type_ == "anno":
+    if origin == Origin.DB:
+        if super_type == SuperType.ANNO:
             return delim.join(
                 [data_desc["scheme"], data_desc["annotator"], data_desc["role"]]
             )
-        elif type_ == "stream":
+        elif super_type == SuperType.STREAM:
             return delim.join([data_desc["name"], data_desc["role"]])
         else:
             raise ValueError(f"Unknown data type {type_} for data.")
-    elif src == "file":
+    elif origin == Origin.FILE:
         return delim.join([data_desc["fp"]])
     else:
         raise ValueError(f"Unsupported source type {src} for generating data description ids")
