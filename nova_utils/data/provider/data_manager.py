@@ -348,7 +348,7 @@ class DatasetManager:
         self._init_sessions()
 
     def _init_sessions(self):
-        db_required = any([parse_src_tag(dd)[0] == Origin.DB.value for dd in self.data_description])
+        db_required = any([parse_src_tag(dd)[0] == Origin.DB for dd in self.data_description])
 
         # Load session information from database
         if db_required:
