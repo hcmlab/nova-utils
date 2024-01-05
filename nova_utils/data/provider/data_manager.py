@@ -359,6 +359,7 @@ class DatasetManager:
                     self.dataset, self.data_description, sess.name, self.source_ctx
                 )
                 self.sessions[sess.name] = {"manager": sm, "info": sess}
+            self.session_names = list(self.sessions.keys())
 
         else:
             if not self.session_names:
