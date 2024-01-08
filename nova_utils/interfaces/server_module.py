@@ -1,7 +1,6 @@
 import typing
 from abc import ABC, abstractmethod
 from time import perf_counter
-from typing import Type
 from nova_utils.data.annotation import Annotation
 from nova_utils.data.provider.dataset_iterator import DatasetIterator
 from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
@@ -33,6 +32,7 @@ class Processor(ABC):
         self.options = opts
         self.model_io = model_io
         self.trainer = trainer
+        self.ds_manager = None
 
     def get_session_manager(self, dataset_manager: DatasetManager, session_name: str = None, ignore_ambiguity: bool = False) -> SessionManager:
         """Returns a session manager that matches the provides session name. If no session name is provided the first
@@ -74,7 +74,7 @@ class Processor(ABC):
         """Returning a dictionary that contains the original keys from the dataset iterator and a list of processed
         samples as value. Can be overwritten to customize the processing"""
         ds_manager: DatasetIterator
-
+        self.ds_manager = ds_manager
         # Start the stopwatch / counter
         pc_start = perf_counter()
         output_list = []

@@ -93,7 +93,9 @@ nova_iterator_parser.add_argument(
     help="Start time for processing measured in time. Defaults to None",
 )
 nova_iterator_parser.add_argument(
-    "--end", type=str, help="End time for processing measured in time. Defaults to None"
+    "--end",
+    type=str,
+    help="End time for processing measured in time. Defaults to None"
 )
 nova_iterator_parser.add_argument(
     "--left_context",

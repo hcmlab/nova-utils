@@ -31,7 +31,8 @@ from nova_utils.data.stream import Stream, SSIStream, StreamMetaData
 from nova_utils.utils.anno_utils import (
     convert_ssi_to_label_dtype,
     convert_label_to_ssi_dtype,
-    resample
+    resample,
+    remove_label
 )
 from nova_utils.utils.type_definitions import SSILabelDType, SchemeType
 
@@ -703,6 +704,8 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 sr = scheme_doc['sr']
                 annotation.data = resample(annotation.data, src_sr=annotation.annotation_scheme.sample_rate, trgt_sr=sr)
 
+            if isinstance(annotation, DiscreteAnnotation):
+                annotation.data = remove_label(annotation.data, label_id=annotation.rest_label_id)
             anno_data = convert_label_to_ssi_dtype(
                 annotation.data, annotation.annotation_scheme.scheme_type
             )

@@ -35,6 +35,10 @@ class RequestHandler(IHandler):
         Returns:
             Data: The loaded data.
         """
+        # TODO: This is just a hack since I need t. Output templates should be handled in the data_manager class. Introduce proper mechanism.
+        if header_only and not data:
+            raise FileNotFoundError()
+
         if dtype == Text:
             if header_only:
                 return Text(data=None)

@@ -4,7 +4,7 @@ Date: 25.10.2023
 """
 from pathlib import Path
 from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme, ContinuousAnnotation, \
-    ContinuousAnnotationScheme
+    ContinuousAnnotationScheme, DiscreteAnnotation, DiscreteAnnotationScheme
 from nova_utils.utils import path_utils
 from nova_utils.data.data import Data
 from nova_utils.data.handler import (
@@ -227,14 +227,18 @@ class SessionManager:
                             session=self.session,
                         )
                     elif super_dtype == SuperType.ANNO:
+                        if sub_dtype is None:
+                            sub_dtype = SubType.FREE
                         print(
-                            f'No predefined scheme available. Creating generic {sub_dtype.value} template annotation for {desc}')
-                        if sub_dtype is None or sub_dtype == SubType.FREE:
+                            f'No predefined annotation scheme available. Creating generic {sub_dtype.value} template annotation for {desc}')
+                        if sub_dtype == SubType.FREE:
                             data = FreeAnnotation(scheme=FreeAnnotationScheme(name='generic'), data=None)
                         elif sub_dtype == SubType.CONTINUOUS:
                             data = ContinuousAnnotation(
                                 scheme=ContinuousAnnotationScheme(name='generic', sample_rate=1, min_val=0, max_val=1),
                                 data=None)
+                        elif sub_dtype == SubType.DISCRETE:
+                            data = DiscreteAnnotation(scheme=DiscreteAnnotationScheme(name='generic', classes={'1' : 'class_one', '2': 'class_two'}))
                         else:
                             raise ValueError(
                                 f"Can\'t create template for {desc} because no scheme information is available.")
@@ -344,7 +348,7 @@ class DatasetManager:
         self._init_sessions()
 
     def _init_sessions(self):
-        db_required = any([parse_src_tag(dd)[0] == Origin.DB.value for dd in self.data_description])
+        db_required = any([parse_src_tag(dd)[0] == Origin.DB for dd in self.data_description])
 
         # Load session information from database
         if db_required:
@@ -355,6 +359,7 @@ class DatasetManager:
                     self.dataset, self.data_description, sess.name, self.source_ctx
                 )
                 self.sessions[sess.name] = {"manager": sm, "info": sess}
+            self.session_names = list(self.sessions.keys())
 
         else:
             if not self.session_names:

@@ -281,6 +281,11 @@ def resample(data: np.ndarray[LabelDType.CONTINUOUS], src_sr: float, trgt_sr: fl
     out = np.array( [(x,y) for x,y in zip(score, conf)], dtype=LabelDType.CONTINUOUS.value)
     return out
 
+
+def remove_label(data : np.ndarray[LabelDType.DISCRETE], label_id: int):
+    data = [x for x in data if x['id'] != label_id]
+    return data
+
 if __name__ == '__main__':
 
     from nova_utils.data.handler.file_handler import FileHandler

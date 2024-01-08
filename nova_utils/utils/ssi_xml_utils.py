@@ -9,7 +9,7 @@ Date:
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from nova_utils.utils.string_utils import string_to_bool
+from nova_utils.utils.string_utils import string_to_bool, parse_time_string_to_ms
 
 class ModelIO:
     """
@@ -46,13 +46,12 @@ class ModelIO:
     """
 
     def __init__(
-        self,
-        io_type: str,
-        io_id: str,
-        io_data: str,
-        io_default_value: str,
+            self,
+            io_type: str,
+            io_id: str,
+            io_data: str,
+            io_default_value: str,
     ):
-
         """
         Initialize a ModelIO object with the specified parameters.
 
@@ -61,6 +60,7 @@ class ModelIO:
         self.io_id = io_id
         self.io_data = io_data
         self.io_default_value = io_default_value
+
 
 class URI:
     """
@@ -86,7 +86,6 @@ Args:
             uri_hash: str = None,
             uri_tar: bool = False,
     ):
-
         """
         Initialize a ModelIO object with the specified parameters.
 
@@ -95,6 +94,7 @@ Args:
         self.uri_url = uri_url
         self.uri_hash = uri_hash
         self.uri_tar = uri_tar
+
 
 class Trainer:
     """
@@ -164,34 +164,34 @@ class Trainer:
     """
 
     def __init__(
-        self,
-        model_script_path: str = "",
-        model_option_path: str = "",
-        model_option_string: str = "",
-        model_weights_path: str = "",
-        model_stream: int = 0,
-        model_create: str = "PythonModel",
-        model_multirole_input=False,
-        users: list = None,
-        classes: list = None,
-        streams: list = None,
-        register: list = None,
-        info_trained: bool = False,
-        meta_frame_step: int = 0,
-        meta_right_ctx: int = 0,
-        meta_left_ctx: int = 0,
-        meta_balance: str = "none",
-        meta_backend: str = "unknown",
-        meta_description: str = "",
-        meta_category: str = "",
-        meta_is_iterable: bool = False,
-        meta_is_processable: bool = True,
-        meta_is_trainable: bool = False,
-        meta_is_explainable: bool = False,
-        meta_io: list[ModelIO] = None,
-        meta_uri: list[URI] = None,
-        ssi_v="5",
-        xml_version="1.0",
+            self,
+            model_script_path: str = "",
+            model_option_path: str = "",
+            model_option_string: str = "",
+            model_weights_path: str = "",
+            model_stream: int = 0,
+            model_create: str = "PythonModel",
+            model_multirole_input=False,
+            users: list = None,
+            classes: list = None,
+            streams: list = None,
+            register: list = None,
+            info_trained: bool = False,
+            meta_frame_step: int = 0,
+            meta_right_ctx: int = 0,
+            meta_left_ctx: int = 0,
+            meta_balance: str = "none",
+            meta_backend: str = "unknown",
+            meta_description: str = "",
+            meta_category: str = "",
+            meta_is_iterable: bool = False,
+            meta_is_processable: bool = True,
+            meta_is_trainable: bool = False,
+            meta_is_explainable: bool = False,
+            meta_io: list[ModelIO] = None,
+            meta_uri: list[URI] = None,
+            ssi_v="5",
+            xml_version="1.0",
     ):
         """
         Initialize a Trainer object with various parameters.
@@ -220,6 +220,7 @@ class Trainer:
         self.meta_is_trainable = meta_is_trainable
         self.meta_is_explainable = meta_is_explainable
         self.meta_is_iterable = meta_is_iterable
+        self.meta_is_processable = meta_is_processable
         self.meta_io = meta_io if meta_io is not None else []
         self.meta_uri = meta_uri if meta_uri is not None else []
         self.ssi_v = ssi_v
@@ -246,17 +247,20 @@ class Trainer:
         if info is not None:
             self.info_trained = string_to_bool(info.get("trained", ""))
         if meta is not None:
-            self.meta_left_ctx = meta.get("leftContext", default="0")
-            self.meta_right_ctx = meta.get("rightContext", default="0")
-            self.meta_frame_step = meta.get("frameStep", default="0")
-            self.meta_balance = meta.get("balance", default="none")
-            self.meta_backend = meta.get("backend", default="Python")
-            self.meta_description = meta.get("description", default="")
-            self.meta_category = meta.get("category", default="")
-            self.meta_is_iterable = meta.get("is_iterable", default="True")
-            self.meta_is_processable = meta.get("is_processable", default="True")
-            self.meta_is_trainable = meta.get("is_trainable", default="False")
-            self.meta_is_explainable = meta.get("is_explainable", default="False")
+            self.meta_left_ctx = parse_time_string_to_ms(meta.get("leftContext", default=self.meta_left_ctx),
+                                                         suppress_warn=True)
+            self.meta_right_ctx = parse_time_string_to_ms(meta.get("rightContext", default=self.meta_right_ctx),
+                                                          suppress_warn=True)
+            self.meta_frame_step = parse_time_string_to_ms(meta.get("frameStep", default=self.meta_frame_step),
+                                                           suppress_warn=True)
+            self.meta_balance = meta.get("balance", default=self.meta_balance)
+            self.meta_backend = meta.get("backend", default=self.meta_backend)
+            self.meta_description = meta.get("description", default=self.meta_description)
+            self.meta_category = meta.get("category", default=self.meta_category)
+            self.meta_is_iterable = string_to_bool(meta.get("is_iterable", default=self.meta_is_iterable))
+            self.meta_is_processable = string_to_bool(meta.get("is_processable", default=self.meta_is_processable))
+            self.meta_is_trainable = string_to_bool(meta.get("is_trainable", default=self.meta_is_trainable))
+            self.meta_is_explainable = string_to_bool(meta.get("is_explainable", default=self.meta_is_explainable))
 
             for io_tag in meta.findall("io"):
                 self.meta_io.append(
@@ -265,7 +269,8 @@ class Trainer:
 
             for uri_tag in meta.findall("uri"):
                 self.meta_uri.append(
-                    URI( uri_tag.get("id"), uri_tag.get("url"), uri_tag.get("hash"), string_to_bool(uri_tag.get("tar", "")))
+                    URI(uri_tag.get("id"), uri_tag.get("url"), uri_tag.get("hash"),
+                        string_to_bool(uri_tag.get("tar", "")))
                 )
         if register is not None:
             for r in register:
@@ -286,8 +291,7 @@ class Trainer:
             self.model_script_path = model.get("script", "")
             self.model_weights_path = model.get("path", "")
             self.model_optstr = model.get("optstr", "")
-            self.model_multi_role_input = string_to_bool( model.get("multi_role_input", "") )
-
+            self.model_multi_role_input = string_to_bool(model.get("multi_role_input", ""))
 
     def write_to_file(self, fp):
         """
@@ -309,9 +313,9 @@ class Trainer:
             backend=self.meta_backend,
             category=self.meta_category,
             description=self.meta_description,
-            meta_is_iterable = str(self.meta_is_iterable),
-            meta_is_trainable = str(self.meta_is_trainable),
-            meta_is_explainable = str(self.meta_is_explainable)
+            meta_is_iterable=str(self.meta_is_iterable),
+            meta_is_trainable=str(self.meta_is_trainable),
+            meta_is_explainable=str(self.meta_is_explainable)
         )
 
         io: ModelIO
@@ -335,7 +339,6 @@ class Trainer:
                 hash=uri.uri_hash,
                 tar=str(uri.uri_tar)
             )
-
 
         register = ET.SubElement(root, "register")
         for r in self.register:
@@ -393,14 +396,14 @@ class ChainLink:
     """
 
     def __init__(
-        self,
-        create: str,
-        script: str,
-        optsstr: str,
-        syspath: str,
-        tag: str = "feature",
-        multi_role_input: str = "False",
-        **kwargs,
+            self,
+            create: str,
+            script: str,
+            optsstr: str,
+            syspath: str,
+            tag: str = "feature",
+            multi_role_input: str = "False",
+            **kwargs,
     ):
         """
         Initialize a ChainLink object with the specified parameters.
@@ -445,16 +448,16 @@ class Chain:
     """
 
     def __init__(
-        self,
-        meta_frame_step: str = "",
-        meta_left_context: str = "",
-        meta_right_context: str = "",
-        meta_backend: str = "nova-server",
-        meta_description: str = "",
-        meta_category: str = "",
-        meta_io: list[ModelIO] = None,
-        register: list = None,
-        links: list = None,
+            self,
+            meta_frame_step: str = "",
+            meta_left_context: str = "",
+            meta_right_context: str = "",
+            meta_backend: str = "nova-server",
+            meta_description: str = "",
+            meta_category: str = "",
+            meta_io: list[ModelIO] = None,
+            register: list = None,
+            links: list = None,
     ):
         """
         Initialize a Chain object with the specified parameters.
@@ -541,8 +544,6 @@ class Chain:
         register = ET.SubElement(root, "register")
         for r in self.register:
             ET.SubElement(register, "item", **r)
-
-
 
         cl: ChainLink
         for cl in self.links:
@@ -728,7 +729,6 @@ class Explainer:
         tree.write(fp)
 
 if __name__ == "__main__":
-
     trainer_in_fp = Path(
         r"C:\Users\schildom\Documents\github\nova-server-modules\demo\uc1\uc1.trainer"
     )
