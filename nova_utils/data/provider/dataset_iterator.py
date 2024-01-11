@@ -227,7 +227,7 @@ class DatasetIterator(DatasetManager):
 
             # TODO account for stride and framesize being None
             # Generate samples for this session
-            while cpos + self.stride < min(
+            while cpos + self.stride <= min(
                     self.end, self.current_session_info.duration
             ):
                 frame_start = cpos
