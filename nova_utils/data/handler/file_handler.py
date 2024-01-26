@@ -679,34 +679,43 @@ class _SSIStreamFileHandler(IHandler):
 class _LazyArray(np.ndarray):
     """LazyArray class extending numpy.ndarray for video and audio loading."""
 
-    # Rewrite as np array container instead of subclass https://numpy.org/devdocs/user/basics.dispatch.html
-    # def __array__(self, dtype=None):
-    #    return self.decord_reader.get_batch(range(self._num_samples)).asnumpy()
+    @property
+    def shape(self):
+        return self._shape
 
     def __init__(self, *args, **kwargs):
         super().__init__()
 
     def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
-        # Removed due to issues with low memory systems
-        # buffer = mmap.mmap(
-        #    -1, dtype.itemsize * math.prod(shape), access=mmap.ACCESS_READ
-        # )
+
         buffer = None
-        obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
+        obj = super().__new__(cls, shape[1:], dtype=dtype, buffer=buffer)
+        #obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
         obj.decord_reader = decord_reader
         obj.start_idx = 0
         obj._num_samples = (
             shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
         )
+        obj.len = shape[0]
+        obj._shape = shape
         return obj
+
+    def __len__(self):
+        return self.shape[0]
+
 
     def __getitem__(self, index):
         if isinstance(index, slice):
             indices = list(range(index.start, index.stop))
-            return self.decord_reader.get_batch(indices).asnumpy()
+            ret = self.decord_reader.get_batch(indices).asnumpy()
+            self.decord_reader.seek(index.start)
+        elif isinstance(index, list):
+            ret =  np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
+            self.decord_reader.seek(index[0])
         else:
-            return np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
-
+            ret = self.decord_reader[index].asnumpy()
+            self.decord_reader.seek(index)
+        return ret
 
 class _VideoFileHandler(IHandler):
     """Class for handling the loading and saving of video data."""
@@ -1038,9 +1047,33 @@ if __name__ == "__main__":
     test_annotations = True
     test_streams = False
     test_static = False
-    #base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
-    base_dir = Path("../../../test_files/")
+    base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
+    #base_dir = Path("../../../test_files/")
     fh = FileHandler()
+
+    # DEBUG
+    from time import perf_counter
+    video = fh.load(base_dir / "kodill" / "teacher.face.mp4")
+    batch_size = 64
+    data = video.data
+    full_start = perf_counter()
+    for i in range(0, len(data), batch_size):
+        start = perf_counter()
+        idx_start = i
+        idx_end = (
+            idx_start + batch_size
+            if idx_start + batch_size <= len(data)
+            else len(data) - idx_start
+        )
+        idxs = list(range(idx_start, idx_end))
+        if not idxs:
+            continue
+
+        frame = data[0]
+        print(f"Batch {int(i / batch_size)} took {perf_counter()- start}")
+
+    print(f'Iterating over video with shape {video.data.shape} frames took {perf_counter() - full_start}')
+#fh.save(video, base_dir / "new_test_video.mp4")
 
     """TESTCASE FOR ANNOTATIONS"""
     if test_annotations:
