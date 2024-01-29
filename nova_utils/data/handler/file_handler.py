@@ -708,13 +708,13 @@ class _LazyArray(np.ndarray):
         if isinstance(index, slice):
             indices = list(range(index.start, index.stop))
             ret = self.decord_reader.get_batch(indices).asnumpy()
-            self.decord_reader.seek(index.start)
+            self.decord_reader.seek_accurate(index.start)
         elif isinstance(index, list):
             ret =  np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
-            self.decord_reader.seek(index[0])
+            self.decord_reader.seek_accurate(index[0])
         else:
             ret = self.decord_reader[index].asnumpy()
-            self.decord_reader.seek(index)
+            self.decord_reader.seek_accurate(index)
         return ret
 
 class _VideoFileHandler(IHandler):
@@ -1069,7 +1069,7 @@ if __name__ == "__main__":
         if not idxs:
             continue
 
-        frame = data[0]
+        frame = data[idxs]
         print(f"Batch {int(i / batch_size)} took {perf_counter()- start}")
 
     print(f'Iterating over video with shape {video.data.shape} frames took {perf_counter() - full_start}')
