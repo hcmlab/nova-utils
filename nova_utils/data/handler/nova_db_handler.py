@@ -244,17 +244,19 @@ class SessionHandler(NovaDBHandler):
 
     """
 
-    def load(self, dataset: str, session: Union[str, list, None] = None) -> list[NovaSession]:
+    def load(self, dataset: str, session: Union[str, list, None] = None, keep_order:bool=True) -> list[NovaSession]:
         """
         Load session data from the specified dataset and session name.
 
         Args:
             dataset (str): The dataset name as specified in the mongo database
             session (str, list, None): The session name as specified in the mongo database. Can be also a list of session names. If no session name is provided, all sessions are loaded instead.
+            keep_order (str, bool, True): Keeping sessions in the order of supplied session names.
 
         Returns:
             NovaSession: A Session object containing loaded session information.
             If the session does not exist, an empty Session object is returned.
+
         """
         if isinstance(session, str):
             session = [session]
@@ -284,7 +286,12 @@ class SessionHandler(NovaDBHandler):
                 )
             )
 
+        # Sorting
+        if session is not None and keep_order:
+            ret = [r for s in session for r in ret if r.name == s]
+
         return ret
+
 
 
 class AnnotationHandler(IHandler, NovaDBHandler):
