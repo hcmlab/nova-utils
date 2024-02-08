@@ -701,7 +701,12 @@ class _LazyArray(np.ndarray):
         return obj
 
     def __len__(self):
-        return self.shape[0]
+
+        #TODO audio signal is shape (channels, samples). Think about making it channels last
+        if type(self.decord_reader) == decord.video_reader:
+            return self.shape[0]
+        else:
+            return self.shape[-1]
 
 
     def __getitem__(self, index):
@@ -711,7 +716,7 @@ class _LazyArray(np.ndarray):
             if type(self.decord_reader) == decord.video_reader.VideoReader:
                 self.decord_reader.seek_accurate(index.start)
         elif isinstance(index, list):
-            ret = np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
+            ret =  np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
             if type(self.decord_reader) == decord.video_reader.VideoReader:
                 self.decord_reader.seek_accurate(index[0])
         else:
