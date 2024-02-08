@@ -245,12 +245,26 @@ class DatasetIterator(DatasetManager):
                 )
 
                 data_for_window = {}
+                warn_once = []
+
                 for k, v in self.current_session.input_data.items():
 
                     # TODO current_session duration is not the correct way to end right padding. We could have longer streams
                     start_ = max(0, window_start)
                     end_ = min(self.current_session_info.duration, window_end)
-                    sample = v.sample_from_interval(start_, end_)
+
+                    try:
+                        sample = v.sample_from_interval(start_, end_)
+                    except Exception as e:
+                        # Stream is shorter than session duration
+                        if v.meta_data.__dict__.get('duration', sys.maxsize) < self.current_session_info.duration:
+                            if not k in warn_once:
+                                warn_once.append(k)
+                                print(f'Error retreiving data for window {window_info} in stream {k}. Stream is shorter than session. From now on np.NaN values will be returned')
+
+                        else:
+                            print(f'Error retreiving data for window {window_info} in stream {k}. Exception caught when retreiving sample. Returning NaN values: {e}')
+                        data_for_window[k] = np.NAN
 
                     # TODO pad continuous annotations
                     # Apply padding
