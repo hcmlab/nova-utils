@@ -703,7 +703,7 @@ class _LazyArray(np.ndarray):
     def __len__(self):
 
         #TODO audio signal is shape (channels, samples). Think about making it channels last
-        if type(self.decord_reader) == decord.video_reader:
+        if type(self.decord_reader) == decord.video_reader.VideoReader:
             return self.shape[0]
         else:
             return self.shape[-1]
