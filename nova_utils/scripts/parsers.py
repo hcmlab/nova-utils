@@ -123,6 +123,15 @@ nova_iterator_parser.add_argument(
     help="Whether to fill missing data. Defaults to True",
 )
 
+# Parser for file handling
+io_parser = argparse.ArgumentParser(
+    description="Parse Information that modifies input / output parameters",
+    add_help=False,
+)
+io_parser.add_argument(
+    "--video_backend", type=str, default='imageio', choices=['decord', 'batchdecord', 'imageio', 'moviepy', 'pyav'], help="The backend that is used to read video files"
+)
+
 # Parser for NOVA-Server module
 nova_server_module_parser = argparse.ArgumentParser(
     description="Parse Information required to execute a NOVA-Server module",

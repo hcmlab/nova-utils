@@ -83,6 +83,7 @@ class SessionManager:
             input_data: dict = None,
             extra_data: dict = None,
             output_data_templates: dict = None,
+            video_backend: file_handler.VideoBackend = file_handler.VideoBackend.IMAGEIO,
     ):
         self.dataset = dataset
         self.data_description = data_description
@@ -92,12 +93,13 @@ class SessionManager:
         self.output_data_templates = (
             {} if output_data_templates is None else output_data_templates
         )
-
         self.source_context = {}
         if source_context is not None:
             for src, context in source_context.items():
                 src_ = Origin(src)
                 self.add_source_context(src_, context)
+
+        self.video_backend = video_backend
 
     def add_source_context(self, source: Origin, context: dict):
         """Add all parameters that are necessary to initialize source specific data handler for reading and writing data objects."""
@@ -190,7 +192,7 @@ class SessionManager:
                 # FILE
                 elif src == Origin.FILE:
                     fp = Path(path_utils.get_tmp_dir()) / desc['uri']
-                    handler = file_handler.FileHandler()
+                    handler = file_handler.FileHandler(video_backend=self.video_backend)
                     data = handler.load(fp=fp, header_only=header_only)
                 # URL
                 elif src == Origin.URL:
@@ -338,7 +340,7 @@ class SessionManager:
 class DatasetManager:
     def __init__(
             self, data_description: list[dict[str, str]], source_context: dict = None, dataset: str = None,
-            session_names: list = None
+            session_names: list = None, video_backend: file_handler.VideoBackend = file_handler.VideoBackend.IMAGEIO
     ):
         self.dataset = dataset
         self.data_description = data_description
@@ -346,6 +348,7 @@ class DatasetManager:
         self.source_ctx = source_context
         self.sessions = {}
         self._init_sessions()
+        self.video_backend = video_backend
 
     def _init_sessions(self):
         db_required = any([parse_src_tag(dd)[0] == Origin.DB for dd in self.data_description])
@@ -356,7 +359,7 @@ class DatasetManager:
             sessions = sh.load(self.dataset, self.session_names)
             for sess in sessions:
                 sm = SessionManager(
-                    self.dataset, self.data_description, sess.name, self.source_ctx
+                    self.dataset, self.data_description, sess.name, self.source_ctx, video_backend = self.video_backend
                 )
                 self.sessions[sess.name] = {"manager": sm, "info": sess}
             self.session_names = list(self.sessions.keys())
@@ -370,7 +373,7 @@ class DatasetManager:
 
             for session in self.session_names:
                 sm = SessionManager(
-                    self.dataset, self.data_description, session, self.source_ctx
+                    self.dataset, self.data_description, session, self.source_ctx, video_backend = self.video_backend
                 )
                 self.sessions[session] = {"manager": sm, "info": None}
 
