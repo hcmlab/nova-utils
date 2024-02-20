@@ -16,6 +16,7 @@ import xml.etree.ElementTree as Et
 from pathlib import Path
 from struct import *
 from typing import Union
+from pims import FramesSequence, Frame
 
 import decord
 import ffmpegio
@@ -774,6 +775,37 @@ class _LazyArray(np.ndarray):
                 self.decord_reader.seek(index)
         return ret
 
+from pims import FramesSequence, Frame
+
+class DecordReader(FramesSequence):
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.reader = decord.VideoReader(filename, ctx=cpu(0))
+        self._len =  self.reader._num_frame# however many frames there will be
+        _f = self.reader[0]
+        self._dtype = _f.dtype # the numpy datatype of the frames
+        self._frame_shape = _f.shape[:2] # the shape, like (512, 512), of an
+        # individual frame -- maybe get this by
+        # opening the first frame
+        # Do whatever setup you need to do to be able to quickly access
+        # individual frames later.
+
+    def get_frame(self, i):
+        # Access the data you need and get it into a numpy array.
+        # Then return a Frame like so:
+        return Frame( self.reader[i], frame_no=i)
+
+    def __len__(self):
+        return self._len
+
+    @property
+    def frame_shape(self):
+        return self._frame_shape
+
+    @property
+    def pixel_type(self):
+        return self._dtype
 
 class _VideoFileHandler(IHandler):
     """Class for handling the loading and saving of video data."""
@@ -838,9 +870,11 @@ class _VideoFileHandler(IHandler):
         # file loading
         import pims
         video_reader_decord = decord.VideoReader(str(fp.resolve()), ctx=cpu(0))
-        video_reader_pims = pims.ImageIOReader(str(fp.resolve()))
+        video_reader_pims = DecordReader(str(fp.resolve()))
+        #video_reader_pims = pims.ImageIOReader(str(fp.resolve()))
         #video_reader_pims = pims.MoviePyReader(str(fp.resolve()))
         #video_reader_pims = pims.PyAVVideoReader(str(fp.resolve()))
+
         # video_reader = video_reader_pims
         #
         lazy_video_data = None
@@ -1110,14 +1144,14 @@ if __name__ == "__main__":
     test_annotations = True
     test_streams = False
     test_static = False
-    base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
-    #base_dir = Path("../../../test_files/")
+    #base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
+    base_dir = Path("../../../test_files/")
     fh = FileHandler()
 
     # DEBUG
     from time import perf_counter
     video = fh.load(base_dir / "kodill" / "teacher.face.mp4")
-    batch_size = 64
+    batch_size = 256
     data = video.data
     full_start = perf_counter()
     for i in range(0, len(data), batch_size):
