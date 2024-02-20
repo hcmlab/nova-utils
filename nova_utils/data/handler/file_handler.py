@@ -16,7 +16,9 @@ import xml.etree.ElementTree as Et
 from pathlib import Path
 from struct import *
 from typing import Union
+import pims
 from pims import FramesSequence, Frame
+
 
 import decord
 import ffmpegio
@@ -25,7 +27,7 @@ from PIL import Image as PILImage
 
 PILImage.init()
 from decord import cpu
-
+from enum import Enum
 from nova_utils.data.annotation import (
     SchemeType,
     Annotation,
@@ -99,8 +101,6 @@ class FileSSIStreamMetaData:
 
 
 # ANNOTATIONS
-
-
 class _AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
 
@@ -677,105 +677,105 @@ class _SSIStreamFileHandler(IHandler):
 
 
 # VIDEO
-class _LazyArray_decord(np.ndarray):
-    """LazyArray class extending numpy.ndarray for video and audio loading."""
-
-    @property
-    def shape(self):
-        return self._shape
-
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-
-    def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
-
-        buffer = None
-        obj = super().__new__(cls, shape[1:], dtype=dtype, buffer=buffer)
-        #obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
-        obj.decord_reader = decord_reader
-        obj.start_idx = 0
-        obj._num_samples = (
-            shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
-        )
-        obj.len = shape[0]
-        obj._shape = shape
-        return obj
-
-    def __len__(self):
-
-        #TODO audio signal is shape (channels, samples). Think about making it channels last
-        if type(self.decord_reader) == decord.video_reader.VideoReader:
-            return self.shape[0]
-        else:
-            return self.shape[-1]
 
 
-    def __getitem__(self, index):
-        if isinstance(index, slice):
-            indices = list(range(index.start, index.stop))
-            ret = self.decord_reader.get_batch(indices).asnumpy()
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index.start)
-        elif isinstance(index, list):
-            ret =  np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index[0])
-        else:
-            ret = self.decord_reader[index].asnumpy()
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index)
-        return ret
+# class _LazyArray_decord(np.ndarray):
+#     """LazyArray class extending numpy.ndarray for video and audio loading."""
+#
+#     @property
+#     def shape(self):
+#         return self._shape
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__()
+#
+#     def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
+#
+#         buffer = None
+#         obj = super().__new__(cls, shape[1:], dtype=dtype, buffer=buffer)
+#         #obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
+#         obj.decord_reader = decord_reader
+#         obj.start_idx = 0
+#         obj._num_samples = (
+#             shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
+#         )
+#         obj.len = shape[0]
+#         obj._shape = shape
+#         return obj
+#
+#     def __len__(self):
+#
+#         #TODO audio signal is shape (channels, samples). Think about making it channels last
+#         if type(self.decord_reader) == decord.video_reader.VideoReader:
+#             return self.shape[0]
+#         else:
+#             return self.shape[-1]
+#
+#
+#     def __getitem__(self, index):
+#         if isinstance(index, slice):
+#             indices = list(range(index.start, index.stop))
+#             ret = self.decord_reader.get_batch(indices).asnumpy()
+#             if type(self.decord_reader) == decord.video_reader.VideoReader:
+#                 self.decord_reader.seek(index.start)
+#         elif isinstance(index, list):
+#             ret =  np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
+#             if type(self.decord_reader) == decord.video_reader.VideoReader:
+#                 self.decord_reader.seek(index[0])
+#         else:
+#             ret = self.decord_reader[index].asnumpy()
+#             if type(self.decord_reader) == decord.video_reader.VideoReader:
+#                 self.decord_reader.seek(index)
+#         return ret
 
-class _LazyArray(np.ndarray):
-    """LazyArray class extending numpy.ndarray for video and audio loading."""
-
-    @property
-    def shape(self):
-        return self._shape
-
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-
-    def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
-
-        buffer = None
-        obj = super().__new__(cls, shape[1:], dtype=dtype, buffer=buffer)
-        #obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
-        obj.decord_reader = decord_reader
-        obj.start_idx = 0
-        obj._num_samples = (
-            shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
-        )
-        obj.len = shape[0]
-        obj._shape = shape
-        return obj
-
-    def __len__(self):
-
-        #TODO audio signal is shape (channels, samples). Think about making it channels last
-        if type(self.decord_reader) == decord.video_reader.VideoReader:
-            return self.shape[0]
-        else:
-            return self.shape[-1]
-
-
-    def __getitem__(self, index):
-        if isinstance(index, slice):
-            indices = list(range(index.start, index.stop))
-            ret = self.decord_reader.get_batch(indices).asnumpy()
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index.start)
-        elif isinstance(index, list):
-            ret =  np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index[0])
-        else:
-            ret = self.decord_reader[index].asnumpy()
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index)
-        return ret
-
-from pims import FramesSequence, Frame
+# class _LazyArray(np.ndarray):
+#     """LazyArray class extending numpy.ndarray for video and audio loading."""
+#
+#     @property
+#     def shape(self):
+#         return self._shape
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__()
+#
+#     def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
+#
+#         buffer = None
+#         obj = super().__new__(cls, shape[1:], dtype=dtype, buffer=buffer)
+#         #obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
+#         obj.decord_reader = decord_reader
+#         obj.start_idx = 0
+#         obj._num_samples = (
+#             shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
+#         )
+#         obj.len = shape[0]
+#         obj._shape = shape
+#         return obj
+#
+#     def __len__(self):
+#
+#         #TODO audio signal is shape (channels, samples). Think about making it channels last
+#         if type(self.decord_reader) == decord.video_reader.VideoReader:
+#             return self.shape[0]
+#         else:
+#             return self.shape[-1]
+#
+#
+#     def __getitem__(self, index):
+#         if isinstance(index, slice):
+#             indices = list(range(index.start, index.stop))
+#             ret = self.decord_reader.get_batch(indices).asnumpy()
+#             if type(self.decord_reader) == decord.video_reader.VideoReader:
+#                 self.decord_reader.seek(index.start)
+#         elif isinstance(index, list):
+#             ret =  np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
+#             if type(self.decord_reader) == decord.video_reader.VideoReader:
+#                 self.decord_reader.seek(index[0])
+#         else:
+#             ret = self.decord_reader[index].asnumpy()
+#             if type(self.decord_reader) == decord.video_reader.VideoReader:
+#                 self.decord_reader.seek(index)
+#         return ret
 
 class DecordReader(FramesSequence):
 
@@ -807,10 +807,20 @@ class DecordReader(FramesSequence):
     def pixel_type(self):
         return self._dtype
 
+class VideoBackend(Enum):
+    DECORD = DecordReader
+    IMAGEIO = pims.ImageIOReader
+    MOPVIEPY = pims.MoviePyReader
+    PYAV = pims.PyAVVideoReader
+
 class _VideoFileHandler(IHandler):
     """Class for handling the loading and saving of video data."""
 
     default_ext = ".mp4"
+
+    def __init__(self, *args, backend: VideoBackend = VideoBackend.DECORD, **kwargs):
+
+        self.backend = backend.value
 
     def _get_video_meta(self, fp) -> dict:
         """
@@ -837,7 +847,7 @@ class _VideoFileHandler(IHandler):
         metadata = json.loads(result.stdout)
         return metadata
 
-    def load(self, fp: Path, header_only: bool = False) -> Data:
+    def load(self, fp: Path, header_only: bool = False, video_backend: VideoBackend = VideoBackend.DECORD) -> Data:
         """
         Load video data from a file.
 
@@ -868,25 +878,26 @@ class _VideoFileHandler(IHandler):
         dtype = np.dtype(np.uint8)
 
         # file loading
-        import pims
-        video_reader_decord = decord.VideoReader(str(fp.resolve()), ctx=cpu(0))
-        video_reader_pims = DecordReader(str(fp.resolve()))
-        #video_reader_pims = pims.ImageIOReader(str(fp.resolve()))
+        vr = self.backend( str(fp.resolve()) )
+
+        #video_reader_decord = decord.VideoReader(str(fp.resolve()), ctx=cpu(0))
+        #
+        ##
         #video_reader_pims = pims.MoviePyReader(str(fp.resolve()))
         #video_reader_pims = pims.PyAVVideoReader(str(fp.resolve()))
 
         # video_reader = video_reader_pims
         #
-        lazy_video_data = None
-        if not header_only:
-            lazy_video_data = _LazyArray(
-                video_reader_decord,
-                shape=(num_samples,) + sample_shape[1:],
-                dtype=dtype,
-            )
+        #lazy_video_data = None
+        #if not header_only:
+        #    lazy_video_data = _LazyArray(
+        #        video_reader_decord,
+        #        shape=(num_samples,) + sample_shape[1:],
+        #        dtype=dtype,
+        #    )
 
         video_ = Video(
-            data=video_reader_pims,
+            data=vr,
             name=fp.stem,
             ext=fp.suffix,
             duration=duration,
@@ -1013,7 +1024,7 @@ class _AudioFileHandler(IHandler):
 
 
 class FileHandler(IHandler):
-    """Class for handling different types of data files."""
+    """Class for handling various types of data files."""
 
     def _get_handler_for_fp(
         self, fp: Path
@@ -1044,7 +1055,7 @@ class FileHandler(IHandler):
             elif ext in ["wav", "mp3"]:
                 return _AudioFileHandler()
             elif ext in ["mp4"]:
-                return _VideoFileHandler()
+                return _VideoFileHandler(backend=self.video_backend)
             elif ext in [x[1:] for x in PILImage.registered_extensions()]:
                 return _ImageFileHandler()
             elif ext in ["txt"]:
@@ -1061,7 +1072,7 @@ class FileHandler(IHandler):
         elif dtype == Image:
             return _ImageFileHandler()
         elif dtype == Video:
-            return _VideoFileHandler()
+            return _VideoFileHandler(backend=self.video_backend)
         elif dtype == SSIStream:
             return _SSIStreamFileHandler()
         elif dtype == Audio:
@@ -1084,8 +1095,9 @@ class FileHandler(IHandler):
             return self._get_handler_for_fp(fp)
         return None
 
-    def __init__(self, data_type: int = None):
+    def __init__(self, data_type: int = None, video_backend: VideoBackend = VideoBackend.DECORD):
         self.data_type = data_type
+        self.video_backend = video_backend
 
     def load(self, fp: Union[Path, str], header_only: bool = False, dtype=None) -> Data:
         """
@@ -1146,29 +1158,36 @@ if __name__ == "__main__":
     test_static = False
     #base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
     base_dir = Path("../../../test_files/")
-    fh = FileHandler()
 
     # DEBUG
     from time import perf_counter
-    video = fh.load(base_dir / "kodill" / "teacher.face.mp4")
-    batch_size = 256
-    data = video.data
-    full_start = perf_counter()
-    for i in range(0, len(data), batch_size):
-        start = perf_counter()
-        idx_start = i
-        idx_end = (
-            idx_start + batch_size
-            if idx_start + batch_size <= len(data)
-            else len(data) - idx_start
-        )
-        idxs = list(range(idx_start, idx_end))
-        if not idxs:
-            continue
-        frame = np.asarray(data[idxs])
-        print(f"Batch {int(i / batch_size)} took {perf_counter()- start}")
+    for vb in VideoBackend:
+        print(f'\n\n-------{vb.name}-------\n')
+        fh = FileHandler(video_backend=vb)
+        video = fh.load(base_dir / "kodill" / "teacher.face.mp4", )
+        batch_size = 256
+        data = video.data
+        full_start = perf_counter()
+        for i in range(0, len(data), batch_size):
+            start = perf_counter()
+            idx_start = i
+            idx_end = (
+                idx_start + batch_size
+                if idx_start + batch_size <= len(data)
+                else len(data) - idx_start
+            )
+            idxs = list(range(idx_start, idx_end))
+            if not idxs:
+                continue
+            frame = data[idxs]
+            for x in frame:
+                continue
+            print(f"Batch {int(i / batch_size)} took {perf_counter()- start}")
+            if (i / batch_size) >= 4: break
+
 
     print(f'Iterating over video with shape {video.data.shape} frames took {perf_counter() - full_start}')
+    exit()
 #fh.save(video, base_dir / "new_test_video.mp4")
 
     """TESTCASE FOR ANNOTATIONS"""
