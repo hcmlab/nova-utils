@@ -818,8 +818,7 @@ class _VideoFileHandler(IHandler):
 
     default_ext = ".mp4"
 
-    def __init__(self, *args, backend: VideoBackend = VideoBackend.DECORD, **kwargs):
-
+    def __init__(self, backend: VideoBackend = VideoBackend.DECORD):
         self.backend = backend.value
 
     def _get_video_meta(self, fp) -> dict:
@@ -847,7 +846,7 @@ class _VideoFileHandler(IHandler):
         metadata = json.loads(result.stdout)
         return metadata
 
-    def load(self, fp: Path, header_only: bool = False, video_backend: VideoBackend = VideoBackend.DECORD) -> Data:
+    def load(self, fp: Path, header_only: bool = False) -> Data:
         """
         Load video data from a file.
 
@@ -1161,11 +1160,12 @@ if __name__ == "__main__":
 
     # DEBUG
     from time import perf_counter
+    import random
     for vb in VideoBackend:
         print(f'\n\n-------{vb.name}-------\n')
         fh = FileHandler(video_backend=vb)
         video = fh.load(base_dir / "kodill" / "teacher.face.mp4", )
-        batch_size = 256
+        batch_size = 32
         data = video.data
         full_start = perf_counter()
         for i in range(0, len(data), batch_size):
@@ -1179,6 +1179,8 @@ if __name__ == "__main__":
             idxs = list(range(idx_start, idx_end))
             if not idxs:
                 continue
+
+            idxs = [random.randint(0, len(data)) for i in range(batch_size)]
             frame = data[idxs]
             for x in frame:
                 continue
