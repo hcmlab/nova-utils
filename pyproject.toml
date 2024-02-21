@@ -27,6 +27,7 @@ dependencies = [
     "pims",
     "soundfile",
     "imageio",
+    "imageio-ffmpeg",
     "numba >= 0.57.1",
     "numpy >= 1.24",
     "pymongo == 3.12.2",
