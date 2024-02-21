@@ -276,7 +276,7 @@ class DatasetIterator(DatasetManager):
                         right_pad = int((
                                                     window_end - self.current_session_info.duration) * sr) if window_end > self.current_session_info.duration else 0
 
-                        # Currently all streams have timedim first. Keep for future reference. 
+                        # Currently all streams have timedim first. Keep for future reference.
                         time_dim_last = False
 
                         # In some cases sample sample_from_interval might return a frame number that is one frame off from what we expect.
