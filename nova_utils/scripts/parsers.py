@@ -130,7 +130,7 @@ io_parser = argparse.ArgumentParser(
 io_parser.add_argument(
     "--video_backend",
     type=str.upper,
-    default="imageio",
+    default="IMAGEIO",
     choices=["DECORD", "DECORDBATCH", "IMAGEIO", "MOVIEPY", "PYAV"],
     help="The backend that is used to read video files",
 )
