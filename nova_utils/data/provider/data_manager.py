@@ -347,8 +347,8 @@ class DatasetManager:
         self.session_names = session_names
         self.source_ctx = source_context
         self.sessions = {}
-        self._init_sessions()
         self.video_backend = video_backend
+        self._init_sessions()
 
     def _init_sessions(self):
         db_required = any([parse_src_tag(dd)[0] == Origin.DB for dd in self.data_description])

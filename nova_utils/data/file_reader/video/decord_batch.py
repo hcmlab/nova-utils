@@ -36,14 +36,14 @@ class DecordBatchReader(np.ndarray):
         if isinstance(index, slice):
             indices = list(range(index.start, index.stop))
             ret = self.decord_reader.get_batch(indices).asnumpy()
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index.start)
+            # if type(self.decord_reader) == decord.video_reader.VideoReader:
+            #     self.decord_reader.seek_accurate(index.start)
         elif isinstance(index, list):
             ret = np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index[0])
+            # if type(self.decord_reader) == decord.video_reader.VideoReader:
+            #     self.decord_reader.seek(index[0])
         else:
             ret = self.decord_reader[index].asnumpy()
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index)
+            # if type(self.decord_reader) == decord.video_reader.VideoReader:
+            #     self.decord_reader.seek(index)
         return ret

@@ -48,7 +48,12 @@ from nova_utils.data.annotation import DiscreteAnnotation
 # Main parser for predict specific options
 parser = argparse.ArgumentParser(
     description="Use a provided nova-server module for inference and save results to NOVA-DB",
-    parents=[nova_db_parser, nova_iterator_parser, nova_server_module_parser],
+    parents=[dm_parser,
+             nova_db_parser,
+             request_parser,
+             nova_iterator_parser,
+             nova_server_module_parser,
+             io_parser],
 )
 parser.add_argument(
     "--trainer_file_path",
