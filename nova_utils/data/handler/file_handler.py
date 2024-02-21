@@ -14,16 +14,13 @@ import xml.etree.ElementTree as Et
 from pathlib import Path
 from struct import *
 from typing import Union
-import pims
-from pims import FramesSequence, Frame
 
-import decord
+
 import ffmpegio
 import numpy as np
 from PIL import Image as PILImage
 
 PILImage.init()
-from decord import cpu
 from enum import Enum
 from nova_utils.data.annotation import (
     SchemeType,
@@ -426,7 +423,7 @@ class _TextFileHandler(IHandler):
 
     def save(self, data, fp, header_only=False):
         with open(fp, "bw") as f:
-            f.write(" ".join(data.data).encode('UTF-8'))
+            f.write(" ".join(data.data).encode("UTF-8"))
 
 
 # Image
@@ -509,13 +506,13 @@ class _SSIStreamFileHandler(IHandler):
         return ssistream_meta_data
 
     def _load_data(
-            self,
-            fp: Path,
-            size: int,
-            dim: int,
-            ftype=SSIFileType.ASCII,
-            dtype: np.dtype = SSINPDataType.FLOAT.value,
-            delim=" ",
+        self,
+        fp: Path,
+        size: int,
+        dim: int,
+        ftype=SSIFileType.ASCII,
+        dtype: np.dtype = SSINPDataType.FLOAT.value,
+        delim=" ",
     ):
         """
         Load SSIStream data from a file.
@@ -545,11 +542,11 @@ class _SSIStreamFileHandler(IHandler):
             raise ValueError("FileType {} not supported".format(self))
 
     def save(
-            self,
-            data: SSIStream,
-            fp: Path,
-            ftype: SSIFileType = SSIFileType.BINARY,
-            delim: str = " ",
+        self,
+        data: SSIStream,
+        fp: Path,
+        ftype: SSIFileType = SSIFileType.BINARY,
+        delim: str = " ",
     ):
         """
         Save SSIStream data to a file.
@@ -672,85 +669,6 @@ class _SSIStreamFileHandler(IHandler):
 
 
 # VIDEO
-class _LazyArray(np.ndarray):
-    """LazyArray class extending numpy.ndarray for video and audio loading."""
-
-    @property
-    def shape(self):
-        return self._shape
-
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-
-    def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
-
-        buffer = None
-        obj = super().__new__(cls, shape[1:], dtype=dtype, buffer=buffer)
-        # obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
-        obj.decord_reader = decord_reader
-        obj.start_idx = 0
-        obj._num_samples = (
-            shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
-        )
-        obj.len = shape[0]
-        obj._shape = shape
-        return obj
-
-    def __len__(self):
-
-        # TODO audio signal is shape (channels, samples). Think about making it channels last
-        if type(self.decord_reader) == decord.video_reader.VideoReader:
-            return self.shape[0]
-        else:
-            return self.shape[-1]
-
-    def __getitem__(self, index):
-        if isinstance(index, slice):
-            indices = list(range(index.start, index.stop))
-            ret = self.decord_reader.get_batch(indices).asnumpy()
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index.start)
-        elif isinstance(index, list):
-            ret = np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index[0])
-        else:
-            ret = self.decord_reader[index].asnumpy()
-            if type(self.decord_reader) == decord.video_reader.VideoReader:
-                self.decord_reader.seek(index)
-        return ret
-
-
-class DecordReader(FramesSequence):
-
-    def __init__(self, filename):
-        self.filename = filename
-        self.reader = decord.VideoReader(filename, ctx=cpu(0))
-        self._len = self.reader._num_frame  # however many frames there will be
-        _f = self.reader[0]
-        self.reader.seek(0)
-        self._dtype = _f.dtype  # the numpy datatype of the frames
-        self._frame_shape = _f.shape[:2]  # the shape, like (512, 512), of an
-        # individual frame -- maybe get this by
-        # opening the first frame
-        # Do whatever setup you need to do to be able to quickly access
-        # individual frames later.
-
-    def get_frame(self, i):
-        # Access the data you need and get it into a numpy array.
-        # Then return a Frame like so:
-        return Frame(self.reader[i].asnumpy(), frame_no=i)
-
-    def __len__(self):
-        return self._len
-
-    @property
-    def frame_shape(self):
-        return self._frame_shape
-
-    @property
-    def pixel_type(self):
-        return self._dtype
 
 
 class VideoBackend(Enum):
@@ -828,19 +746,18 @@ class _VideoFileHandler(IHandler):
         vr = None
         if not header_only:
             if self.backend == VideoBackend.DECORD:
-                vr = DecordReader(str(fp.resolve()))
+                from nova_utils.data.file_reader.video.decord import DecordReader as Reader
             elif self.backend == VideoBackend.DECORDBATCH:
-                vr = _LazyArray(
-                    decord.VideoReader(str(fp.resolve()), ctx=cpu(0)),
-                    shape=(num_samples,) + sample_shape[1:],
-                    dtype=dtype,
-                )
+                from nova_utils.data.file_reader.video.decord_batch import DecordBatchReader as Reader
             elif self.backend == VideoBackend.IMAGEIO:
-                vr = pims.ImageIOReader(str(fp.resolve()))
+                from nova_utils.data.file_reader.video.imageio import ImageIOReader as Reader
             elif self.backend == VideoBackend.MOVIEPY:
-                vr = pims.MoviePyReader(str(fp.resolve()))
+                from nova_utils.data.file_reader.video.moviepy import MoviePyReader as Reader
             elif self.backend == VideoBackend.PYAV:
-                vr = pims.PyAVVideoReader(str(fp.resolve()))
+                from nova_utils.data.file_reader.video.pyav import PyAVVideoReader as Reader
+            else:
+                raise NotImplementedError(f'Backend {self.backend} not supported for video loading.')
+            vr = Reader(str(fp.resolve()))
 
         video_ = Video(
             data=vr,
@@ -933,15 +850,13 @@ class _AudioFileHandler(IHandler):
         num_samples = _num_samples
 
         # file loading
-        lazy_audio_data = None
+        data = None
         if not header_only:
-            audio_reader = decord.AudioReader(str(fp.resolve()), ctx=cpu(0))
-            lazy_audio_data = _LazyArray(
-                audio_reader, shape=audio_reader.shape, dtype=dtype
-            )
+            import soundfile
+            data, samplerate = soundfile.read(str(fp.resolve()))
 
         audio_ = Audio(
-            data=lazy_audio_data,
+            data=data,
             duration=duration,
             name=fp.stem,
             ext=fp.suffix,
@@ -973,7 +888,7 @@ class FileHandler(IHandler):
     """Class for handling various types of data files."""
 
     def _get_handler_for_fp(
-            self, fp: Path
+        self, fp: Path
     ) -> Union[
         _AnnotationFileHandler,
         _SSIStreamFileHandler,
@@ -1024,9 +939,9 @@ class FileHandler(IHandler):
         elif dtype == Audio:
             return _AudioFileHandler()
         elif (
-                dtype == DiscreteAnnotation
-                or dtype == ContinuousAnnotation
-                or dtype == FreeAnnotation
+            dtype == DiscreteAnnotation
+            or dtype == ContinuousAnnotation
+            or dtype == FreeAnnotation
         ):
             return _AnnotationFileHandler()
         raise NotImplementedError
@@ -1041,7 +956,9 @@ class FileHandler(IHandler):
             return self._get_handler_for_fp(fp)
         return None
 
-    def __init__(self, data_type: int = None, video_backend: VideoBackend = VideoBackend.IMAGEIO):
+    def __init__(
+        self, data_type: int = None, video_backend: VideoBackend = VideoBackend.IMAGEIO
+    ):
         self.data_type = data_type
         self.video_backend = video_backend
 
@@ -1065,13 +982,13 @@ class FileHandler(IHandler):
         return data
 
     def save(
-            self,
-            data: Stream,
-            fp: Union[Path, str],
-            overwrite: bool = True,
-            dtype=None,
-            *args,
-            **kwargs,
+        self,
+        data: Stream,
+        fp: Union[Path, str],
+        overwrite: bool = True,
+        dtype=None,
+        *args,
+        **kwargs,
     ):
         """
         Save data to a file.
@@ -1099,49 +1016,54 @@ class FileHandler(IHandler):
 
 if __name__ == "__main__":
     # Test cases...
-    test_annotations = True
-    test_streams = False
+    test_annotations = False
+    test_streams = True
     test_static = False
-    # base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
-    base_dir = Path("../../../test_files/")
+    base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
+    fh = FileHandler()
+    #base_dir = Path("../../../test_files/")
 
     # DEBUG
-    from time import perf_counter
-    import random
 
-    for vb in VideoBackend:
-        print(f'\n\n-------{vb.name}-------\n')
-        fh = FileHandler(video_backend=vb)
-        #video = fh.load(base_dir / "kodill" / "teacher.face.mp4", )
-        video = fh.load(base_dir / "test_video.mp4" )
-
-        batch_size = 256
-        data = video.data
-        full_start = perf_counter()
-        for i in range(0, len(data), batch_size):
-            start = perf_counter()
-            idx_start = i
-            idx_end = (
-                idx_start + batch_size
-                if idx_start + batch_size <= len(data)
-                else len(data) - idx_start
-            )
-            idxs = list(range(idx_start, idx_end))
-            if not idxs:
-                continue
-
-            # idxs = [random.randint(0, len(data)) for i in range(batch_size)]
-            frame = data[idxs]
-            #frame = np.asarray(frame)
-            print(type(frame))
-            for x in frame:
-                x
-            print(f"Batch {int(i / batch_size)} took {perf_counter() - start}")
-            if (i / batch_size) >= 4: break
-
-    print(f'Iterating over video with shape {video.data.shape} frames took {perf_counter() - full_start}')
-    exit()
-    # fh.save(video, base_dir / "new_test_video.mp4")
+    # from time import perf_counter
+    # import random
+    #
+    # for vb in VideoBackend:
+    #     print(f"\n\n-------{vb.name}-------\n")
+    #     fh = FileHandler(video_backend=vb)
+    #     # video = fh.load(base_dir / "kodill" / "teacher.face.mp4", )
+    #     video = fh.load(base_dir / "test_video.mp4")
+    #
+    #     batch_size = 256
+    #     data = video.data
+    #     full_start = perf_counter()
+    #     for i in range(0, len(data), batch_size):
+    #         start = perf_counter()
+    #         idx_start = i
+    #         idx_end = (
+    #             idx_start + batch_size
+    #             if idx_start + batch_size <= len(data)
+    #             else len(data) - idx_start
+    #         )
+    #         idxs = list(range(idx_start, idx_end))
+    #         if not idxs:
+    #             continue
+    #
+    #         # idxs = [random.randint(0, len(data)) for i in range(batch_size)]
+    #         frame = data[idxs]
+    #         # frame = np.asarray(frame)
+    #         print(type(frame))
+    #         for x in frame:
+    #             x
+    #         print(f"Batch {int(i / batch_size)} took {perf_counter() - start}")
+    #         if (i / batch_size) >= 4:
+    #             break
+    #
+    # print(
+    #     f"Iterating over video with shape {video.data.shape} frames took {perf_counter() - full_start}"
+    # )
+    # exit()
+    # # fh.save(video, base_dir / "new_test_video.mp4")
 
     """TESTCASE FOR ANNOTATIONS"""
     if test_annotations:
@@ -1174,7 +1096,11 @@ if __name__ == "__main__":
         from nova_utils.utils.anno_utils import resample
 
         sr = 10
-        resampled = resample(continuous_anno_ascii.data, continuous_anno_ascii.annotation_scheme.sample_rate, sr)
+        resampled = resample(
+            continuous_anno_ascii.data,
+            continuous_anno_ascii.annotation_scheme.sample_rate,
+            sr,
+        )
         continuous_anno_binary.data = resampled
         continuous_anno_binary.annotation_scheme.sample_rate = sr
         fh.save(
@@ -1217,7 +1143,7 @@ if __name__ == "__main__":
         fh.save(ssistream_binary, base_dir / "new_binary.stream", SSIFileType.BINARY)
 
         # audio
-        audio = fh.load(base_dir / "test_audio.wav")
+        audio = fh.load(base_dir / "multi_channel_audio_test.wav")
         a = np.asarray(audio.data)
         # b = np.array([1,2,3])
         a = a.__array__()
