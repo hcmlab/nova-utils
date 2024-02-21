@@ -41,7 +41,8 @@ nova_db_parser.add_argument(
 
 # Parser for request handling
 request_parser = argparse.ArgumentParser(
-    description="Parse Information required for the caller of the module to retrieve processed information", add_help=False
+    description="Parse Information required for the caller of the module to retrieve processed information",
+    add_help=False,
 )
 request_parser.add_argument(
     "--shared_dir",
@@ -62,14 +63,14 @@ dm_parser.add_argument(
     "--dataset",
     type=str,
     help="Name of the dataset. Must match entries in NOVA-DB",
-    default='dummy_dataset'
+    default="dummy_dataset",
 )
 
 dm_parser.add_argument(
     "--sessions",
     type=json.loads,
     help="Json formatted List of sessions to apply the iterator to",
-    default=['dummy_session']
+    default=["dummy_session"],
 )
 dm_parser.add_argument(
     "--data",
@@ -93,9 +94,7 @@ nova_iterator_parser.add_argument(
     help="Start time for processing measured in time. Defaults to None",
 )
 nova_iterator_parser.add_argument(
-    "--end",
-    type=str,
-    help="End time for processing measured in time. Defaults to None"
+    "--end", type=str, help="End time for processing measured in time. Defaults to None"
 )
 nova_iterator_parser.add_argument(
     "--left_context",
@@ -123,6 +122,19 @@ nova_iterator_parser.add_argument(
     help="Whether to fill missing data. Defaults to True",
 )
 
+# Parser for file handling
+io_parser = argparse.ArgumentParser(
+    description="Parse Information that modifies input / output parameters",
+    add_help=False,
+)
+io_parser.add_argument(
+    "--video_backend",
+    type=str.upper,
+    default="IMAGEIO",
+    choices=["DECORD", "DECORDBATCH", "IMAGEIO", "MOVIEPY", "PYAV"],
+    help="The backend that is used to read video files",
+)
+
 # Parser for NOVA-Server module
 nova_server_module_parser = argparse.ArgumentParser(
     description="Parse Information required to execute a NOVA-Server module",
@@ -148,4 +160,3 @@ nova_server_module_parser.add_argument(
     type=json.loads,
     help="Json formatted String containing dictionaries with key value pairs, setting the options for a NOVA-Server module",
 )
-

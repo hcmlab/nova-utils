@@ -276,7 +276,9 @@ class DatasetIterator(DatasetManager):
                         right_pad = int((
                                                     window_end - self.current_session_info.duration) * sr) if window_end > self.current_session_info.duration else 0
 
-                        time_dim_last = isinstance(v, Audio)
+                        # Currently all streams have timedim first. Keep for future reference.
+                        time_dim_last = False
+
                         # In some cases sample sample_from_interval might return a frame number that is one frame off from what we expect.
                         # This is due to sampling issues when frame sizes do not match the samplerate. We fix this here.
                         num_samples_exp = int((abs(window_start) + window_end) * sr)
@@ -325,7 +327,6 @@ class DatasetIterator(DatasetManager):
 
 
 if __name__ == "__main__":
-    from nova_utils.data.provider.data_manager import NovaDatasetManager
     from dotenv import load_dotenv
 
     load_dotenv("../../../.env")
@@ -359,10 +360,10 @@ if __name__ == "__main__":
     }
 
     file = {
-        "src": "file:stream",
+        "src": "file:stream:Audio",
         "type": "input",
         "id": "file",
-        "uri": "/Users/dominikschiller/Work/local_nova_dir/test_files/new_test_video_25.mp4",
+        "uri": "/Users/dominikschiller/Work/local_nova_dir/test_files/test_audio.wav",
     }
 
     ctx = {
@@ -377,7 +378,7 @@ if __name__ == "__main__":
 
     nova_iterator = DatasetIterator(
         dataset=dataset,
-        data_description=[annotation],
+        data_description=[file],
         session_names=sessions,
         source_context=ctx,
         frame_size="1s",

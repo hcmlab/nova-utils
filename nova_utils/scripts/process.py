@@ -27,6 +27,8 @@ import traceback
 from importlib.machinery import SourceFileLoader
 from pathlib import Path, PureWindowsPath
 from typing import Union, Type
+
+import nova_utils.data.handler.file_handler
 from nova_utils.data.provider.data_manager import DatasetManager, SessionManager
 from nova_utils.data.provider.dataset_iterator import DatasetIterator
 from nova_utils.interfaces.server_module import Predictor, Extractor
@@ -36,6 +38,7 @@ from nova_utils.scripts.parsers import (
     request_parser,
     nova_iterator_parser,
     nova_server_module_parser,
+    io_parser
 )
 from nova_utils.utils import ssi_xml_utils, string_utils
 from nova_utils.utils.string_utils import string_to_bool, parse_time_string_to_ms
@@ -45,7 +48,12 @@ from nova_utils.data.annotation import DiscreteAnnotation
 # Main parser for predict specific options
 parser = argparse.ArgumentParser(
     description="Use a provided nova-server module for inference and save results to NOVA-DB",
-    parents=[nova_db_parser, nova_iterator_parser, nova_server_module_parser],
+    parents=[dm_parser,
+             nova_db_parser,
+             request_parser,
+             nova_iterator_parser,
+             nova_server_module_parser,
+             io_parser],
 )
 parser.add_argument(
     "--trainer_file_path",
@@ -81,6 +89,7 @@ def main(args):
     dm_args, _ = dm_parser.parse_known_args(args)
     iter_args, _ = nova_iterator_parser.parse_known_args(args)
     module_args, _ = nova_server_module_parser.parse_known_args(args)
+    io_args, _ = io_parser.parse_known_args(args)
 
     # Set environment variables
     os.environ['CACHE_DIR'] = module_args.cache_dir
@@ -151,12 +160,13 @@ def main(args):
     single_session_data_provider = []
 
     # Create one dataset per session
+    video_backend = nova_utils.data.handler.file_handler.VideoBackend[io_args.video_backend]
     for session in dm_args.sessions:
         is_iterable = string_to_bool(trainer.meta_is_iterable)
         if is_iterable:
-            data_provider = DatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], **vars(iter_args))
+            data_provider = DatasetIterator(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session], video_backend= video_backend, **vars(iter_args))
         else:
-            data_provider = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session],)
+            data_provider = DatasetManager(dataset=dm_args.dataset, data_description=dm_args.data, source_context=ctx, session_names=[session],  video_backend= video_backend)
 
         single_session_data_provider.append(data_provider)
     print("Data managers initialized")

@@ -23,8 +23,10 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only"
 ]
 dependencies = [
-    "eva-decord >= 0.6.1",
     "ffmpegio >= 0.8.3",
+    "pims",
+    "soundfile",
+    "imageio",
     "numba >= 0.57.1",
     "numpy >= 1.24",
     "pymongo == 3.12.2",
@@ -33,6 +35,14 @@ dependencies = [
     "pillow"
 ]
 dynamic = ["version"]
+
+
+[project.optional-dependencies]
+decord = ["eva-decord >= 0.6.1"]
+pymovie = ["pymovie"]
+pyav = ["pyav"]
+
+
 
 [tool.setuptools.packages.find]
 #where = ["src"]  # list of folders that contain the packages (["."] by default)

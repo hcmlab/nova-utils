@@ -216,7 +216,7 @@ class Audio(Stream):
     This class extends the Stream class with attributes and functionality specific to audio streams.
 
     Args:
-        data (np.ndarray): The audio stream data. Shape is (num_channels, num_samples). Dtype is float.
+        data (np.ndarray): The audio stream data. Shape is (num_samples, num_channels). Dtype is float.
         sample_rate (float): Sampling rate of the audio stream.
         **kwargs: Additional keyword arguments for Stream.
 
