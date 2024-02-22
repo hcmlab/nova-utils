@@ -35,7 +35,7 @@ class ModelIOEncoder(json.JSONEncoder):
 
         """
         if isinstance(obj, ModelIO):
-            return {"type": obj.io_type, "id": obj.io_id, "data": obj.io_data, "default_value": obj.io_default_value, "default_active": obj.default_active}
+            return {"type": obj.io_type, "id": obj.io_id, "data": obj.io_data, "default_value": obj.io_default_value, "default_active": obj.io_default_active}
         return super().default(obj)
 
 class ModelIODecoder(json.JSONDecoder):
