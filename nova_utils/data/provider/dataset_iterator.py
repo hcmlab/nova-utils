@@ -11,6 +11,7 @@ import sys
 import warnings
 from pathlib import Path
 from typing import Union
+from collections.abc import Iterator
 
 import numpy as np
 from nova_utils.data.handler.nova_db_handler import NovaSession
@@ -183,7 +184,7 @@ class DatasetIterator(DatasetManager):
         else:
             return annotation_duration
 
-    def _yield_sample(self):
+    def _yield_sample(self) -> Iterator[dict]:
         """
         Yield examples.
 
@@ -319,10 +320,10 @@ class DatasetIterator(DatasetManager):
                 data_for_window['info'] = window_info
                 yield data_for_window
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[dict]:
         return self._iterable
 
-    def __next__(self):
+    def __next__(self) -> dict:
         return self._iterable.__next__()
 
 
