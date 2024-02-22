@@ -44,6 +44,7 @@ class ModelIO:
             ``"specific_data_type"``
                     Optional string identifier to specify either the annotation scheme or the type of feature. E.g. "transcript" or "Openface"
         io_default_value (str): Default value for stream name or annotation scheme to read from or write to
+        io_default_active (bool): Only used for output streams. Default value to indicate if an output stream should be written to the output
     """
 
     def __init__(
@@ -52,6 +53,7 @@ class ModelIO:
             io_id: str,
             io_data: str,
             io_default_value: str,
+            io_default_active: bool,
     ):
         """
         Initialize a ModelIO object with the specified parameters.
@@ -61,6 +63,7 @@ class ModelIO:
         self.io_id = io_id
         self.io_data = io_data
         self.io_default_value = io_default_value
+        self.io_default_active = io_default_active
 
 
 class URI:
@@ -265,7 +268,7 @@ class Trainer:
 
             for io_tag in meta.findall("io"):
                 self.meta_io.append(
-                    ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"), io_tag.get("default_value"))
+                    ModelIO(io_tag.get("type"), io_tag.get("id"), io_tag.get("data"), io_tag.get("default_value"), string_to_bool(io_tag.get("default_active", default="True")))
                 )
 
             for uri_tag in meta.findall("uri"):
