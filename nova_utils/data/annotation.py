@@ -41,16 +41,22 @@ class IAnnotationScheme(ABC):
 
     Attributes:
         name (str): The name of the annotation scheme.
+        description (str, optional): A description of the annotation scheme
+        examples (list, optional): Examples of how annotations look like
 
     Args:
         name (str): The name of the annotation scheme.
+        description (str, optional): A description of the annotation scheme
+        examples (list, optional): Examples of how annotations look like
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, description: str = None, examples: list = None):
         """
         Initialize an IAnnotationScheme instance with the given name.
         """
         self.name = name
+        self.description = description
+        self.examples = examples
 
     @property
     @abstractmethod

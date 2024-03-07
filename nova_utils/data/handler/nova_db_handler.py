@@ -554,6 +554,8 @@ class AnnotationHandler(IHandler, NovaDBHandler):
             (scheme_doc,) = anno_doc["scheme"]
 
         scheme_type = scheme_doc["type"]
+        scheme_description = scheme_doc.get("description")
+        scheme_examples = scheme_doc.get("examples")
         anno_data = None
         anno_duration = 0
 
@@ -572,7 +574,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
                 anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
 
-            anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes)
+            anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes, description=scheme_description, examples=scheme_examples)
             annotation = DiscreteAnnotation(
                 role=role,
                 session=session,
@@ -598,7 +600,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_duration = len(anno_data_doc["labels"]) / sr
 
             anno_scheme = ContinuousAnnotationScheme(
-                name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val
+                name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val, description=scheme_description, examples=scheme_examples
             )
             annotation = ContinuousAnnotation(
                 role=role,
@@ -627,7 +629,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
                 anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
 
-            anno_scheme = FreeAnnotationScheme(name=scheme)
+            anno_scheme = FreeAnnotationScheme(name=scheme, description=scheme_description, examples=scheme_examples)
             annotation = FreeAnnotation(
                 role=role,
                 session=session,
@@ -960,8 +962,8 @@ if __name__ == "__main__":
     from time import perf_counter
     from dotenv import load_dotenv
 
-    test_annotations = False
-    test_streams = True
+    test_annotations = True
+    test_streams = False
 
     load_dotenv("../../../.env")
     IP = os.getenv("NOVA_IP", "")
@@ -978,9 +980,9 @@ if __name__ == "__main__":
         t_start = perf_counter()
         discrete_anno = amh.load(
             dataset="test",
-            scheme="diarization",
+            scheme="emotion_categorical",
             annotator="schildom",
-            session="04_Oesterreich_test",
+            session="01_AffWild2_video1",
             role="testrole2",
             header_only=True
         )
