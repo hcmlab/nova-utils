@@ -14,6 +14,7 @@ from nova_utils.data.handler import (
     request_handler,
 )
 from nova_utils.data.stream import SSIStream, Video, Audio, Stream
+from  nova_utils.data.static import Image, Text
 from nova_utils.utils.request_utils import Origin, SuperType, SubType, parse_src_tag, data_description_to_string, \
     infere_dtype
 
@@ -225,6 +226,24 @@ class SessionManager:
                             name=desc.get("name"),
                             role=desc.get("role"),
                             sample_rate=1,
+                            dataset=self.dataset,
+                            session=self.session,
+                        )
+                    elif super_dtype == SuperType.IMAGE:
+                        data_cls = Image
+                        data = data_cls(
+                            None,
+                            name=desc.get("name"),
+                            role=desc.get("role"),
+                            dataset=self.dataset,
+                            session=self.session,
+                        )
+                    elif super_dtype == SuperType.TEXT:
+                        data_cls = Image
+                        data = data_cls(
+                            None,
+                            name=desc.get("name"),
+                            role=desc.get("role"),
                             dataset=self.dataset,
                             session=self.session,
                         )

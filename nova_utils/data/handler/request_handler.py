@@ -35,7 +35,7 @@ class RequestHandler(IHandler):
         Returns:
             Data: The loaded data.
         """
-        # TODO: This is just a hack since I need t. Output templates should be handled in the data_manager class. Introduce proper mechanism.
+        # TODO: This is just a hack since I need it. Output templates should be handled in the data_manager class. Introduce proper mechanism.
         if header_only and not data:
             raise FileNotFoundError()
 
