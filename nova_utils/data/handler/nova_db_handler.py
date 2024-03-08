@@ -981,10 +981,10 @@ if __name__ == "__main__":
         discrete_anno = amh.load(
             dataset="test",
             scheme="emotion_categorical",
-            annotator="schildom",
+            annotator="baurtobi",
             session="01_AffWild2_video1",
-            role="testrole2",
-            header_only=True
+            role="testrole",
+            header_only=False
         )
         t_stop = perf_counter()
         print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
