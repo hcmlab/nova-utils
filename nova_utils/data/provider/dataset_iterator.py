@@ -283,7 +283,7 @@ class DatasetIterator(DatasetManager):
                         # In some cases sample sample_from_interval might return a frame number that is one frame off from what we expect.
                         # This is due to sampling issues when frame sizes do not match the samplerate. We fix this here.
                         num_samples_exp = int((abs(window_start) + window_end) * sr)
-                        num_samples = int(left_pad + right_pad + (sample.shape[-1] if isinstance(v, Audio) else sample.shape[0]))
+                        num_samples = int(left_pad + right_pad + sample.shape[0])
                         if num_samples > num_samples_exp:
                             diff = (num_samples - num_samples_exp)
                             if time_dim_last:

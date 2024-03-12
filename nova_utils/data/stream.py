@@ -163,7 +163,7 @@ class Stream(DynamicData):
         """
 
         start_sample, end_sample = time_to_sample_interval(start, end, self.meta_data.sample_rate)
-        return self.data[start_sample : end_sample]
+        return np.asarray(self.data[start_sample : end_sample])
 
 
 class SSIStream(Stream):
