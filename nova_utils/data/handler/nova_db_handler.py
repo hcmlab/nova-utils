@@ -244,7 +244,7 @@ class SessionHandler(NovaDBHandler):
 
     """
 
-    def load(self, dataset: str, session: Union[str, list, None] = None, keep_order:bool=True) -> list[NovaSession]:
+    def load(self, dataset: str, session: Union[str, list, None] = None, keep_order: bool = True) -> list[NovaSession]:
         """
         Load session data from the specified dataset and session name.
 
@@ -291,7 +291,6 @@ class SessionHandler(NovaDBHandler):
             ret = [r for s in session for r in ret if r.name == s]
 
         return ret
-
 
 
 class AnnotationHandler(IHandler, NovaDBHandler):
@@ -574,7 +573,8 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
                 anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
 
-            anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes, description=scheme_description, examples=scheme_examples)
+            anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes, description=scheme_description,
+                                                   examples=scheme_examples)
             annotation = DiscreteAnnotation(
                 role=role,
                 session=session,
@@ -600,7 +600,8 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_duration = len(anno_data_doc["labels"]) / sr
 
             anno_scheme = ContinuousAnnotationScheme(
-                name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val, description=scheme_description, examples=scheme_examples
+                name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val, description=scheme_description,
+                examples=scheme_examples
             )
             annotation = ContinuousAnnotation(
                 role=role,
@@ -714,7 +715,12 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 annotation.data = resample(annotation.data, src_sr=annotation.annotation_scheme.sample_rate, trgt_sr=sr)
 
             if isinstance(annotation, DiscreteAnnotation):
-                annotation.data = remove_label(annotation.data, label_id=annotation.rest_label_id)
+                # Remove rest class
+                non_rest_class_idxs = (annotation.data['id'] != annotation.rest_label_id)
+                annotation.data = annotation.data[non_rest_class_idxs]
+                for k in annotation.meta_data.attributes.keys():
+                   annotation.meta_data.attributes[k] = list(np.asarray(annotation.meta_data.attributes[k])[non_rest_class_idxs])
+
             anno_data = convert_label_to_ssi_dtype(
                 annotation.data, annotation.annotation_scheme.scheme_type
             )
@@ -724,6 +730,18 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 dict(zip(annotation.annotation_scheme.label_dtype.names, ad.item()))
                 for ad in anno_data
             ]
+
+            if annotation.meta_data is not None:
+                for k in list(annotation.meta_data.attributes.keys()):
+                    if len(annotation.meta_data.attributes[k]) != len(anno_data):
+                        annotation.meta_data.attributes.pop(k)
+                        warnings.warn(
+                            f"Number of values for attribute '{k}' do not match number of samples. Attribute will not be saved to the database"
+                        )
+                for i, ad in enumerate(anno_data):
+                    ad['meta'] = "attributes:{" + ','.join(
+                        [(str(k) + ":{" + str(v[i]) + "}") for k, v in annotation.meta_data.attributes.items()]) + "}"
+
         else:
             anno_data = []
 
