@@ -555,6 +555,10 @@ class AnnotationHandler(IHandler, NovaDBHandler):
         scheme_type = scheme_doc["type"]
         scheme_description = scheme_doc.get("description")
         scheme_examples = scheme_doc.get("examples")
+        scheme_attributes = scheme_doc.get("attributes")
+        for sa in scheme_attributes:
+            sa['values'] = [str(v['value']) for v in sa['values']]
+
         anno_data = None
         anno_duration = 0
 
@@ -573,8 +577,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.DISCRETE)
                 anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
 
-            anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes, description=scheme_description,
-                                                   examples=scheme_examples)
+            anno_scheme = DiscreteAnnotationScheme(name=scheme, classes=scheme_classes)
             annotation = DiscreteAnnotation(
                 role=role,
                 session=session,
@@ -582,7 +585,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 data=anno_data,
                 scheme=anno_scheme,
                 annotator=annotator,
-                duration=anno_duration,
+                duration=anno_duration
             )
 
         # continuous scheme
@@ -600,8 +603,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_duration = len(anno_data_doc["labels"]) / sr
 
             anno_scheme = ContinuousAnnotationScheme(
-                name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val, description=scheme_description,
-                examples=scheme_examples
+                name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val, description=scheme_description
             )
             annotation = ContinuousAnnotation(
                 role=role,
@@ -630,7 +632,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
                 anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
 
-            anno_scheme = FreeAnnotationScheme(name=scheme, description=scheme_description, examples=scheme_examples)
+            anno_scheme = FreeAnnotationScheme(name=scheme, description=scheme_description)
             annotation = FreeAnnotation(
                 role=role,
                 session=session,
@@ -642,6 +644,10 @@ class AnnotationHandler(IHandler, NovaDBHandler):
             )
         else:
             raise TypeError(f"Unknown scheme type {scheme_type}")
+
+        annotation.meta_data.examples = scheme_examples
+        annotation.meta_data.description = scheme_description
+        annotation.meta_data.attributes = scheme_attributes
 
         # setting meta data
         if header_only:

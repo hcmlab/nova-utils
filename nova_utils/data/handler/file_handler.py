@@ -261,6 +261,9 @@ class _AnnotationFileHandler(IHandler):
             meta = {}
         role = meta.get("role")
         annotator = meta.get("annotator")
+        description = meta.get("description")
+        examples = [x.attrib for x in meta.findall("example")]
+        annotation_attributes = [x.attrib for x in meta.findall("attribute")]
 
         # scheme
         scheme = tree.find("scheme")
@@ -268,8 +271,9 @@ class _AnnotationFileHandler(IHandler):
             scheme = {}
         scheme_name = scheme.get("name")
         scheme_type = scheme.get("type")
-        scheme_description = scheme.get("description")
-        scheme_examples = scheme.get("examples")
+
+        #scheme_description = scheme.get("description")
+        #scheme_examples = scheme.get("examples")
 
         # TODO: Nova Annotations do export a 'color' column where ssi annotations do not. Account for this
         anno_data = None
@@ -287,7 +291,7 @@ class _AnnotationFileHandler(IHandler):
                     duration = anno_data[-1][1]
 
             anno_scheme = DiscreteAnnotationScheme(
-                name=scheme_name, classes=scheme_classes, description=scheme_description, examples=scheme_examples
+                name=scheme_name, classes=scheme_classes
             )
             annotation = DiscreteAnnotation(
                 data=anno_data,
@@ -310,8 +314,7 @@ class _AnnotationFileHandler(IHandler):
                     duration = len(anno_data) / sr * 1000
 
             anno_scheme = ContinuousAnnotationScheme(
-                name=scheme_name, sample_rate=sr, min_val=min_val, max_val=max_val, description=scheme_description,
-                examples=scheme_examples
+                name=scheme_name, sample_rate=sr, min_val=min_val, max_val=max_val
             )
             annotation = ContinuousAnnotation(
                 scheme=anno_scheme,
@@ -329,8 +332,7 @@ class _AnnotationFileHandler(IHandler):
                 if anno_data.size:
                     duration = anno_data[-1][1]
 
-            anno_scheme = FreeAnnotationScheme(name=scheme_name, description=scheme_description,
-                                               examples=scheme_examples)
+            anno_scheme = FreeAnnotationScheme(name=scheme_name)
             annotation = FreeAnnotation(
                 scheme=anno_scheme,
                 data=anno_data,
@@ -340,6 +342,10 @@ class _AnnotationFileHandler(IHandler):
             )
         else:
             raise TypeError(f"Unknown scheme type {type}")
+
+        annotation.meta_data.description = description
+        annotation.meta_data.examples = examples
+        annotation.meta_data.attributes = annotation_attributes
 
         return annotation
 
@@ -369,22 +375,34 @@ class _AnnotationFileHandler(IHandler):
         Et.SubElement(root, "info", attrib={"ftype": ftype.name, "size": size})
 
         # meta
-        role = "" if data.meta_data.role is None else data.meta_data.role
-        annotator = "" if data.meta_data.annotator is None else data.meta_data.annotator
-        Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
+        role = data.meta_data.role if data.meta_data.role else ""
+        annotator = data.meta_data.annotator if data.meta_data.annotator else ""
+        description = data.meta_data.description
+        examples = data.meta_data.examples if data.meta_data.examples else []
+        annotation_attributes = data.meta_data.attributes if data.meta_data.attributes else []
+
+        meta = Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator, "description": description})
+
+        for aa in annotation_attributes:
+            for k in aa:
+                if k == 'values':
+                    aa[k] = ','.join(aa[k])
+                aa[k] = str(aa[k])
+            Et.SubElement( meta, "attribute", **aa )
+
+        for ex in examples:
+            Et.SubElement( meta, "example", **ex )
 
         # scheme
         scheme_name = data.annotation_scheme.name
         scheme_type = data.annotation_scheme.scheme_type
-        scheme_description = data.annotation_scheme.description
-        scheme_examples = data.annotation_scheme.examples
+
 
         if scheme_type == SchemeType.DISCRETE:
             data: DiscreteAnnotation
             scheme = Et.SubElement(
                 root, "scheme",
-                attrib={"name": scheme_name, "type": scheme_type.name, "description": scheme_description,
-                        "scheme_examples": scheme_examples}
+                attrib={"name": scheme_name, "type": scheme_type.name}
             )
             for class_id, class_attributes in data.annotation_scheme.classes.items():
                 Et.SubElement(
@@ -402,8 +420,6 @@ class _AnnotationFileHandler(IHandler):
                     "sr": f"{data.annotation_scheme.sample_rate:.3f}",
                     "min": f"{data.annotation_scheme.min_val:.3f}",
                     "max": f"{data.annotation_scheme.max_val:.3f}",
-                    "description": scheme_description,
-                    "scheme_examples": scheme_examples
                 },
             )
 
@@ -415,8 +431,7 @@ class _AnnotationFileHandler(IHandler):
             data: FreeAnnotation
             Et.SubElement(
                 root, "scheme",
-                attrib={"name": scheme_name, "type": scheme_type.name, "description": scheme_description,
-                        "scheme_examples": scheme_examples}
+                attrib={"name": scheme_name, "type": scheme_type.name}
             )
         else:
             raise TypeError(f"Unknown scheme type {type}")
