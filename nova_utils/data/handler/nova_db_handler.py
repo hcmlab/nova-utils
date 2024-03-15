@@ -560,8 +560,8 @@ class AnnotationHandler(IHandler, NovaDBHandler):
 
         # discrete scheme
         if scheme_type == SchemeType.DISCRETE.name:
-            scheme_classes = {l["id"]: l["name"] for l in scheme_doc["labels"]}
-
+            #scheme_classes = {l["id"]: l["name"] for l in scheme_doc["labels"]}
+            scheme_classes = {l["id"]: l for l in scheme_doc["labels"]}
             if not header_only:
                 anno_data = np.array(
                     [
@@ -997,16 +997,16 @@ if __name__ == "__main__":
         fs = "Loading {} took {}ms"
         t_start = perf_counter()
         discrete_anno = amh.load(
-            dataset="test",
-            scheme="emotion_categorical",
-            annotator="baurtobi",
-            session="01_AffWild2_video1",
-            role="testrole",
+            dataset="therapai_deliberate_practice",
+            scheme="Verbale Ausdrucksfähigkeit",
+            annotator="schildom",
+            session="224_1",
+            role="therapeut",
             header_only=False
         )
         t_stop = perf_counter()
         print(fs.format("Discrete annotation", int((t_stop - t_start) * 1000)))
-
+        breakpoint()
         t_start = perf_counter()
         continuous_anno = amh.load(
             dataset="test",
