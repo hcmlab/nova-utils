@@ -344,6 +344,10 @@ class _AnnotationFileHandler(IHandler):
         Raises:
             TypeError: If filetype is not supported for saving or unknown
         """
+
+        if isinstance(fp, str):
+            fp = Path(fp)
+
         data_path = fp.with_suffix(fp.suffix + "~")
 
         # header
