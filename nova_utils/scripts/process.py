@@ -74,7 +74,7 @@ parser.add_argument(
     "--anno_min_gap",
     type=str,
     required=False,
-    default=f'{sys.maxsize}s',
+    default='0',
     help="Minimum gap between labels of the same class to be considered separate labels. Specified in either seconds (float or 's'-suffix) or milliseconds (int or 'ms'-suffix)",
 )
 

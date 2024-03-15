@@ -438,7 +438,7 @@ if __name__ == "__main__":
     sessions = ["01_AffWild2_video1"]
 
     annotation = {
-        "src": "db:anno",
+        "src": "db:annotation",
         "scheme": "diarization",
         "type": "input",
         "id": "annotation",
@@ -479,22 +479,15 @@ if __name__ == "__main__":
     }
 
     annotation_out = {
-        "src": "file:anno",
+        "src": "file:annotation",
         "type": "output",
         "id": "annotation_out",
         "uri": "./test_output.annotation",
     }
 
-    # data_aggregator_in = SessionManager(
-    #     dataset=dataset,
-    #     session=sessions[0],
-    #     source_context=ctx,
-    # )
-
     dsm = DatasetManager(
-        dataset=dataset, data_description=[request], source_context=ctx)
+        dataset=dataset, data_description=[annotation, stream], source_context=ctx)
 
-    dsm.load()
 
     # dsm.output_data_templates[
     #     "annotation_out"

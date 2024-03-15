@@ -15,7 +15,6 @@ from pathlib import Path
 from struct import *
 from typing import Union
 
-
 import ffmpegio
 import numpy as np
 from PIL import Image as PILImage
@@ -124,6 +123,9 @@ class _AnnotationFileHandler(IHandler):
             data = np.fromfile(path, dtype=SSILabelDType.DISCRETE.value)
         else:
             raise ValueError("FileType {} not supported".format(ftype))
+
+        if data.size == 1:
+            data = data.reshape(1)
 
         return data
 
@@ -241,6 +243,10 @@ class _AnnotationFileHandler(IHandler):
         Returns:
             Annotation: The loaded annotation data as an Annotation object.
         """
+
+        if isinstance(fp, str):
+            fp = Path(fp)
+
         data_path = fp.with_suffix(fp.suffix + "~")
         tree = Et.parse(fp)
 
@@ -255,6 +261,9 @@ class _AnnotationFileHandler(IHandler):
             meta = {}
         role = meta.get("role")
         annotator = meta.get("annotator")
+        description = meta.get("description")
+        examples = [x.attrib for x in meta.findall("example")]
+        annotation_attributes = [x.attrib for x in meta.findall("attribute")]
 
         # scheme
         scheme = tree.find("scheme")
@@ -263,13 +272,17 @@ class _AnnotationFileHandler(IHandler):
         scheme_name = scheme.get("name")
         scheme_type = scheme.get("type")
 
+        #scheme_description = scheme.get("description")
+        #scheme_examples = scheme.get("examples")
+
         # TODO: Nova Annotations do export a 'color' column where ssi annotations do not. Account for this
         anno_data = None
         duration = None
         if scheme_type == SchemeType.DISCRETE.name:
             scheme_classes = {}
             for item in scheme:
-                scheme_classes[item.get("id")] = item.get("name")
+                # scheme_classes[item.get("id")] = item.get("name")
+                scheme_classes[item.get("id")] = item.attrib
 
             if not header_only:
                 anno_data = self._load_data_discrete(data_path, ftype)
@@ -330,6 +343,10 @@ class _AnnotationFileHandler(IHandler):
         else:
             raise TypeError(f"Unknown scheme type {type}")
 
+        annotation.meta_data.description = description
+        annotation.meta_data.examples = examples
+        annotation.meta_data.attributes = annotation_attributes
+
         return annotation
 
     def save(self, data: Annotation, fp: Path, ftype: SSIFileType = SSIFileType.ASCII):
@@ -344,6 +361,10 @@ class _AnnotationFileHandler(IHandler):
         Raises:
             TypeError: If filetype is not supported for saving or unknown
         """
+
+        if isinstance(fp, str):
+            fp = Path(fp)
+
         data_path = fp.with_suffix(fp.suffix + "~")
 
         # header
@@ -354,22 +375,38 @@ class _AnnotationFileHandler(IHandler):
         Et.SubElement(root, "info", attrib={"ftype": ftype.name, "size": size})
 
         # meta
-        role = "" if data.meta_data.role is None else data.meta_data.role
-        annotator = "" if data.meta_data.annotator is None else data.meta_data.annotator
-        Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
+        role = data.meta_data.role if data.meta_data.role else ""
+        annotator = data.meta_data.annotator if data.meta_data.annotator else ""
+        description = data.meta_data.description
+        examples = data.meta_data.examples if data.meta_data.examples else []
+        annotation_attributes = data.meta_data.attributes if data.meta_data.attributes else []
+
+        meta = Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator, "description": description})
+
+        for aa in annotation_attributes:
+            for k in aa:
+                if k == 'values':
+                    aa[k] = ','.join(aa[k])
+                aa[k] = str(aa[k])
+            Et.SubElement( meta, "attribute", **aa )
+
+        for ex in examples:
+            Et.SubElement( meta, "example", **ex )
 
         # scheme
         scheme_name = data.annotation_scheme.name
         scheme_type = data.annotation_scheme.scheme_type
 
+
         if scheme_type == SchemeType.DISCRETE:
             data: DiscreteAnnotation
             scheme = Et.SubElement(
-                root, "scheme", attrib={"name": scheme_name, "type": scheme_type.name}
+                root, "scheme",
+                attrib={"name": scheme_name, "type": scheme_type.name}
             )
-            for class_id, class_name in data.annotation_scheme.classes.items():
+            for class_id, class_attributes in data.annotation_scheme.classes.items():
                 Et.SubElement(
-                    scheme, "item", attrib={"name": class_name, "id": str(class_id)}
+                    scheme, "item", attrib={str(k): str(v) for k, v in class_attributes.items()}
                 )
 
         elif scheme_type == SchemeType.CONTINUOUS:
@@ -393,7 +430,8 @@ class _AnnotationFileHandler(IHandler):
                 )
             data: FreeAnnotation
             Et.SubElement(
-                root, "scheme", attrib={"name": scheme_name, "type": scheme_type.name}
+                root, "scheme",
+                attrib={"name": scheme_name, "type": scheme_type.name}
             )
         else:
             raise TypeError(f"Unknown scheme type {type}")
@@ -506,13 +544,13 @@ class _SSIStreamFileHandler(IHandler):
         return ssistream_meta_data
 
     def _load_data(
-        self,
-        fp: Path,
-        size: int,
-        dim: int,
-        ftype=SSIFileType.ASCII,
-        dtype: np.dtype = SSINPDataType.FLOAT.value,
-        delim=" ",
+            self,
+            fp: Path,
+            size: int,
+            dim: int,
+            ftype=SSIFileType.ASCII,
+            dtype: np.dtype = SSINPDataType.FLOAT.value,
+            delim=" ",
     ):
         """
         Load SSIStream data from a file.
@@ -542,11 +580,11 @@ class _SSIStreamFileHandler(IHandler):
             raise ValueError("FileType {} not supported".format(self))
 
     def save(
-        self,
-        data: SSIStream,
-        fp: Path,
-        ftype: SSIFileType = SSIFileType.BINARY,
-        delim: str = " ",
+            self,
+            data: SSIStream,
+            fp: Path,
+            ftype: SSIFileType = SSIFileType.BINARY,
+            delim: str = " ",
     ):
         """
         Save SSIStream data to a file.
@@ -888,7 +926,7 @@ class FileHandler(IHandler):
     """Class for handling various types of data files."""
 
     def _get_handler_for_fp(
-        self, fp: Path
+            self, fp: Path
     ) -> Union[
         _AnnotationFileHandler,
         _SSIStreamFileHandler,
@@ -939,9 +977,9 @@ class FileHandler(IHandler):
         elif dtype == Audio:
             return _AudioFileHandler()
         elif (
-            dtype == DiscreteAnnotation
-            or dtype == ContinuousAnnotation
-            or dtype == FreeAnnotation
+                dtype == DiscreteAnnotation
+                or dtype == ContinuousAnnotation
+                or dtype == FreeAnnotation
         ):
             return _AnnotationFileHandler()
         raise NotImplementedError
@@ -957,7 +995,7 @@ class FileHandler(IHandler):
         return None
 
     def __init__(
-        self, data_type: int = None, video_backend: VideoBackend = VideoBackend.IMAGEIO
+            self, data_type: int = None, video_backend: VideoBackend = VideoBackend.IMAGEIO
     ):
         self.data_type = data_type
         self.video_backend = video_backend
@@ -982,13 +1020,13 @@ class FileHandler(IHandler):
         return data
 
     def save(
-        self,
-        data: Stream,
-        fp: Union[Path, str],
-        overwrite: bool = True,
-        dtype=None,
-        *args,
-        **kwargs,
+            self,
+            data: Stream,
+            fp: Union[Path, str],
+            overwrite: bool = True,
+            dtype=None,
+            *args,
+            **kwargs,
     ):
         """
         Save data to a file.
@@ -1019,9 +1057,9 @@ if __name__ == "__main__":
     test_annotations = False
     test_streams = True
     test_static = False
-    base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
+    base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files")
     fh = FileHandler()
-    #base_dir = Path("../../../test_files/")
+    # base_dir = Path("../../../test_files/")
 
     # DEBUG
 

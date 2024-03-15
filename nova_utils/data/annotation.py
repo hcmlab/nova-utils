@@ -20,17 +20,30 @@ class AnnoMetaData:
     Attributes:
         annotator (str, optional): Annotator identifier.
         duration (float, optional): Duration of the stream in ms.
+        attributes (dict, optional): Additional attributes per label. Dictionary contains the name of the attribute as label and a list of on attribute per label. Length of attribute list must match the length of the annotation data.
+        examples (list, optional): Examples of how annotations look like
+        description (str, optional): A description of the annotation scheme
+
 
     Args:
         annotator (str, optional): Annotator identifier.
+        examples (list, optional): Examples of how annotations look like
+        description (str, optional): A description of the annotation scheme
+
+
     """
 
-    def __init__(self, annotator: str = None, duration: int = None):
+    def __init__(self, annotator: str = None, duration: int = None, attributes : list = None, examples: list = None, description: str = None):
         """
         Initialize an AnnoMetaData instance with annotator information.
         """
         self.annotator = annotator
         self.duration = duration
+        self.attributes = attributes
+        self.examples = examples
+        self.description = description
+
+
 
 
 class IAnnotationScheme(ABC):
@@ -41,22 +54,16 @@ class IAnnotationScheme(ABC):
 
     Attributes:
         name (str): The name of the annotation scheme.
-        description (str, optional): A description of the annotation scheme
-        examples (list, optional): Examples of how annotations look like
 
     Args:
         name (str): The name of the annotation scheme.
-        description (str, optional): A description of the annotation scheme
-        examples (list, optional): Examples of how annotations look like
     """
 
-    def __init__(self, name: str, description: str = None, examples: list = None):
+    def __init__(self, name: str):
         """
         Initialize an IAnnotationScheme instance with the given name.
         """
         self.name = name
-        self.description = description
-        self.examples = examples
 
     @property
     @abstractmethod
