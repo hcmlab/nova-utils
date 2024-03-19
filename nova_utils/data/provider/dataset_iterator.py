@@ -289,7 +289,7 @@ class DatasetIterator(DatasetManager):
                             if time_dim_last:
                                 sample = sample[:,:-diff]
                             else:
-                                sample = sample[:-diff,:]
+                                sample = sample[:-diff]
 
 
                         if left_pad or right_pad:
