@@ -603,7 +603,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_duration = len(anno_data_doc["labels"]) / sr
 
             anno_scheme = ContinuousAnnotationScheme(
-                name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val, description=scheme_description
+                name=scheme, sample_rate=sr, min_val=min_val, max_val=max_val
             )
             annotation = ContinuousAnnotation(
                 role=role,
@@ -632,7 +632,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 anno_data = convert_ssi_to_label_dtype(anno_data, SchemeType.FREE)
                 anno_duration = anno_data[-1]["to"] if anno_data.size != 0 else 0
 
-            anno_scheme = FreeAnnotationScheme(name=scheme, description=scheme_description)
+            anno_scheme = FreeAnnotationScheme(name=scheme)
             annotation = FreeAnnotation(
                 role=role,
                 session=session,
