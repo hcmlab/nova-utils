@@ -738,15 +738,15 @@ class AnnotationHandler(IHandler, NovaDBHandler):
             ]
 
             if annotation.meta_data is not None:
-                for k in list(annotation.meta_data.attributes.keys()):
-                    if len(annotation.meta_data.attributes[k]) != len(anno_data):
-                        annotation.meta_data.attributes.pop(k)
+                for k in list(annotation.meta_data.attribute_values.keys()):
+                    if len(annotation.meta_data.attribute_values[k]) != len(anno_data):
+                        annotation.meta_data.attribute_values.pop(k)
                         warnings.warn(
                             f"Number of values for attribute '{k}' do not match number of samples. Attribute will not be saved to the database"
                         )
                 for i, ad in enumerate(anno_data):
                     ad['meta'] = "attributes:{" + ','.join(
-                        [(str(k) + ":{" + str(v[i]) + "}") for k, v in annotation.meta_data.attributes.items()]) + "}"
+                        [(str(k) + ":{" + str(v[i]) + "}") for k, v in annotation.meta_data.attribute_values.items()]) + "}"
 
         else:
             anno_data = []
