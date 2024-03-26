@@ -724,8 +724,9 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 # Remove rest class
                 non_rest_class_idxs = (annotation.data['id'] != annotation.rest_label_id)
                 annotation.data = annotation.data[non_rest_class_idxs]
-                for k in annotation.meta_data.attribute_values.keys():
-                   annotation.meta_data.attribute_values[k] = list(np.asarray(annotation.meta_data.attribute_values[k])[non_rest_class_idxs])
+                if annotation.meta_data.attribute_values is not None:
+                    for k in annotation.meta_data.attribute_values.keys():
+                       annotation.meta_data.attribute_values[k] = list(np.asarray(annotation.meta_data.attribute_values[k])[non_rest_class_idxs])
 
             anno_data = convert_label_to_ssi_dtype(
                 annotation.data, annotation.annotation_scheme.scheme_type
