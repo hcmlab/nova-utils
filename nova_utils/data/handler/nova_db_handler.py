@@ -737,7 +737,7 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 for ad in anno_data
             ]
 
-            if annotation.meta_data is not None:
+            if annotation.meta_data.attribute_values is not None:
                 for k in list(annotation.meta_data.attribute_values.keys()):
                     if len(annotation.meta_data.attribute_values[k]) != len(anno_data):
                         annotation.meta_data.attribute_values.pop(k)
