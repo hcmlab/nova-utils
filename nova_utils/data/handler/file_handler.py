@@ -2,25 +2,31 @@
 
 Author:
     Dominik Schiller <dominik.schiller@uni-a.de>
+    Marius Funk <marius.funk@uni-a.de>
 Date:
     18.8.2023
+    03.04.2024
 
 """
 
 import csv
 import json
+import math
+import mmap
 import subprocess
 import xml.etree.ElementTree as Et
 from pathlib import Path
 from struct import *
 from typing import Union
 
+import decord
 import ffmpegio
 import numpy as np
 from PIL import Image as PILImage
 
 PILImage.init()
-from enum import Enum
+from decord import cpu
+
 from nova_utils.data.annotation import (
     SchemeType,
     Annotation,
@@ -94,6 +100,8 @@ class FileSSIStreamMetaData:
 
 
 # ANNOTATIONS
+
+
 class _AnnotationFileHandler(IHandler):
     """Class for handling the loading and saving of data annotations."""
 
@@ -123,9 +131,6 @@ class _AnnotationFileHandler(IHandler):
             data = np.fromfile(path, dtype=SSILabelDType.DISCRETE.value)
         else:
             raise ValueError("FileType {} not supported".format(ftype))
-
-        if data.size == 1:
-            data = data.reshape(1)
 
         return data
 
@@ -170,7 +175,7 @@ class _AnnotationFileHandler(IHandler):
         """
         data = []
         if ftype == SSIFileType.ASCII.name:
-            with open(path, "r") as ascii_file:
+            with open(path, "r", encoding="utf-8") as ascii_file:
                 ascii_file_reader = csv.reader(ascii_file, delimiter=";", quotechar='"')
                 for row in ascii_file_reader:
                     f = float(row[0])
@@ -243,10 +248,6 @@ class _AnnotationFileHandler(IHandler):
         Returns:
             Annotation: The loaded annotation data as an Annotation object.
         """
-
-        if isinstance(fp, str):
-            fp = Path(fp)
-
         data_path = fp.with_suffix(fp.suffix + "~")
         tree = Et.parse(fp)
 
@@ -261,9 +262,6 @@ class _AnnotationFileHandler(IHandler):
             meta = {}
         role = meta.get("role")
         annotator = meta.get("annotator")
-        description = meta.get("description")
-        examples = [x.attrib for x in meta.findall("example")]
-        annotation_attributes = [x.attrib for x in meta.findall("attribute")]
 
         # scheme
         scheme = tree.find("scheme")
@@ -272,17 +270,13 @@ class _AnnotationFileHandler(IHandler):
         scheme_name = scheme.get("name")
         scheme_type = scheme.get("type")
 
-        #scheme_description = scheme.get("description")
-        #scheme_examples = scheme.get("examples")
-
         # TODO: Nova Annotations do export a 'color' column where ssi annotations do not. Account for this
         anno_data = None
         duration = None
         if scheme_type == SchemeType.DISCRETE.name:
             scheme_classes = {}
             for item in scheme:
-                # scheme_classes[item.get("id")] = item.get("name")
-                scheme_classes[item.get("id")] = item.attrib
+                scheme_classes[item.get("id")] = item.get("name")
 
             if not header_only:
                 anno_data = self._load_data_discrete(data_path, ftype)
@@ -343,10 +337,6 @@ class _AnnotationFileHandler(IHandler):
         else:
             raise TypeError(f"Unknown scheme type {type}")
 
-        annotation.meta_data.description = description
-        annotation.meta_data.examples = examples
-        annotation.meta_data.attributes = annotation_attributes
-
         return annotation
 
     def save(self, data: Annotation, fp: Path, ftype: SSIFileType = SSIFileType.ASCII):
@@ -361,10 +351,6 @@ class _AnnotationFileHandler(IHandler):
         Raises:
             TypeError: If filetype is not supported for saving or unknown
         """
-
-        if isinstance(fp, str):
-            fp = Path(fp)
-
         data_path = fp.with_suffix(fp.suffix + "~")
 
         # header
@@ -375,38 +361,22 @@ class _AnnotationFileHandler(IHandler):
         Et.SubElement(root, "info", attrib={"ftype": ftype.name, "size": size})
 
         # meta
-        role = data.meta_data.role if data.meta_data.role else ""
-        annotator = data.meta_data.annotator if data.meta_data.annotator else ""
-        description = data.meta_data.description
-        examples = data.meta_data.examples if data.meta_data.examples else []
-        annotation_attributes = data.meta_data.attributes if data.meta_data.attributes else []
-
-        meta = Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator, "description": description})
-
-        for aa in annotation_attributes:
-            for k in aa:
-                if k == 'values':
-                    aa[k] = ','.join(aa[k])
-                aa[k] = str(aa[k])
-            Et.SubElement( meta, "attribute", **aa )
-
-        for ex in examples:
-            Et.SubElement( meta, "example", **ex )
+        role = "" if data.meta_data.role is None else data.meta_data.role
+        annotator = "" if data.meta_data.annotator is None else data.meta_data.annotator
+        Et.SubElement(root, "meta", attrib={"role": role, "annotator": annotator})
 
         # scheme
         scheme_name = data.annotation_scheme.name
         scheme_type = data.annotation_scheme.scheme_type
 
-
         if scheme_type == SchemeType.DISCRETE:
             data: DiscreteAnnotation
             scheme = Et.SubElement(
-                root, "scheme",
-                attrib={"name": scheme_name, "type": scheme_type.name}
+                root, "scheme", attrib={"name": scheme_name, "type": scheme_type.name}
             )
-            for class_id, class_attributes in data.annotation_scheme.classes.items():
+            for class_id, class_name in data.annotation_scheme.classes.items():
                 Et.SubElement(
-                    scheme, "item", attrib={str(k): str(v) for k, v in class_attributes.items()}
+                    scheme, "item", attrib={"name": class_name, "id": str(class_id)}
                 )
 
         elif scheme_type == SchemeType.CONTINUOUS:
@@ -430,8 +400,7 @@ class _AnnotationFileHandler(IHandler):
                 )
             data: FreeAnnotation
             Et.SubElement(
-                root, "scheme",
-                attrib={"name": scheme_name, "type": scheme_type.name}
+                root, "scheme", attrib={"name": scheme_name, "type": scheme_type.name}
             )
         else:
             raise TypeError(f"Unknown scheme type {type}")
@@ -452,6 +421,7 @@ class _AnnotationFileHandler(IHandler):
 
 # Text
 class _TextFileHandler(IHandler):
+
     default_ext = ".txt"
 
     def load(self, fp, header_only=False) -> Union[Data, None]:
@@ -461,11 +431,12 @@ class _TextFileHandler(IHandler):
 
     def save(self, data, fp, header_only=False):
         with open(fp, "bw") as f:
-            f.write(" ".join(data.data).encode("UTF-8"))
+            f.write(" ".join(data.data).encode('UTF-8'))
 
 
 # Image
 class _ImageFileHandler(IHandler):
+
     default_ext = ".jpg"
 
     def load(self, fp, header_only=False) -> Union[Data, None]:
@@ -544,13 +515,13 @@ class _SSIStreamFileHandler(IHandler):
         return ssistream_meta_data
 
     def _load_data(
-            self,
-            fp: Path,
-            size: int,
-            dim: int,
-            ftype=SSIFileType.ASCII,
-            dtype: np.dtype = SSINPDataType.FLOAT.value,
-            delim=" ",
+        self,
+        fp: Path,
+        size: int,
+        dim: int,
+        ftype=SSIFileType.ASCII,
+        dtype: np.dtype = SSINPDataType.FLOAT.value,
+        delim=" ",
     ):
         """
         Load SSIStream data from a file.
@@ -580,11 +551,11 @@ class _SSIStreamFileHandler(IHandler):
             raise ValueError("FileType {} not supported".format(self))
 
     def save(
-            self,
-            data: SSIStream,
-            fp: Path,
-            ftype: SSIFileType = SSIFileType.BINARY,
-            delim: str = " ",
+        self,
+        data: SSIStream,
+        fp: Path,
+        ftype: SSIFileType = SSIFileType.BINARY,
+        delim: str = " ",
     ):
         """
         Save SSIStream data to a file.
@@ -599,7 +570,12 @@ class _SSIStreamFileHandler(IHandler):
         data_path = fp.with_suffix(fp.suffix + "~")
 
         # header
-        root = Et.Element("annotation", attrib={"ssi-v ": "2"})
+        
+        # Define the XML declaration string
+        xml_declaration = '<?xml version="1.0"?>'
+        
+        #root = Et.Element("annotation", attrib={"ssi-v ": "2"})
+        root = Et.Element("stream", attrib={"ssi-v ": "2"})
 
         # info
         meta_data: StreamMetaData | SSIStreamMetaData = data.meta_data
@@ -626,7 +602,7 @@ class _SSIStreamFileHandler(IHandler):
 
         # meta
         Et.SubElement(
-            root, "meta", attrib={"type": meta_data.media_type, **meta_data.custom_meta}
+            root, "meta", attrib={"name": "skeleton", "num": "1", "type": meta_data.media_type, **meta_data.custom_meta}
         )
 
         # chunks
@@ -644,9 +620,17 @@ class _SSIStreamFileHandler(IHandler):
                 )
 
         # saving
-        root = Et.ElementTree(root)
+        #root = Et.ElementTree(root)
         Et.indent(root, space="    ", level=0)
-        root.write(fp)
+        
+        # Convert the XML content to a string
+        xml_content = Et.tostring(root, encoding="unicode", method="xml")
+
+        with open(fp, "w", encoding="utf-8") as f:
+            #Write xml declaration first
+            f.write(xml_declaration + "\n")
+            #Write content without Tree to confirm with old exports
+            f.write(xml_content)
 
         # save data
         if ftype == SSIFileType.ASCII:
@@ -707,23 +691,59 @@ class _SSIStreamFileHandler(IHandler):
 
 
 # VIDEO
+class _LazyArray(np.ndarray):
+    """LazyArray class extending numpy.ndarray for video and audio loading."""
+
+    @property
+    def shape(self):
+        return self._shape
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+    def __new__(cls, decord_reader, shape: tuple, dtype: np.dtype):
+
+        buffer = None
+        obj = super().__new__(cls, shape[1:], dtype=dtype, buffer=buffer)
+        #obj = super().__new__(cls, shape, dtype=dtype, buffer=buffer)
+        obj.decord_reader = decord_reader
+        obj.start_idx = 0
+        obj._num_samples = (
+            shape[0] if isinstance(decord_reader, decord.VideoReader) else shape[-1]
+        )
+        obj.len = shape[0]
+        obj._shape = shape
+        return obj
+
+    def __len__(self):
+
+        #TODO audio signal is shape (channels, samples). Think about making it channels last
+        if type(self.decord_reader) == decord.video_reader.VideoReader:
+            return self.shape[0]
+        else:
+            return self.shape[-1]
 
 
-class VideoBackend(Enum):
-    DECORDBATCH = 0
-    DECORD = 1
-    IMAGEIO = 2
-    MOVIEPY = 3
-    PYAV = 4
-
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            indices = list(range(index.start, index.stop))
+            ret = self.decord_reader.get_batch(indices).asnumpy()
+            if type(self.decord_reader) == decord.video_reader.VideoReader:
+                self.decord_reader.seek_accurate(index.start)
+        elif isinstance(index, list):
+            ret =  np.squeeze(self.decord_reader.get_batch([index]).asnumpy())
+            if type(self.decord_reader) == decord.video_reader.VideoReader:
+                self.decord_reader.seek_accurate(index[0])
+        else:
+            ret = self.decord_reader[index].asnumpy()
+            if type(self.decord_reader) == decord.video_reader.VideoReader:
+                self.decord_reader.seek_accurate(index)
+        return ret
 
 class _VideoFileHandler(IHandler):
     """Class for handling the loading and saving of video data."""
 
     default_ext = ".mp4"
-
-    def __init__(self, backend: VideoBackend = VideoBackend.IMAGEIO):
-        self.backend = backend
 
     def _get_video_meta(self, fp) -> dict:
         """
@@ -781,24 +801,18 @@ class _VideoFileHandler(IHandler):
         dtype = np.dtype(np.uint8)
 
         # file loading
-        vr = None
+        video_reader = decord.VideoReader(str(fp.resolve()), ctx=cpu(0))
+
+        lazy_video_data = None
         if not header_only:
-            if self.backend == VideoBackend.DECORD:
-                from nova_utils.data.file_reader.video.decord import DecordReader as Reader
-            elif self.backend == VideoBackend.DECORDBATCH:
-                from nova_utils.data.file_reader.video.decord_batch import DecordBatchReader as Reader
-            elif self.backend == VideoBackend.IMAGEIO:
-                from nova_utils.data.file_reader.video.imageio import ImageIOReader as Reader
-            elif self.backend == VideoBackend.MOVIEPY:
-                from nova_utils.data.file_reader.video.moviepy import MoviePyReader as Reader
-            elif self.backend == VideoBackend.PYAV:
-                from nova_utils.data.file_reader.video.pyav import PyAVVideoReader as Reader
-            else:
-                raise NotImplementedError(f'Backend {self.backend} not supported for video loading.')
-            vr = Reader(str(fp.resolve()))
+            lazy_video_data = _LazyArray(
+                video_reader,
+                shape=(num_samples,) + sample_shape[1:],
+                dtype=dtype,
+            )
 
         video_ = Video(
-            data=vr,
+            data=lazy_video_data,
             name=fp.stem,
             ext=fp.suffix,
             duration=duration,
@@ -888,13 +902,15 @@ class _AudioFileHandler(IHandler):
         num_samples = _num_samples
 
         # file loading
-        data = None
+        lazy_audio_data = None
         if not header_only:
-            import soundfile
-            data, samplerate = soundfile.read(str(fp.resolve()))
+            audio_reader = decord.AudioReader(str(fp.resolve()), ctx=cpu(0))
+            lazy_audio_data = _LazyArray(
+                audio_reader, shape=audio_reader.shape, dtype=dtype
+            )
 
         audio_ = Audio(
-            data=data,
+            data=lazy_audio_data,
             duration=duration,
             name=fp.stem,
             ext=fp.suffix,
@@ -923,10 +939,10 @@ class _AudioFileHandler(IHandler):
 
 
 class FileHandler(IHandler):
-    """Class for handling various types of data files."""
+    """Class for handling different types of data files."""
 
     def _get_handler_for_fp(
-            self, fp: Path
+        self, fp: Path
     ) -> Union[
         _AnnotationFileHandler,
         _SSIStreamFileHandler,
@@ -954,7 +970,7 @@ class FileHandler(IHandler):
             elif ext in ["wav", "mp3"]:
                 return _AudioFileHandler()
             elif ext in ["mp4"]:
-                return _VideoFileHandler(backend=self.video_backend)
+                return _VideoFileHandler()
             elif ext in [x[1:] for x in PILImage.registered_extensions()]:
                 return _ImageFileHandler()
             elif ext in ["txt"]:
@@ -971,15 +987,15 @@ class FileHandler(IHandler):
         elif dtype == Image:
             return _ImageFileHandler()
         elif dtype == Video:
-            return _VideoFileHandler(backend=self.video_backend)
+            return _VideoFileHandler()
         elif dtype == SSIStream:
             return _SSIStreamFileHandler()
         elif dtype == Audio:
             return _AudioFileHandler()
         elif (
-                dtype == DiscreteAnnotation
-                or dtype == ContinuousAnnotation
-                or dtype == FreeAnnotation
+            dtype == DiscreteAnnotation
+            or dtype == ContinuousAnnotation
+            or dtype == FreeAnnotation
         ):
             return _AnnotationFileHandler()
         raise NotImplementedError
@@ -994,11 +1010,8 @@ class FileHandler(IHandler):
             return self._get_handler_for_fp(fp)
         return None
 
-    def __init__(
-            self, data_type: int = None, video_backend: VideoBackend = VideoBackend.IMAGEIO
-    ):
+    def __init__(self, data_type: int = None):
         self.data_type = data_type
-        self.video_backend = video_backend
 
     def load(self, fp: Union[Path, str], header_only: bool = False, dtype=None) -> Data:
         """
@@ -1020,13 +1033,13 @@ class FileHandler(IHandler):
         return data
 
     def save(
-            self,
-            data: Stream,
-            fp: Union[Path, str],
-            overwrite: bool = True,
-            dtype=None,
-            *args,
-            **kwargs,
+        self,
+        data: Stream,
+        fp: Union[Path, str],
+        overwrite: bool = True,
+        dtype=None,
+        *args,
+        **kwargs,
     ):
         """
         Save data to a file.
@@ -1054,57 +1067,40 @@ class FileHandler(IHandler):
 
 if __name__ == "__main__":
     # Test cases...
-    test_annotations = False
-    test_streams = True
+    test_annotations = True
+    test_streams = False
     test_static = False
-    base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files")
+    base_dir = Path(r"/Users/dominikschiller/Work/local_nova_dir/test_files" )
+    #base_dir = Path("../../../test_files/")
     fh = FileHandler()
-    # base_dir = Path("../../../test_files/")
 
     # DEBUG
+    from time import perf_counter
+    video = fh.load(base_dir / "kodill" / "teacher.face.mp4")
+    batch_size = 64
+    data = video.data
+    full_start = perf_counter()
+    for i in range(0, len(data), batch_size):
+        start = perf_counter()
+        idx_start = i
+        idx_end = (
+            idx_start + batch_size
+            if idx_start + batch_size <= len(data)
+            else len(data) - idx_start
+        )
+        idxs = list(range(idx_start, idx_end))
+        if not idxs:
+            continue
 
-    # from time import perf_counter
-    # import random
-    #
-    # for vb in VideoBackend:
-    #     print(f"\n\n-------{vb.name}-------\n")
-    #     fh = FileHandler(video_backend=vb)
-    #     # video = fh.load(base_dir / "kodill" / "teacher.face.mp4", )
-    #     video = fh.load(base_dir / "test_video.mp4")
-    #
-    #     batch_size = 256
-    #     data = video.data
-    #     full_start = perf_counter()
-    #     for i in range(0, len(data), batch_size):
-    #         start = perf_counter()
-    #         idx_start = i
-    #         idx_end = (
-    #             idx_start + batch_size
-    #             if idx_start + batch_size <= len(data)
-    #             else len(data) - idx_start
-    #         )
-    #         idxs = list(range(idx_start, idx_end))
-    #         if not idxs:
-    #             continue
-    #
-    #         # idxs = [random.randint(0, len(data)) for i in range(batch_size)]
-    #         frame = data[idxs]
-    #         # frame = np.asarray(frame)
-    #         print(type(frame))
-    #         for x in frame:
-    #             x
-    #         print(f"Batch {int(i / batch_size)} took {perf_counter() - start}")
-    #         if (i / batch_size) >= 4:
-    #             break
-    #
-    # print(
-    #     f"Iterating over video with shape {video.data.shape} frames took {perf_counter() - full_start}"
-    # )
-    # exit()
-    # # fh.save(video, base_dir / "new_test_video.mp4")
+        frame = data[idxs]
+        print(f"Batch {int(i / batch_size)} took {perf_counter()- start}")
+
+    print(f'Iterating over video with shape {video.data.shape} frames took {perf_counter() - full_start}')
+#fh.save(video, base_dir / "new_test_video.mp4")
 
     """TESTCASE FOR ANNOTATIONS"""
     if test_annotations:
+
         # ascii read
         discrete_anno_ascii = fh.load(base_dir / "discrete_ascii.annotation")
         continuous_anno_ascii = fh.load(base_dir / "continuous_ascii.annotation")
@@ -1132,20 +1128,15 @@ if __name__ == "__main__":
         )
 
         from nova_utils.utils.anno_utils import resample
-
         sr = 10
-        resampled = resample(
-            continuous_anno_ascii.data,
-            continuous_anno_ascii.annotation_scheme.sample_rate,
-            sr,
-        )
+        resampled = resample(continuous_anno_ascii.data, continuous_anno_ascii.annotation_scheme.sample_rate, sr)
         continuous_anno_binary.data = resampled
         continuous_anno_binary.annotation_scheme.sample_rate = sr
         fh.save(
             continuous_anno_binary,
             base_dir / "resampled_continuous_binary.annotation",
             ftype=SSIFileType.BINARY,
-        )
+            )
 
         # verify
         discrete_anno_ascii_new = fh.load(base_dir / "new_discrete_ascii.annotation")
@@ -1162,6 +1153,7 @@ if __name__ == "__main__":
 
     """TESTCASE FOR STREAMS"""
     if test_streams:
+
         # ssistream read
         ssistream_ascii = fh.load(base_dir / "ascii.stream")
         ssistream_binary = fh.load(base_dir / "binary.stream")
@@ -1181,7 +1173,7 @@ if __name__ == "__main__":
         fh.save(ssistream_binary, base_dir / "new_binary.stream", SSIFileType.BINARY)
 
         # audio
-        audio = fh.load(base_dir / "multi_channel_audio_test.wav")
+        audio = fh.load(base_dir / "test_audio.wav")
         a = np.asarray(audio.data)
         # b = np.array([1,2,3])
         a = a.__array__()
