@@ -239,7 +239,7 @@ class SessionManager:
                             session=self.session,
                         )
                     elif super_dtype == SuperType.TEXT:
-                        data_cls = Image
+                        data_cls = Text
                         data = data_cls(
                             None,
                             name=desc.get("name"),
