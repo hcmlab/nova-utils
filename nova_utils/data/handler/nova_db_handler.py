@@ -553,9 +553,9 @@ class AnnotationHandler(IHandler, NovaDBHandler):
             (scheme_doc,) = anno_doc["scheme"]
 
         scheme_type = scheme_doc["type"]
-        scheme_description = scheme_doc.get("description")
-        scheme_examples = scheme_doc.get("examples")
-        scheme_attributes = scheme_doc.get("attributes")
+        scheme_description = scheme_doc.get("description", '')
+        scheme_examples = scheme_doc.get("examples", [])
+        scheme_attributes = scheme_doc.get("attributes", [])
         for sa in scheme_attributes:
             sa['values'] = [str(v['value']) for v in sa['values']]
 
@@ -1005,10 +1005,10 @@ if __name__ == "__main__":
         t_start = perf_counter()
         discrete_anno = amh.load(
             dataset="therapai_deliberate_practice",
-            scheme="Verbale Ausdrucksfähigkeit",
+            scheme="transcript",
             annotator="schildom",
             session="224_1",
-            role="therapeut",
+            role="session",
             header_only=False
         )
         t_stop = perf_counter()

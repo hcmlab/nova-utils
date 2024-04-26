@@ -599,7 +599,7 @@ class _SSIStreamFileHandler(IHandler):
         data_path = fp.with_suffix(fp.suffix + "~")
 
         # header
-        root = Et.Element("annotation", attrib={"ssi-v ": "2"})
+        root = Et.Element("stream", attrib={"ssi-v ": "2"})
 
         # info
         meta_data: StreamMetaData | SSIStreamMetaData = data.meta_data
