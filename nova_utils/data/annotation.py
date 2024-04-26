@@ -480,8 +480,8 @@ class ContinuousAnnotation(Annotation):
 
         if len(self.data) >= e:
             frame = self.data[s:e]
-            frame_data = frame[:, 0]
-            frame_conf = frame[:, 1]
+            frame_data = frame["score"]
+            frame_conf = frame["conf"]
         else:
             return self.MISSING_DATA_LABEL_VALUE
 

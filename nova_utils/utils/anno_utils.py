@@ -136,8 +136,8 @@ def data_contains_garbage(data: Union[np.ndarray, int], garbage_label_id: object
                 return True
             elif (data != data).any():
                 return True
-            elif garbage_label_id in data:
-                return True
+            elif garbage_label_id in np.asarray(data):
+                    return True
             else:
                 return False
     else:
