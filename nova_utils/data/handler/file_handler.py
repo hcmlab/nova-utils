@@ -377,7 +377,7 @@ class _AnnotationFileHandler(IHandler):
         # meta
         role = data.meta_data.role if data.meta_data.role else ""
         annotator = data.meta_data.annotator if data.meta_data.annotator else ""
-        description = data.meta_data.description
+        description = data.meta_data.description if data.meta_data.description else ""
         examples = data.meta_data.examples if data.meta_data.examples else []
         annotation_attributes = data.meta_data.attributes if data.meta_data.attributes else []
 
@@ -875,10 +875,10 @@ class _AudioFileHandler(IHandler):
         # meta information
         stream_meta_data = self._get_audio_meta(fp)
 
-        metadata = stream_meta_data["streams"][0]
+        metadata = stream_meta_data.get("streams", [{}])[0]
         _channels = metadata.get("channels")
-        _sample_rate = int(metadata.get("sample_rate"))
-        _duration = int(float(metadata.get("duration")) * 1000)
+        _sample_rate = int(metadata.get("sample_rate", -1))
+        _duration = int(float(metadata.get("duration", 0)) * 1000)
         _num_samples = round(_duration * _sample_rate)
 
         sample_shape = (1, None, _channels)
@@ -917,7 +917,8 @@ class _AudioFileHandler(IHandler):
         ffmpegio.audio.write(
             str(fp.resolve()),
             int(meta_data.sample_rate),
-            np.swapaxes(np.hstack(data.data), 0, -1),
+            #np.swapaxes(np.hstack(data.data), 0, -1),
+            data.data,
             overwrite=True,
         )
 
