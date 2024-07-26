@@ -160,9 +160,17 @@ class Stream(DynamicData):
 
         Returns:
             np.ndarray: The sampled data within the interval.
+
+        Raises:
+            IndexError: If start or end index is out of bounds.
         """
 
         start_sample, end_sample = time_to_sample_interval(start, end, self.meta_data.sample_rate)
+
+        # Check for out of bound errors
+        self.data[start_sample]
+        self.data[end_sample]
+
         return np.asarray(self.data[start_sample : end_sample])
 
 

@@ -274,15 +274,15 @@ class DatasetIterator(DatasetManager):
                         # Don't pad anything but num_samples axis
                         sr = v.meta_data.sample_rate / 1000
                         left_pad = int((0 - window_start) * sr) if window_start < 0 else 0
-                        right_pad = int((
-                                                    window_end - self.current_session_info.duration) * sr) if window_end > self.current_session_info.duration else 0
+                        right_pad = int((window_end - self.current_session_info.duration) * sr) if window_end > self.current_session_info.duration else 0
 
                         # Currently all streams have timedim first. Keep for future reference.
                         time_dim_last = False
 
                         # In some cases sample sample_from_interval might return a frame number that is one frame off from what we expect.
                         # This is due to sampling issues when frame sizes do not match the samplerate. We fix this here.
-                        num_samples_exp = int((abs(window_start) + window_end) * sr)
+                        #num_samples_exp = int((abs(window_start) + window_end) * sr)
+                        num_samples_exp = int((window_end - window_start) * sr)
                         num_samples = int(left_pad + right_pad + sample.shape[0])
                         if num_samples > num_samples_exp:
                             diff = (num_samples - num_samples_exp)
