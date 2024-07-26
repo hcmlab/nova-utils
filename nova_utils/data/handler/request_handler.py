@@ -19,7 +19,7 @@ from nova_utils.data.data import Data
 from nova_utils.data.handler.file_handler import FileHandler
 from nova_utils.data.handler.ihandler import IHandler
 from nova_utils.data.static import Text, Image
-from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme
+from nova_utils.data.annotation import FreeAnnotation, FreeAnnotationScheme, DiscreteAnnotation, DiscreteAnnotationScheme, ContinuousAnnotation, ContinuousAnnotationScheme
 
 
 class RequestHandler(IHandler):
@@ -56,6 +56,10 @@ class RequestHandler(IHandler):
         elif dtype == FreeAnnotation:
             if header_only:
                 return FreeAnnotation(data=None, scheme=FreeAnnotationScheme(name='default_scheme'))
+        elif dtype == DiscreteAnnotationScheme:
+            if header_only:
+                return DiscreteAnnotation(data=None, scheme=DiscreteAnnotationScheme(name='default_scheme', classes={}))
+
         else:
             raise ValueError(
                 f"Data with unsupported dtype {dtype} received in request form."
@@ -65,7 +69,6 @@ class RequestHandler(IHandler):
         """
         Save data to filesystem using the shared directory as well the current job id
         """
-
         # Create output folder for job
         output_dir = Path(shared_dir) / job_id
         if dataset:

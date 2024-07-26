@@ -615,8 +615,6 @@ class AnnotationHandler(IHandler, NovaDBHandler):
                 duration=anno_duration,
             )
 
-            # free scheme
-
         # free scheme
         elif scheme_type == SchemeType.FREE.name:
 

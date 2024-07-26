@@ -14,7 +14,7 @@ from nova_utils.data.handler import (
     request_handler,
 )
 from nova_utils.data.stream import SSIStream, Video, Audio, Stream
-from  nova_utils.data.static import Image, Text
+from nova_utils.data.static import Image, Text
 from nova_utils.utils.request_utils import Origin, SuperType, SubType, parse_src_tag, data_description_to_string, \
     infere_dtype
 
@@ -137,6 +137,18 @@ class SessionManager:
             To load a stream file from disk using data.handler.file_handler.FileHandler we only need a filepath
             ``"fp"``
                 The filepath from which to load the data from. Only necessary when loading files from disk.
+            To load or save ana annotation as answer to a web request provide the necessary data header information for processing:
+            All schemes:
+            Discrete schemes:
+             ``"classes"``
+                Dictionary mapping class_ids to names
+            Continuous schemes:
+            ``"min_val"``
+                Minimum value of a continuous scheme
+            ``"max_val``
+                Maximum value of a continuous scheme
+            ``"sr``
+                Samplerate of the annotation
 
         Returns:
 
@@ -248,22 +260,52 @@ class SessionManager:
                             session=self.session,
                         )
                     elif super_dtype == SuperType.ANNO:
+                        def get_required_param(data_description, param, default):
+                            ret = data_description.get(param)
+                            if ret is None:
+                                print(
+                                    f'Parameter "{param}" is missing but required for annotation. Using default "{default}" instead. ')
+                                return default
+                            else:
+                                return ret
+
                         if sub_dtype is None:
                             sub_dtype = SubType.FREE
                         print(
-                            f'No predefined annotation scheme available. Creating generic {sub_dtype.value} template annotation for {desc}')
+                            f'Annotation scheme could not be loaded from header. Creating {sub_dtype.value} template annotation for {desc}')
+                        scheme_name = desc.get("scheme", "generic_scheme")
+                        annotator = desc.get("annotator", "generic_annotator")
+                        role = desc.get("role", "generic_role")
+                        examples = desc.get("examples", [])
+                        description = desc.get("description", "")
+                        name = '.'.join([role, scheme_name, annotator, 'annotation'])
+
                         if sub_dtype == SubType.FREE:
-                            data = FreeAnnotation(scheme=FreeAnnotationScheme(name='generic'), data=None)
+                            data = FreeAnnotation(annotator=annotator,
+                                                  role=role,
+                                                  name=name, scheme=FreeAnnotationScheme(name=scheme_name), data=None)
                         elif sub_dtype == SubType.CONTINUOUS:
+                            sr = get_required_param(desc, 'sr', 1)
+                            min_val = get_required_param(desc, 'min_val', 0)
+                            max_val = get_required_param(desc, 'max_val', 1)
                             data = ContinuousAnnotation(
-                                scheme=ContinuousAnnotationScheme(name='generic', sample_rate=1, min_val=0, max_val=1),
+                                annotator=annotator,
+                                role=role,
+                                name=name,
+                                scheme=ContinuousAnnotationScheme(name=scheme_name, sample_rate=sr, min_val=min_val,
+                                                                  max_val=max_val),
                                 data=None)
                         elif sub_dtype == SubType.DISCRETE:
-                            data = DiscreteAnnotation(scheme=DiscreteAnnotationScheme(name='generic', classes={'1' : 'class_one', '2': 'class_two'}))
+                            classes = get_required_param(desc, 'classes', {'1': 'class_one', '2': 'class_two'})
+                            data = DiscreteAnnotation(annotator=annotator,
+                                                      role=role,
+                                                      name=name, scheme=DiscreteAnnotationScheme(name=scheme_name,
+                                                                                                 classes=classes))
                         else:
                             raise ValueError(
                                 f"Can\'t create template for {desc} because no scheme information is available.")
-
+                        data.meta_data.examples = examples
+                        data.meta_data.description = description
                     else:
                         # Todo Handle other cases where no header might be loaded
                         data = Data()
@@ -334,12 +376,14 @@ class SessionManager:
                     scheme = desc.get('scheme')
                     annotator = desc.get('annotator')
                     handler = nova_db_handler.AnnotationHandler(**ctx)
-                    success = handler.save(dataset=self.dataset, session=self.session, annotation=data, overwrite=overwrite, role=role, annotator=annotator, scheme=scheme)
+                    success = handler.save(dataset=self.dataset, session=self.session, annotation=data,
+                                           overwrite=overwrite, role=role, annotator=annotator, scheme=scheme)
                 elif super_dtype == SuperType.STREAM:
                     name = desc.get('name')
                     role = desc.get('role')
                     handler = nova_db_handler.StreamHandler(**ctx)
-                    success = handler.save(dataset=self.dataset, session=self.session, stream=data, role=role, name=name)
+                    success = handler.save(dataset=self.dataset, session=self.session, stream=data, role=role,
+                                           name=name)
             elif src == Origin.FILE:
                 handler = file_handler.FileHandler()
                 success = handler.save(data=data, fp=Path(desc["uri"]))
@@ -378,7 +422,7 @@ class DatasetManager:
             sessions = sh.load(self.dataset, self.session_names)
             for sess in sessions:
                 sm = SessionManager(
-                    self.dataset, self.data_description, sess.name, self.source_ctx, video_backend = self.video_backend
+                    self.dataset, self.data_description, sess.name, self.source_ctx, video_backend=self.video_backend
                 )
                 self.sessions[sess.name] = {"manager": sm, "info": sess}
             self.session_names = list(self.sessions.keys())
@@ -392,7 +436,7 @@ class DatasetManager:
 
             for session in self.session_names:
                 sm = SessionManager(
-                    self.dataset, self.data_description, session, self.source_ctx, video_backend = self.video_backend
+                    self.dataset, self.data_description, session, self.source_ctx, video_backend=self.video_backend
                 )
                 self.sessions[session] = {"manager": sm, "info": None}
 
@@ -487,7 +531,6 @@ if __name__ == "__main__":
 
     dsm = DatasetManager(
         dataset=dataset, data_description=[annotation, stream], source_context=ctx)
-
 
     # dsm.output_data_templates[
     #     "annotation_out"

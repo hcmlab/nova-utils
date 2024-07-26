@@ -204,7 +204,7 @@ class _AnnotationFileHandler(IHandler):
         return np.asarray(data, dtype=SSILabelDType.FREE.value)
 
     @staticmethod
-    def _str_format_from_dtype(dtype: np.dtype):
+    def _str_format_from_named_dtype(dtype: np.dtype):
         """
         Generate a string format for a given numpy dtype.
 
@@ -444,7 +444,24 @@ class _AnnotationFileHandler(IHandler):
 
         # save data
         if ftype == SSIFileType.ASCII:
-            fmt = self._str_format_from_dtype(anno_data.dtype)
+            fmt = self._str_format_from_named_dtype(anno_data.dtype)
+
+            if data.meta_data.attributes:
+
+                tmp_attributes = []
+                for aa in annotation_attributes:
+                    attribute_name = aa['name']
+                    tmp_attributes.append([
+                        f'{attribute_name}: {{ {x} }}' for x in data.meta_data.attribute_values[attribute_name]
+                    ])
+
+                # Format: "attributes:{Explanation:{This is why I did it},test:{True},la list:{One}}"
+                attributes = np.asarray( [f'attributes:{{ {",".join(x)} }}' for x in zip(*tmp_attributes)], dtype=np.object_ )
+                anno_data = np.asarray(
+                    [x + (y,) for x,y in zip(anno_data.tolist(),attributes)], dtype=object
+                )
+                fmt.append('%s')
+
             np.savetxt(data_path, anno_data, fmt=fmt, delimiter=";", encoding="UTF-8")
         if ftype == SSIFileType.BINARY:
             data.data.tofile(data_path, sep="")
